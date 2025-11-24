@@ -9,7 +9,8 @@ COPY requirements.txt .
 
 # Instalar las dependencias
 # Se agrega --no-cache-dir para mantener la imagen ligera
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copiar el resto del código de la aplicación
 COPY . .

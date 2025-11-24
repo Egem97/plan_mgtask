@@ -10,7 +10,7 @@ from functions.load_onedrive import *
 async def main():
     scheduler = AsyncIOScheduler()
     access_token = get_access_token()
-    scheduler.add_job(cosecha_load_data, 'interval', hour=1, args=[access_token])
+    scheduler.add_job(cosecha_load_data, 'interval', hours=1, args=[access_token])
     scheduler.add_job(fertiriego_load_data, 'interval', minutes=85, args=[access_token])
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")

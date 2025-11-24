@@ -32,10 +32,8 @@ def read_excel_resilient(path: str, **kwargs):
     """Read Excel robustly. If invalid XML/styles error, try a sanitized copy.
     Returns a DataFrame or None on failure (and reports via Streamlit UI).
     """
-    if not os.path.exists(path):
-        print(f"No se encontró el archivo: {path}")
-        return None
     try:
+        
         return pd.read_excel(path, **kwargs)
     except Exception as e:
         msg = str(e).lower()

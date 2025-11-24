@@ -4,7 +4,7 @@ import numpy as np
 import altair as alt
 import os
 import re
-from utils.utils import read_excel_resilient, read_excel_fast, format_lote, parse_mixed_date, lacolina_transform, clean_turno, sanitize_for_parquet
+from utils.utils import *
 
 from utils.helpers import get_download_url_by_name
 from utils.get_api import listar_archivos_en_carpeta_compartida
@@ -89,7 +89,7 @@ def drenaje_data(access_token):
     return read_excel_fast(url_excel_1, sheet_name="DATA DRENAJE", skiprows=1)
 
 
-def cosecha_datasets(acess_token,name_excel,preferred_sheet,skip_rows):
+def cosecha_datasets(access_token,name_excel,preferred_sheet,skip_rows):
     data = listar_archivos_en_carpeta_compartida(
         access_token,
         "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
@@ -363,7 +363,7 @@ def data_cosecha(access_token):
         #dff = pd.read_excel(full_path, sheet_name=preferred_sheet, skiprows=skip_rows)
         #st.write(dff.shape)
         #df = read_excel_resilient(full_path, sheet_name=preferred_sheet, skiprows=skip_rows)#,dtype={"FECHA":"str"}
-        df = cosecha_datasets(token,file,preferred_sheet,skip_rows)
+        df = cosecha_datasets(access_token,file,preferred_sheet,skip_rows)
         #st.write(full_path)
         #st.dataframe(df)
         if file == "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":
@@ -422,5 +422,142 @@ def data_cosecha(access_token):
     data["FECHA"] = pd.to_datetime(data["FECHA"]).dt.date
     return data
 
-#1. Cosecha Excelence Sur 2025 CAMPO San Jose I.xlsx
+#DATA QUE CAMBIA POCAS VECES O FRECUENCIA
 
+def sede():
+    sedes = ['SAN JOSE', 'SAN PEDRO', 'SAN JOSE II','LAS BRISAS','LICAPA','EL POTRERO','GAP BERRIES','LA COLINA']
+    zonas = ['SUR','NORTE','SUR','SUR','PAIJAN','NORTE','SUR','LA COLINA']
+    sedes_df = pd.DataFrame(sedes, columns=['SEDE'])
+    sedes_df["Zona"] = zonas
+    return sedes_df
+
+
+def poligonos(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        #"b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        "01XOBWFSG3TINCMZG2RVHIU5OP6DGFNVX3"
+    )
+    url_excel_1 = get_download_url_by_name(data, "poligonos.xlsx")
+    xls = pd.ExcelFile(url_excel_1)
+    list_hojas = list(xls.sheet_names)
+    data = pd.DataFrame()
+    for hoja in list_hojas:
+        df = pd.read_excel(url_excel_1, sheet_name=hoja)
+        df["Fundo"] = hoja
+
+        #wkt_col = detect_wkt_column(df)
+        #if wkt_col:
+        #    df["GeoJSON"] = df[wkt_col].apply(lambda s: json.dumps(wkt_to_geojson_dict(s)) if wkt_to_geojson_dict(s) else None)
+        #else:
+        #    st.warning(f"No se encontró columna WKT en la hoja '{hoja}'.")
+        
+        data = pd.concat([data,df],axis=0)
+    return data
+
+def informe_plantacion(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT3E3DVAFNF4ZRGJS66GDVM3ZRMO"
+    )
+    url_excel_1 = get_download_url_by_name(data, "Informe de Plantación - 2025 Zona Sur y Norte V1.xlsx")
+    url_excel_2 = get_download_url_by_name(data, "Informe de Plantación - 2025 Qberries V1.xlsx")
+
+    columns_data = ['Zona', 'Fundo', 'Predio', 'Módulo', 'Turno', 'Lote',
+       'Área actualizada', 'Área sin plantas', 'Año', 'Sem',
+       'Fecha de plantación', 'Variedad', 'Presentación (CC)', 'Estatus',
+       'Origen', 'Jefe Zona ', 'Jefe de Fundo', 'Dist. surcos (m)',
+       'Dist. entre plantas (m)', 'M2', 'Plantas/ha', 'N° de Plantas ',
+       'Diametro de lineas (mm)', 'N° Lineas', 'Distancia goteros',
+       'Caudal nominal lts/hr', 'Goteros planta', 'Precipitación mm/Horas/ha',
+       'Tipo de manguera']  
+    # Leer Informe de Plantación Zona Sur y Norte
+    sn_dff = read_excel_resilient(
+        url_excel_1, sheet_name="BDIP", skiprows=5, engine="openpyxl"
+    )
+    sn_dff = sn_dff[columns_data]
+    sn_dff = sn_dff[sn_dff["Lote"].notna()]
+
+    lc_lotes = [1,2,3,4,5,6,7,8,9,10]
+    lc_ha = [1.24,0.40,1.23,0.99,1.11,1.26,1.10,0.81,0.65,0.40]
+
+    # Crear dataframe con las dos listas
+    lc_dff = pd.DataFrame({'Lote': lc_lotes, 'Área actualizada': lc_ha})
+
+    lc_dff["Zona"] = "LA COLINA"
+    lc_dff["Fundo"] = "LA COLINA"
+    lc_dff["Predio"] = "LA COLINA MOD-"+lc_dff["Lote"].astype(str)
+    lc_dff["Módulo"] = "M1"
+    lc_dff["Turno"] = 1
+    lc_dff["Área sin plantas"] = 0
+    lc_dff["Año"] = 2025
+    lc_dff["Sem"] = 0
+    lc_dff["Fecha de plantación"] = datetime(2025, 1, 1)
+    lc_dff["Variedad"] = "ATLAS"
+    lc_dff["Presentación (CC)"] = 1000
+    lc_dff["Estatus"] = "BOLSA"
+    lc_dff["Origen"] = "NO ESPECIFICADO"
+    lc_dff["Jefe Zona "] = "NO ESPECIFICADO"
+    lc_dff["Jefe de Fundo"] = "NO ESPECIFICADO"
+    lc_dff["Dist. surcos (m)"] = 0
+    lc_dff["Dist. entre plantas (m)"] = 0
+    lc_dff["M2"] = 0
+    lc_dff["Plantas/ha"] = 6500
+    lc_dff["N° de Plantas "] = lc_dff["Plantas/ha"] * lc_dff["Área actualizada"]
+    lc_dff["Diametro de lineas (mm)"] = 0
+    lc_dff["N° Lineas"] = 1
+    lc_dff["Distancia goteros"] = 0.15
+    lc_dff["Caudal nominal lts/hr"] = 1.6
+    lc_dff["Goteros planta"] = 3
+    lc_dff["Precipitación mm/Horas/ha"] = 0
+    lc_dff["Tipo de manguera"] = "BICAPA"
+
+    qberries_dff = read_excel_resilient(
+        url_excel_2, sheet_name="BDIP", skiprows=5, engine="openpyxl"
+    )
+    qberries_dff = qberries_dff[columns_data]
+    qberries_dff = qberries_dff[qberries_dff["Lote"].notna()]
+    qberries_dff["Lote"] = qberries_dff["Lote"].astype(int).astype(str)
+
+    dff = pd.concat([sn_dff, qberries_dff,lc_dff], axis=0)
+    dff = dff[dff["Lote"].notna()]
+    dff["Lote"] = dff["Lote"].astype(str)
+    dff["Área sin plantas"] = dff["Área sin plantas"].fillna(0)
+
+    dff.columns = [strip_accents(col).strip().upper() for col in dff.columns]
+    for col in ['ZONA', 'FUNDO', 'PREDIO', 'MODULO','VARIEDAD','ESTATUS','ORIGEN','JEFE ZONA','JEFE DE FUNDO','TIPO DE MANGUERA']:
+            
+        if dff[col].dtype == "object":
+            dff[col] = dff[col].fillna("NO ESPECIFICADO")
+            dff[col] = dff[col].str.strip()
+            dff[col] = dff[col].str.upper()
+
+    # Aplicar normalización de fecha y convertir a tipo fecha (YYYY-MM-DD)
+    dff["MODULO"] = dff["MODULO"].str.replace("MOD","M")
+    dff["MODULO"] = dff["MODULO"].str.strip().str.replace(' ', '', regex=False)
+    dff['FECHA DE PLANTACION'] = pd.to_datetime(
+        dff['FECHA DE PLANTACION'].apply(parse_mixed_date), errors='coerce'
+    ).dt.date
+
+
+
+    dff["LOTE"] = dff["LOTE"].apply(format_lote)
+    dff["LOTE"] = dff["LOTE"].str.replace(" -1","-1")
+    dff["ID"] = dff["FUNDO"]+"_"+dff["LOTE"]
+    dff = dff.drop(columns = ['ANO','SEM'])
+    dff.columns = [col.capitalize() for col in dff.columns]
+    dff = dff.rename(columns = {
+        "Area actualizada":"Area",
+        "N° de plantas":"Plantas Por Lote",
+        "Plantas/ha":"Densidad",
+        "Fecha de plantacion":"Fecha De Plantacion",
+        "Id":"ID"
+        }
+    )
+    dff["Fundo"] = dff["Fundo"].replace({"TARA FARM":"LAS BRISAS","CANYON":"EL POTRERO"})
+    dff["MOD"] = dff["Modulo"].str.extract(r"(\d+)")[0].fillna("0").astype(int)
+    dff["Fecha De Plantacion"] = pd.to_datetime(dff["Fecha De Plantacion"]).dt.date
+
+    return dff

@@ -7,6 +7,7 @@ import zipfile
 import tempfile
 import unicodedata
 import re
+import requests
 
 def _sanitize_xlsx_remove_styles(src_path: str) -> str:
     """Create a temporary copy of the XLSX without styles/calcChain to bypass invalid XML.
@@ -32,8 +33,23 @@ def read_excel_resilient(path: str, **kwargs):
     """Read Excel robustly. If invalid XML/styles error, try a sanitized copy.
     Returns a DataFrame or None on failure (and reports via Streamlit UI).
     """
+    temp_file = None
     try:
-        
+        # Si es una URL, descargar primero
+        if path.startswith("http://") or path.startswith("https://"):
+            print(f"Descargando archivo desde URL...")
+            response = requests.get(path)
+            response.raise_for_status()
+            
+            # Crear archivo temporal
+            fd, temp_path = tempfile.mkstemp(suffix=".xlsx")
+            os.close(fd)
+            with open(temp_path, "wb") as f:
+                f.write(response.content)
+            
+            path = temp_path
+            temp_file = temp_path
+
         return pd.read_excel(path, **kwargs)
     except Exception as e:
         msg = str(e).lower()
@@ -45,6 +61,11 @@ def read_excel_resilient(path: str, **kwargs):
                 sanitized = _sanitize_xlsx_remove_styles(path)
                 df = pd.read_excel(sanitized, **kwargs)
                 print("Lectura exitosa usando copia saneada (sin estilos).")
+                # Limpiar archivo saneado
+                try:
+                    os.remove(sanitized)
+                except:
+                    pass
                 return df
             except Exception as e2:
                 print(
@@ -55,6 +76,13 @@ def read_excel_resilient(path: str, **kwargs):
         else:
             print(f"Error leyendo el Excel: {e}")
             return None
+    finally:
+        # Limpiar archivo temporal de descarga si existe
+        if temp_file and os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+            except:
+                pass
 
 
 def read_excel_fast(source: str, sheet_name: str | None = None, skiprows: int | None = None):
@@ -243,25 +271,3 @@ def lacolina_transform(df = pd.DataFrame()):
     df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
     df = df.rename(columns={"OBSERVACIONES": "TURNO"})
     return df
-
-# Limpieza de TURNO: float -> int, quitar letras, tomar primer número si hay comas
-def clean_turno(v):
-    try:
-        if pd.isna(v):
-            return 0
-    except Exception:
-        pass
-    if isinstance(v, (int, np.integer)):
-        return int(v)
-    if isinstance(v, (float, np.floating)):
-        return int(v)
-    s = str(v).strip()
-    if not s:
-        return 0
-    # si es tipo '2,3,4' tomar el primer token
-    first = s.split(",")[0]
-    # extraer dígitos (quitar letras), usar el primer número encontrado
-    m = re.search(r"\d+", first)
-    if m:
-        return int(m.group(0))
-    return 0

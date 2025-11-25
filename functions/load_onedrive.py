@@ -6,10 +6,10 @@ from functions.agricola import *
 
 
 
-def cosecha_load_data(access_token):
+def cosecha_load_data():
     print(f"📤 Subiendo archivo 'COSECHA' a OneDrive...")
-    COSECHA_DF= data_cosecha(access_token)
-    
+    COSECHA_DF= data_cosecha()
+    access_token = get_access_token()
     resultado = subir_archivo_con_reintento(
         access_token=access_token,
         dataframe=COSECHA_DF,
@@ -25,12 +25,12 @@ def cosecha_load_data(access_token):
         print(f"❌ Error al subir el archivo")
         return False
 
-def fertiriego_load_data(access_token):
+def fertiriego_load_data():
     print(f"📤 Subiendo archivos 'FERITIRIEGO' a OneDrive...")
-
+    
     resultado_1 = subir_archivo_con_reintento(
-        access_token=access_token,
-        dataframe=aplicativoNutricional(access_token),
+        access_token=get_access_token(),
+        dataframe=aplicativoNutricional(),
         nombre_archivo="APLICACIONES NUTRICIONALES.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
@@ -38,8 +38,8 @@ def fertiriego_load_data(access_token):
     )
 
     resultado_2 = subir_archivo_con_reintento(
-        access_token=access_token,
-        dataframe=FertiRiego(access_token),
+        access_token=get_access_token(),
+        dataframe=FertiRiego(),
         nombre_archivo="INSUMOS.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
@@ -47,8 +47,8 @@ def fertiriego_load_data(access_token):
     )
 
     resultado_3 = subir_archivo_con_reintento(
-        access_token=access_token,
-        dataframe=parametros_campo(access_token),
+        access_token=get_access_token(),
+        dataframe=parametros_campo(),
         nombre_archivo="MUESTRAS.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
@@ -56,8 +56,8 @@ def fertiriego_load_data(access_token):
     )
 
     resultado_4 = subir_archivo_con_reintento(
-        access_token=access_token,
-        dataframe=drenaje_campo(access_token),
+        access_token=get_access_token(),
+        dataframe=drenaje_campo(),
         nombre_archivo="DRENAJE.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",

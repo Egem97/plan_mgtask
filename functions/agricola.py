@@ -100,7 +100,8 @@ def cosecha_datasets(access_token,name_excel,preferred_sheet,skip_rows):
     return read_excel_fast(url_excel_1,sheet_name=preferred_sheet, skiprows=skip_rows)#, sheet_name="DATA DRENAJE", skiprows=1
 
 
-def aplicativoNutricional(access_token):
+def aplicativoNutricional():
+    access_token = get_access_token()
     nutri_general_df = test1(access_token)
     nutri_qb_df = test2(access_token)
     df = pd.concat([nutri_general_df,nutri_qb_df],axis=0)
@@ -129,7 +130,8 @@ def aplicativoNutricional(access_token):
     return df
 
 
-def FertiRiego(access_token):
+def FertiRiego():
+    access_token = get_access_token()
     fertiriego_qberries_df = fertiriegoQberries(access_token)
     fertiriego_general_df = fertiriegoGeneral(access_token)
     fertiriego_qberries_df = fertiriego_qberries_df.loc[:, [c for c in fertiriego_qberries_df.columns if not str(c).strip().upper().startswith("UNNAMED")]]
@@ -227,7 +229,8 @@ def FertiRiego(access_token):
 
 #89
 #@st.cache_data(ttl=60*5)
-def parametros_campo(access_token):
+def parametros_campo():
+    access_token = get_access_token()
     df = ph_ce_general(access_token)
     dff = ph_ce_qberries(access_token)
     df_general = pd.concat([df,dff],axis=0)
@@ -275,7 +278,8 @@ def parametros_campo(access_token):
 #st.dataframe(df_muestras)
 #print(df_muestras.info())
 #print(df_muestras["FUNDO"].unique())
-def drenaje_campo(access_token):
+def drenaje_campo():
+    access_token = get_access_token()
     df = drenaje_data(access_token)
     df = df.loc[:, [c for c in df.columns if not str(c).strip().upper().startswith("UNNAMED")]]
     df.columns = [str(c).strip().upper() for c in df.columns]
@@ -321,8 +325,9 @@ def drenaje_campo(access_token):
     return df
 
 
-def data_cosecha(access_token):
+def data_cosecha():
     #path_cosecha = r"C:\Users\EdwardoGiampiereEnri\OneDrive - ALZA PERU GROUP S.A.C\Archivos de Andy Rodriguez - INTELIGENCIA DE NEGOCIOS\DATA BI\AGRICOLA\PRODUCCION"
+    access_token = get_access_token()
     list_files = [
         "1. Cosecha Excelence Sur 2025 CAMPO San Jose I.xlsx",
         "2. Cosecha Excelence Sur 2025 CAMPO San Jose II LIS (1).xlsx",
@@ -362,7 +367,6 @@ def data_cosecha(access_token):
         # Lectura robusta con saneo del Excel si el XML está inválido
         #dff = pd.read_excel(full_path, sheet_name=preferred_sheet, skiprows=skip_rows)
         #st.write(dff.shape)
-        #df = read_excel_resilient(full_path, sheet_name=preferred_sheet, skiprows=skip_rows)#,dtype={"FECHA":"str"}
         df = cosecha_datasets(access_token,file,preferred_sheet,skip_rows)
         #st.write(full_path)
         #st.dataframe(df)

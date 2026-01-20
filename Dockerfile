@@ -1,19 +1,22 @@
-# Usar una imagen base de Python oficial y ligera
-FROM python:3.11-slim
+# Usar la imagen oficial de Playwright que incluye Python y los navegadores necesarios
+FROM mcr.microsoft.com/playwright/python:v1.49.1-jammy
 
-# Establecer el directorio de trabajo en el contenedor
+# Establecer el directorio de trabajo
 WORKDIR /app
 
-# Copiar el archivo de requerimientos primero para aprovechar la caché de Docker
+# Copiar requirements.txt
 COPY requirements.txt .
 
-# Instalar las dependencias
-# Se agrega --no-cache-dir para mantener la imagen ligera
+# Instalar dependencias de Python
+# Nota: La imagen ya trae playwright y navegadores compatibles con su versión interna.
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copiar el resto del código de la aplicación
+# Instalar navegadores explícitamente para asegurar compatibilidad con la versión de pip
+RUN playwright install chromium
+
+# Copiar el resto del código
 COPY . .
 
-# Comando para ejecutar la aplicación
+# Comando de inicio
 CMD ["python", "schedule.py"]

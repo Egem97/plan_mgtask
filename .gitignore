@@ -107,3 +107,10 @@ client_secret.json
 .git/
 .gitattributes 
 nifty-might-269005-cd303aaaa33f.json
+xlsx/
+historico/
+download/
+fundos_cosecha_bi.py
+ma.py
+other.py
+recursos_humanos.py

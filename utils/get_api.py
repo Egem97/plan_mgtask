@@ -10,8 +10,8 @@ config = load_config()
 
 MAX_RETRIES = config['processing']['max_retries']
 RETRY_DELAY = config['processing']['retry_delay']
-BASE_URL = "https://api.apis.net.pe/v2/sunat/tipo-cambio"
-TOKEN = "apis-token-16554.ZQM8MpXKbbVnqEaLmLByory531BrQp20"
+BASE_URL = config['apitp']['base_url']
+TOKEN = config['apitp']['token']
 
 
 def listar_archivos_en_carpeta_compartida(access_token: str  ,drive_id: str, item_id: str):

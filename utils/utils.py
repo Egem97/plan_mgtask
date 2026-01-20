@@ -214,6 +214,7 @@ def format_lote(val):
     s = s.upper()
     # Corregir sufijo '-I' a '-1'
     s = re.sub(r"-I\b", "-1", s)
+    s = re.sub(r"-II\b", "-2", s)
     # Separar la primera parte numérica y el resto
     parts = s.split("-")
     head = parts[0]
@@ -271,3 +272,62 @@ def lacolina_transform(df = pd.DataFrame()):
     df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
     df = df.rename(columns={"OBSERVACIONES": "TURNO"})
     return df
+
+################################################ AGRITRACER ################################################
+def time_to_decimal_hours(time_str):
+    if pd.isna(time_str):
+        return 0.0
+    
+    # Si ya es numérico (float/int), devolverlo tal cual
+    if isinstance(time_str, (int, float, np.number)):
+        return float(time_str)
+
+    try:
+        # Si es string
+        if isinstance(time_str, str):
+            # Intentar convertir string numérico directo
+            try:
+                return float(time_str)
+            except ValueError:
+                pass
+            
+            # Parsear formato de tiempo
+            time_obj = pd.to_datetime(time_str, format='%H:%M:%S', errors='coerce')
+            if pd.isna(time_obj):
+                 # Intentar inferir
+                 time_obj = pd.to_datetime(time_str, errors='coerce')
+            
+            if pd.notna(time_obj):
+                 time_obj = time_obj.time()
+            else:
+                 return 0.0
+        else:
+            # Si ya es datetime o time, extraer el time
+            time_obj = time_str.time() if hasattr(time_str, 'time') else time_str
+        
+        # Convertir a horas decimales si tiene atributos de tiempo
+        if hasattr(time_obj, 'hour'):
+            hours = time_obj.hour + time_obj.minute/60 + time_obj.second/3600
+            return hours
+        else:
+            return 0.0
+    except Exception:
+        return 0.0
+
+
+def quitar_tildes(texto):
+    if pd.isna(texto):
+        return texto
+    # Normalizar y quitar acentos
+    texto_normalizado = unicodedata.normalize('NFD', str(texto))
+    texto_sin_tildes = ''.join(c for c in texto_normalizado if unicodedata.category(c) != 'Mn')
+    return texto_sin_tildes
+
+def create_fecha_final(fecha,year_campania,year_fecha):
+            if year_campania == year_fecha:
+                return fecha
+            else:
+                if year_fecha == 2023:
+                    return datetime(2024, 1, 1)
+                else:
+                    return datetime(2024, 12, 31)

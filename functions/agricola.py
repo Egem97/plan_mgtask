@@ -8,6 +8,7 @@ from utils.utils import *
 
 from utils.helpers import get_download_url_by_name
 from utils.get_api import listar_archivos_en_carpeta_compartida
+from utils.utils import read_excel_fast
 from pandas.core.frame import DataFrame
 from utils.get_token import get_access_token
 
@@ -46,15 +47,15 @@ def fertiriegoQberries(access_token):
 
 #@st.cache_data(ttl=60*60)
 def fertiriegoGeneral(access_token):
-    data = listar_archivos_en_carpeta_compartida(
-        access_token,
-        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
-        "01KM43WT22U7MUWEHXNRBZBLP6734DCWJO"
-    )
-    url_excel_1 = get_download_url_by_name(data, "REGISTRO GENERAL DE RIEGO Y FERTIRRIEGO.xlsx")
-    #url_excel_2 = get_download_url_by_name(data, "REGISTRO APLICACIONES NUTRICIONALES-FUNDO QBERRIES.xlsx")
-    return read_excel_fast(url_excel_1, sheet_name="BASE DE DATOS FERTIRRIEGO ", skiprows=1)
+    #data = listar_archivos_en_carpeta_compartida(
+    #    access_token,
+    #    "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+    #    "01KM43WT22U7MUWEHXNRBZBLP6734DCWJO"
+    #)
 
+    #return read_excel_fast(url_excel_1, sheet_name="BASE DE DATOS FERTIRRIEGO ", skiprows=1)
+    path = r"C:\Users\EdwardoGiampiereEnri\OneDrive - ALZA PERU GROUP S.A.C\Archivos de Andy Rodriguez - INTELIGENCIA DE NEGOCIOS\DATA BI\AGRICOLA\RIEGO Y FERTIRIEGO"
+    return pd.read_excel(path + "\REGISTRO GENERAL DE RIEGO Y FERTIRRIEGO.xlsx", sheet_name="BASE DE DATOS FERTIRRIEGO ", skiprows=1)
 
 
 def ph_ce_general(access_token):
@@ -200,6 +201,7 @@ def FertiRiego():
     ]
 
     for c in var_float:
+        print(c)
         fertiriego_df[c] = fertiriego_df[c].fillna("0")
         fertiriego_df[c] = fertiriego_df[c].astype(str)
         fertiriego_df[c] = fertiriego_df[c].str.strip()
@@ -271,6 +273,30 @@ def parametros_campo():
     df_general["L MIN"] = df_general["L MIN"].fillna(0)
     df_general["L MAX"] = df_general["L MAX"].fillna(0)
     df_general["FECHA"] = pd.to_datetime(df_general["FECHA"]).dt.date
+    df_general["INDEX"] = df_general["TIPO DE MUESTRA"].replace({
+        "CANAL":1,
+        "DECANTADOR":2,
+        "REACTOR":3,
+        "RESERVORIO":4,
+        "FILTRADO":5,
+        "SFR":6,
+        "SS":7,
+        "DRENAJE":8,
+        "SUSTRATO":9,
+        "SOL. FIBRA COCO":10,
+        "POZO 01":11,
+        "OSMOSIS":12,
+        "GOTERO":13,
+        
+        "SALMUERA":14,
+        "POZO 02":15,
+        "POZO 3":16,
+        "POZO 4":17,
+        "POZO EXISTENTE":18,
+        "OSMOSIS 1":19,
+        "OSMOSIS 2":20,
+    })
+    
     return df_general
 
 #df_muestras = parametros_campo()
@@ -317,7 +343,10 @@ def drenaje_campo():
     cols_num_drenaje = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
         'VOL DREN.1', 'VOL DREN. 2', 'VOLUMEN AFORO', '% DRENAJE REAL',
         '% MÍNIMO', '% MÁXIMO']
+    import streamlit as st
+    st.write(df)
     for c in cols_num_drenaje:
+        print(c)
         df[c] = df[c].fillna(0)
         df[c] = df[c].astype(float)
 
@@ -565,3 +594,86 @@ def informe_plantacion(access_token):
     dff["Fecha De Plantacion"] = pd.to_datetime(dff["Fecha De Plantacion"]).dt.date
 
     return dff
+
+def cosecha_dataset_2():
+    access_token = get_access_token()
+    list_files = [
+            "1. Cosecha Excelence Sur 2025 CAMPO San Jose I.xlsx",
+            "2. Cosecha Excelence Sur 2025 CAMPO San Jose II LIS (1).xlsx",
+            "5. Cosecha QBERRIES-CAMPAÑA-2025.xlsx",
+            "3. Cosecha GAP - 2025.xlsx",
+            "4. Cosecha TARA FARM - 2025.xlsx",
+            "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx",
+            "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx",
+            #"REPORTE COSECHA LA COLINA ATLAS 2025..xlsx"
+
+    ]
+
+    files_check = [
+        "1. Cosecha Excelence Sur 2025 CAMPO San Jose I.xlsx",
+        "2. Cosecha Excelence Sur 2025 CAMPO San Jose II LIS (1).xlsx",
+        "4. Cosecha TARA FARM - 2025.xlsx",
+        "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx",
+        "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx",
+    ]
+    files_skip = [
+        "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx",
+        "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx"
+    ]
+    data = pd.DataFrame()
+    for file in list_files:
+    #costo_laboral_diario= read_costo_laboral()
+    #st.dataframe(costo_laboral_diario)
+        
+        if file in files_check:
+            sheet_name = "KG PLANTA Y CAMPO "
+            skip_rows = None
+        
+        elif file == "5. Cosecha QBERRIES-CAMPAÑA-2025.xlsx":
+            sheet_name = "KG PLANTA Y CAMPO"
+        elif file == " 3. Cosecha GAP - 2025.xlsx":
+            sheet_name = "KG PLANTA Y CAMPO"
+            
+        if file in files_skip:
+            skip_rows = 8
+        else:
+            skip_rows = None
+
+        df = cosecha_datasets(access_token,file,sheet_name,skip_rows)
+        
+        df = df.loc[:, [c for c in df.columns if "UNNAMED" not in str(c).strip().upper()]]
+        df.columns = [str(c).strip().upper() for c in df.columns]
+        df.columns = df.columns.str.replace('\r', '').str.replace('\n', '')
+        df = df.rename(columns={
+            "PACKIG": "PACKING",
+            "KG+CAMPO":"KG+DESCARTE(KILOS BRUTOS)",
+            "KG EXPORT": "KG ENVIADOS A PLANTA",
+            #"KG+DESCARTE(KILOS BRUTOS)":"KG+DESCARTE\r\n(KILOS BRUTOS)"
+
+        })
+        #st.dataframe(df)
+        data = pd.concat([data,df],axis=0)
+    return data
+
+def clean_cosecha_2():
+    data = cosecha_dataset_2()
+    data = data[data["FUNDO"].notna()]
+    data = data.drop(["COLUMNA1","DEVOLUCIÓN","JARRAS DE DESCARTE","KG PLANTA","MES11","MES","AÑO"], axis=1)
+    data["KG CAMPO"] = data["KG CAMPO"].fillna(0)
+    data["KG CAMPO"] = data["KG CAMPO"].replace(" ",0)
+    data["KG CAMPO"] = data["KG CAMPO"].replace("",0)
+    data["KG CAMPO"] = data["KG CAMPO"].astype(float)
+    data["KG DESCARTE"] = data["KG DESCARTE"].fillna(0)
+    data["KG ENVIADOS A PLANTA"] = data["KG ENVIADOS A PLANTA"].fillna(0)
+    data["KG ENVIADOS A PLANTA"] = data["KG ENVIADOS A PLANTA"].replace(" ",0)
+    data["KG ENVIADOS A PLANTA"] = data["KG ENVIADOS A PLANTA"].replace("",0)
+    data["KG ENVIADOS A PLANTA"] = data["KG ENVIADOS A PLANTA"].astype(float)
+    data["KG/JARRA  CAMPO"] = data["KG/JARRA  CAMPO"].fillna(0)
+    data["KG/JARRA EXPO"] = data["KG/JARRA EXPO"].fillna(0)
+    data["KG/JARRA"] = data["KG/JARRA"].fillna(0)
+    data["JARRA"] =data["JARRA"].fillna(0)
+    data["KG+DESCARTE(KILOS BRUTOS)"] =data["KG+DESCARTE(KILOS BRUTOS)"].fillna(0)
+    data["FECHA"] = pd.to_datetime(data["FECHA"]).dt.date
+    data = data.rename(columns={"KG+DESCARTE(KILOS BRUTOS)": "KILOS BRUTOS"})
+    data["FUNDO"] = data["FUNDO"].replace({"QBERRIES":"LICAPA","GAP":"GAP BERRIES","CANYON BERRIES":"EL POTRERO"})
+    return data

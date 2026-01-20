@@ -12,6 +12,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+
 # Instalar navegadores explícitamente para asegurar compatibilidad con la versión de pip
 RUN playwright install chromium
 

@@ -4,7 +4,7 @@ from pandas.core.frame import DataFrame
 from utils.get_token import get_access_token
 from utils.utils import read_excel_fast
 import pandas as pd
-import pandas as pd
+
 
 def clean_costo_laboral(df):
     df = df.loc[:, [c for c in df.columns if not str(c).strip().upper().startswith("UNNAMED")]]

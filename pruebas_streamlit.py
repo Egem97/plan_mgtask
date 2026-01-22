@@ -31,9 +31,9 @@ def test1(access_token):
 
 
 #download_files_c1()
-df = test1(get_access_token())
-st.write(df.shape)
-st.dataframe(df)
+from  functions.proc_files_xlsx import pipeline_agritracer
+pipeline_agritracer()   
+st.write("actualizado")
 ##test_1 = test1(get_access_token())
 #st.write(test_1.shape)
 #st.dataframe(test_1)

@@ -30,10 +30,158 @@ def test1(access_token):
 
 
 
+data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WTYIAMKEILBABBD3YV6E7PSSUZLG"
+)
+
+
+
+
+print("2025")
+
+def clean_biometria_fundos():
+    data25_df = pd.read_excel(get_download_url_by_name(data, "BIOMETRIA CAM2025 FUN.xlsx"),sheet_name = "BD")
+    data25_df.columns = (
+        data25_df.columns.astype(str)
+        .str.normalize('NFKD')
+        .str.encode('ascii', errors='ignore')
+        .str.decode('utf-8')
+        .str.replace('\n', ' ', regex=False)
+        .str.replace('.', '', regex=False)
+        .str.strip()
+    )
+    data25_df = data25_df.loc[:, [c for c in data25_df.columns if not str(c).strip().upper().startswith("UNNAMED")]]
+
+    columns25= [
+        "FUNDO","ZONA","FECHA DE SIEMBRA","DDS","FECHA DE PODA","DDP","FECHA DE HOY","Difdias","SEMANA",
+        "MODULO","TURNO","LOTE","VARIEDAD","ALTURA DE PLANTA","TASA DE CRECIMIENTO","N CANAS","N BROTES",
+        "LONG BROTES","TC BROTE","N RETONOS","LONG BROTES RETONOS",
+        "TC RETONOS","DIAMETRO","OBS"
+    ]
+    print(len(columns25))
+    data25_df = data25_df[columns25]
+
+    data25_df = data25_df.rename(columns={
+        "Difdias": "DIFERENCIA DE DIAS",
+        
+        "N CANAS": "NUMERO DE CAÑAS",
+        
+        "N BROTES":"NUMERO DE BROTES",
+        
+        "LONG BROTES":"ALTURA BROTES",
+        "TC BROTE": "BROTES TASA DE CRECIMIENTO",
+        "N RETONOS": "NUMERO DE RETOÑOS",
+        "LONG BROTES RETONOS":"ALTURA BROTES RETOÑO",
+        "TC RETONOS":"RETOÑOS TASA DE CRECIMIENTO",
+        "OBS":"OBSERVACION"
+
+
+    })
+
+
+
+
+    data25_df["FUNDO"] = data25_df["FUNDO"].fillna("NO ESPECIFICADO")
+    data25_df["FUNDO"] = data25_df["FUNDO"].str.strip()
+    data25_df["FUNDO"] = data25_df["FUNDO"].str.upper()
+    data25_df["FUNDO"] = data25_df["FUNDO"].replace({"TARA":"LAS BRISAS"})
+
+    data25_df["ZONA"] = data25_df["ZONA"].fillna("NO ESPECIFICADO")
+    data25_df["ZONA"] = data25_df["ZONA"].str.strip()
+    data25_df["ZONA"] = data25_df["ZONA"].str.upper()
+
+    data25_df["FECHA DE SIEMBRA"] = pd.to_datetime(data25_df["FECHA DE SIEMBRA"],errors="coerce").dt.date
+    data25_df["FECHA DE PODA"] = pd.to_datetime(data25_df["FECHA DE PODA"],errors="coerce").dt.date
+    data25_df["FECHA DE HOY"] = pd.to_datetime(data25_df["FECHA DE HOY"],errors="coerce").dt.date
+
+    data25_df["MODULO"] = data25_df["MODULO"].fillna("X")
+    data25_df["MODULO"] = data25_df["MODULO"].str.strip()
+    data25_df["MODULO"] = data25_df["MODULO"].str.upper()
+    data25_df["MODULO"] = data25_df["MODULO"].replace({
+        "I": "M1",
+        "II": "M2",
+        "III": "M3"
+    })
+    data25_df["TURNO"] = data25_df["TURNO"].fillna(0)
+    data25_df["LOTE"] = data25_df["LOTE"].fillna("x")
+    data25_df["LOTE"] = data25_df["LOTE"].astype(str)
+    data25_df["LOTE"] = data25_df["LOTE"].str.replace(".0","")
+    data25_df["LOTE"] = data25_df["LOTE"].apply(format_lote)
+    data25_df["OBSERVACION"] = data25_df["OBSERVACION"].fillna("-")
+    var_numeric =['ALTURA DE PLANTA',  'TASA DE CRECIMIENTO', 'NUMERO DE CAÑAS',
+         'NUMERO DE BROTES', 'ALTURA BROTES', 'BROTES TASA DE CRECIMIENTO',
+        'NUMERO DE RETOÑOS', 'ALTURA BROTES RETOÑO','RETOÑOS TASA DE CRECIMIENTO', 'DIAMETRO'
+    ]
+    for col_num in var_numeric:
+        data25_df[col_num] = pd.to_numeric(data25_df[col_num], errors='coerce').fillna(0)
+    return data25_df
+
+#st.write(data25_df.shape)
+#st.dataframe(data25_df)
+#print(data25_df.info())
+
+df = pd.read_excel(get_download_url_by_name(data, "Q BERRIES_BIOMETRIA 2025.xlsx"),sheet_name = "Registro",skiprows=1)
+df.columns = (
+        df.columns.astype(str)
+        .str.normalize('NFKD')
+        .str.encode('ascii', errors='ignore')
+        .str.decode('utf-8')
+        .str.replace('\n', ' ', regex=False)
+        .str.replace('.', '', regex=False)
+        .str.strip()
+        .str.upper()
+    )
+df = df.loc[:, [c for c in df.columns if not str(c).strip().upper().startswith("UNNAMED")]]
+columns25_qberries = [
+
+"SEM",
+"VARIEDAD",
+"FECHA DE EVALUACION",
+"MODULO",
+"TURNO",
+"LOTE",
+"FECHA DE SIEMBRA",
+"DDS" ,
+"TALLOS/ PLANTA",
+"ALTURA DE PLANTA",
+"DIAS ENTRE EVAL",
+"TC PLANTA (CM/DIA)",
+"BROTES/ PLANTA",
+"RETONOS/ PLANTA",
+
+"ALTURA DE BROTE APICAL",
+"TC BROTE APICAL (CM/DIA)",
+"ALTURA DE BROTE BASAL",
+"TC BROTE BASAL (CM/DIA)2",
+"OBSERVACIONES"
+
+]
+df = df[columns25_qberries]
+df = df.rename(columns = {
+    "SEM" : "SEMANA",
+    "DIAS ENTRE EVAL":"DIFERENCIA DE DIAS",
+    "TALLOS/ PLANTA":"NUMERO DE CAÑAS",
+    "TC PLANTA (CM/DIA)":"TASA DE CRECIMIENTO",
+    "BROTES/ PLANTA":"NUMERO DE BROTES",
+    "RETONOS/ PLANTA": "NUMERO DE RETOÑOS",
+
+})
+st.write(df.shape)
+st.write(df)
+st.write(list(df.columns))
+
+
+
+
+
+
+#url_parquet = get_download_url_by_name(data, "HUBCROP_2025_.parquet")
+    #url_excel_2 = get_download_url_by_name(data, "REGISTRO APLICACIONES NUTRICIONALES-FUNDO QBERRIES.xlsx")
+
 #download_files_c1()
-from  functions.proc_files_xlsx import pipeline_agritracer
-pipeline_agritracer()   
-st.write("actualizado")
+
 ##test_1 = test1(get_access_token())
 #st.write(test_1.shape)
 #st.dataframe(test_1)

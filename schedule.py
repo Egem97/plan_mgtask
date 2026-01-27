@@ -7,6 +7,7 @@ from functions.load_onedrive import *
 from functions.tipo_cambio import tipo_cambio_load_data
 from functions.proc_files_xlsx import pipeline_agritracer
 from functions.hubcrop import pipeline_hubcrop
+from functions.estacion_meteorologica import pipeline_meteorologia
 async def main():
     scheduler = AsyncIOScheduler()
     
@@ -15,6 +16,7 @@ async def main():
     scheduler.add_job(tipo_cambio_load_data, 'cron', hour=7, minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_hubcrop, 'cron', hour='9,15', minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_agritracer, 'cron', hour='8,14', minute=30, timezone='America/Lima')
+    scheduler.add_job(pipeline_meteorologia, 'cron', hour='8,20', minute=0, timezone='America/Lima')
     
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")

@@ -55,65 +55,37 @@ def agri_xlsx_data(path = "./data/download/"):
     return data
 
 def pipeline_agritracer():
-    import time
-    
     drive_id = "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR"
     folder_id = "01XOBWFSG7XR5BMRB6XNAJBU7Q7KXU7BO3"
+    download_files_c1()
+    def historico_agritracer(access_token):
+        data = listar_archivos_en_carpeta_compartida(
+            access_token,
+            drive_id,
+            folder_id
+        )
+        url_parquet = get_download_url_by_name(data, "AGRITRACER_2025.parquet")
+        #url_excel_2 = get_download_url_by_name(data, "REGISTRO APLICACIONES NUTRICIONALES-FUNDO QBERRIES.xlsx")
+        return pd.read_parquet(url_parquet, engine="pyarrow")
+    df = agri_xlsx_data()
+    access_token = get_access_token()
+    hdf = historico_agritracer(access_token)
+    df = pd.concat([hdf, df], ignore_index=True)
+    print(f"📤 Subiendo archivo 'AGRITRACER' a OneDrive...")
     
-    max_intentos = 5
-    
-    for intento in range(1, max_intentos + 1):
-        try:
-            print(f"🔄 Intento {intento} de {max_intentos}...")
-            
-            download_files_c1()
-            
-            def historico_agritracer(access_token):
-                data = listar_archivos_en_carpeta_compartida(
-                    access_token,
-                    drive_id,
-                    folder_id
-                )
-                url_parquet = get_download_url_by_name(data, "AGRITRACER_2025.parquet")
-                #url_excel_2 = get_download_url_by_name(data, "REGISTRO APLICACIONES NUTRICIONALES-FUNDO QBERRIES.xlsx")
-                return pd.read_parquet(url_parquet, engine="pyarrow")
-            
-            df = agri_xlsx_data()
-            access_token = get_access_token()
-            hdf = historico_agritracer(access_token)
-            df = pd.concat([hdf, df], ignore_index=True)
-            print(f"📤 Subiendo archivo 'AGRITRACER' a OneDrive...")
-            
-            resultado = subir_archivo_con_reintento(
-                access_token=access_token,
-                dataframe=df,
-                nombre_archivo="AGRITRACER_GENERAL.parquet",
-                drive_id=drive_id,
-                folder_id=folder_id,
-                type_file="parquet"
-            )
-            
-            if resultado:
-                print(f"✅ Proceso completado exitosamente en el intento {intento}")
-                return True
-            else:
-                print(f"⚠️ Error al subir el archivo en el intento {intento}")
-                if intento < max_intentos:
-                    tiempo_espera = 2 ** intento  # Espera exponencial: 2, 4, 8, 16 segundos
-                    print(f"⏳ Esperando {tiempo_espera} segundos antes del siguiente intento...")
-                    time.sleep(tiempo_espera)
-                    
-        except Exception as e:
-            print(f"❌ Error en el intento {intento}: {str(e)}")
-            if intento < max_intentos:
-                tiempo_espera = 2 ** intento  # Espera exponencial: 2, 4, 8, 16 segundos
-                print(f"⏳ Esperando {tiempo_espera} segundos antes del siguiente intento...")
-                time.sleep(tiempo_espera)
-            else:
-                print(f"❌ Todos los intentos fallaron después de {max_intentos} intentos")
-                return False
-    
-    print(f"❌ Proceso fallido después de {max_intentos} intentos")
-    return False
+    resultado = subir_archivo_con_reintento(
+        access_token=access_token,
+        dataframe=df,
+        nombre_archivo="AGRITRACER_GENERAL.parquet",
+        drive_id=drive_id,
+        folder_id=folder_id,
+        type_file="parquet"
+    )
+    if resultado:
+        print(f"✅ Proceso completado exitosamente")
+        return True
+    else:
+        print(f"❌ Error al subir el archivo")
+        return False
 
     

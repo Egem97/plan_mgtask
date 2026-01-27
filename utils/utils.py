@@ -331,3 +331,117 @@ def create_fecha_final(fecha,year_campania,year_fecha):
                     return datetime(2024, 1, 1)
                 else:
                     return datetime(2024, 12, 31)
+
+def clean_data_meteorologica(df):
+    fundos = {
+        "001D0AE0D1CD":"QBERRIES",
+        "001D0AE0986B":"CERROVERDE",
+        "001D0AE09AD9":"VISTAHERMOSA",
+        "001D0AE0D39F":"TARA"
+    }
+    df["ESTACIONES"] = df["did"].map(fundos)
+    df = df.drop(columns=["id","estacion_id","did","fecha_registro","estado"])
+    df["lluvia"] = df["lluvia"].astype(float)
+    df["lluvia"] = (df["lluvia"] / 10) *2
+    df["lluvia_h"] = df["lluvia_h"].astype(float)
+    df["lluvia_h"] = (df["lluvia_h"] / 10) *2
+    
+    df = df.rename(columns={
+        "fecha":"Fecha",
+        "tempExt":"Temp Ext(°C)",
+        "tempExt_h":"Temp Ext Alta (°C)",
+        "tempExt_l":"Temp Ext Baja (°C)",
+        "humOut":"Humedad Ext (%)",
+        "viento_vel_prom":"Viento Vel Prom (Km/h)",
+        "viento_dir":"Dir Viento",
+        "viento_vel_h":"Vel Viento Alta (Km/h)",
+        "viento_hi_dir":"Dir Viento Predominante",
+        "presion" : "Presión (mb)",
+        "tempIn":"Temp In (°C)",
+        "et":"ET (mm)",
+        "humIn":"Hum Int (%)",
+        "uv":"Indice UV",
+        "uv_h":"Indice UV Alto",
+        "forecast":"Pronóstico",
+        "radiacion":"Radiación (W/m2)",
+        "radiacion_h":"Radiación Alta (W/m2)",
+        "lluvia":"Lluvia (mm)",
+        "lluvia_h":"Indice de Lluvia (mm)"
+
+
+        }
+    )
+
+    # Convert columns to numeric if they aren't already
+    numeric_cols = [
+        "Temp Ext(°C)", "Temp Ext Alta (°C)", "Temp Ext Baja (°C)",
+        "Lluvia (mm)", "Indice de Lluvia (mm)", "Presión (mb)",
+        "Radiación (W/m2)", "Radiación Alta (W/m2)",
+        "Temp In (°C)", "Hum Int (%)", "Humedad Ext (%)",
+        "Viento Vel Prom (Km/h)", "Vel Viento Alta (Km/h)",
+        "Indice UV", "Indice UV Alto", "ET (mm)",
+        "Dir Viento Predominante","Dir Viento","viento"
+    ]
+
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+    df["Fecha"] = pd.to_datetime(df["Fecha"]).dt.date
+    # Calculate WindChill
+    # Formula uses Average Wind Speed based on reference check.
+    T = df["Temp Ext(°C)"]
+    V = df["Viento Vel Prom (Km/h)"]
+    V_high = df["Vel Viento Alta (Km/h)"]
+    Rh = df["Humedad Ext (%)"]
+    Rad = df["Radiación (W/m2)"]
+
+    wind_chill_calc = 13.12 + (0.6215 * T) - (11.37 * (V ** 0.16)) + (0.3965 * T * (V ** 0.16))
+    
+    df["WindChill (°C)"] = np.where(wind_chill_calc < T, wind_chill_calc, T)
+    df["WindChill (°C)"] = df["WindChill (°C)"].round(1)
+
+    # 1. Wind Run (km)
+    # Interval 30 min -> 0.5 hours
+    df["Wind Run (km)"] = V * 0.5
+
+    # 2. Heat Index (°C)
+    # NOAA logic: simplified
+    T_F = (T * 1.8) + 32
+    c1 = -42.379
+    c2 = 2.04901523
+    c3 = 10.14333127
+    c4 = -0.22475541
+    c5 = -6.83783e-3
+    c6 = -5.481717e-2
+    c7 = 1.22874e-3
+    c8 = 8.5282e-4
+    c9 = -1.99e-6
+    HI_F = (c1 + c2*T_F + c3*Rh + c4*T_F*Rh + c5*T_F**2 + c6*Rh**2 + 
+            c7*T_F**2*Rh + c8*T_F*Rh**2 + c9*T_F**2*Rh**2)
+    HI_C = (HI_F - 32) / 1.8
+    df["Heat Index (°C)"] = np.where(T < 26.7, T, HI_C)
+    df["Heat Index (°C)"] = df["Heat Index (°C)"].round(1)
+
+    # 3. THW Index (°C)
+    # Steadman's Formula matches reference when using GUST (High Wind Speed).
+    es = 6.112 * np.exp((17.67 * T) / (T + 243.5))
+    e = (Rh / 100.0) * es
+    ws = V_high / 3.6  # Use High Wind Speed for THW
+    df["THW (°C)"] = T + (0.33 * e) - (0.70 * ws) - 4.00
+    df["THW (°C)"] = df["THW (°C)"].round(1)
+
+    # 4. Solar Energy (Lg)
+    # 1 W/m2 = 0.001434 Ly/min. For 30 mins: 0.001434 * 30 = 0.04302
+    df["Energía Solar (Lg)"] = Rad * 0.04302
+    df["Energía Solar (Lg)"] = df["Energía Solar (Lg)"].round(2)
+
+    # 5. Dew Point (°C)
+    # Magnus formula
+    # a = 17.625, b = 243.04
+    a = 17.625
+    b = 243.04
+    alpha = np.log(Rh / 100.0) + ((a * T) / (b + T))
+    df["DewPoint (°C)"] = (b * alpha) / (a - alpha)
+    df["DewPoint (°C)"] = df["DewPoint (°C)"].round(1)
+
+    return df

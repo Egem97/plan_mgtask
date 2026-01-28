@@ -49,7 +49,7 @@ def download_files_c1():
         
         # Esperar a que el login se complete y cambie la URL
         print("⏳ Esperando autenticación...")
-        page.wait_for_url(lambda url: "auth/login" not in url, timeout=60000)
+        page.wait_for_url(lambda url: "auth/login" not in url, timeout=90000)
         #page.wait_for_load_state('networkidle')
 
         #https://alzaperu.agritracer.app/#/manoobra/reportes/campo/rpt-horas
@@ -136,7 +136,7 @@ def download_files_c1():
         print(f"⬇️ Iniciando descarga... Esperando archivo en: {save_path}")
         
         # Esperar la descarga al hacer click QBERRIES
-        with page.expect_download(timeout=60000) as download_info:
+        with page.expect_download(timeout=100000) as download_info:
             page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-header/div[2]/div/button").click()
         
         download = download_info.value
@@ -182,6 +182,3 @@ def download_files_c1():
             # Guardar
             download.save_as(save_path)
             print(f"💾 Archivo guardado exitosamente en: {save_path}")
-        
-
-#download_files_c1()

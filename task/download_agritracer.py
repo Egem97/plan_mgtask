@@ -57,7 +57,7 @@ def download_files_c1():
         # Debug: Imprimir opciones del sidebar para verificar
         print("📍 Inspeccionando sidebar...")
         # Intentar esperar a que el sidebar cargue
-        page.wait_for_selector("kt-aside-left ul li", timeout=10000)
+        page.wait_for_selector("kt-aside-left ul li", timeout=100000)
         
         # Opción 1: Navegación Directa (Más robusta si la URL es constante)
         # target_url = "https://alzaperu.agritracer.app/#/manoobra/reportes/campo/rpt-horas"
@@ -70,18 +70,19 @@ def download_files_c1():
         
         # Paso 1: Primer nivel (Mano de Obra / Operaciones ?)
         # Usamos locator más específico o texto si es posible. Por ahora, hacemos print del texto para confirmar.
-        sidebar_item_1 = page.locator("xpath=//html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[3]")
+        sidebar_item_1 = page.locator("xpath=//html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[4]")
         print(f"   Texto del item 1: '{sidebar_item_1.inner_text().strip()}'")
         sidebar_item_1.click()
         time.sleep(1) # Pequeña pausa para animación
-        sidebar_item_1.click()
-        time.sleep(1)
+        #sidebar_item_1.click()
+        
+        #time.sleep(1)
 
 
         print("📍 Navegando por sidebar (Paso 2)...")
         # Paso 2: Segundo nivel
         # Esperar que el submenu sea visible
-        sidebar_item_2 = page.locator("xpath=//html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[3]/div/ul/li")
+        sidebar_item_2 = page.locator("xpath=//html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[4]/div")
         # Asegurar que está visible antes de clickear
         if sidebar_item_2.is_visible():
              print(f"   Texto del item 2: '{sidebar_item_2.inner_text().strip()}'")
@@ -94,7 +95,9 @@ def download_files_c1():
 
         print("📍 Navegando por sidebar (Paso 3)...")
         # Paso 3: Tercer nivel
-        sidebar_item_3 = page.locator("xpath=//html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[3]/div/ul/li/div/ul/li[2]")
+        #sidebar_item_3 = page.locator("xpath=//html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[4]/div")
+        #/html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[4]/div/ul/li/div/ul/li[2]/a/span
+        sidebar_item_3 = page.locator("xpath=//html/body/kt-base/div/div/kt-aside-left/div/div/div/ul/li[4]/div/ul/li/div/ul/li[2]/a/span")
         if sidebar_item_3.is_visible():
             print(f"   Texto del item 3: '{sidebar_item_3.inner_text().strip()}'")
             sidebar_item_3.click()
@@ -136,7 +139,7 @@ def download_files_c1():
         print(f"⬇️ Iniciando descarga... Esperando archivo en: {save_path}")
         
         # Esperar la descarga al hacer click QBERRIES
-        with page.expect_download(timeout=100000) as download_info:
+        with page.expect_download(timeout=900000) as download_info:
             page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-header/div[2]/div/button").click()
         
         download = download_info.value

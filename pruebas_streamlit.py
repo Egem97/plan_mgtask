@@ -117,9 +117,10 @@ def clean_biometria_fundos():
     for col_num in var_numeric:
         data25_df[col_num] = pd.to_numeric(data25_df[col_num], errors='coerce').fillna(0)
     return data25_df
-
-#st.write(data25_df.shape)
-#st.dataframe(data25_df)
+st.subheader("LISTO")
+data25_df = clean_biometria_fundos()
+st.write(data25_df.shape)
+st.dataframe(data25_df)
 #print(data25_df.info())
 
 df = pd.read_excel(get_download_url_by_name(data, "Q BERRIES_BIOMETRIA 2025.xlsx"),sheet_name = "Registro",skiprows=1)

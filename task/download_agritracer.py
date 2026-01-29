@@ -116,15 +116,19 @@ def download_files_c1():
         page.fill(select_fecha_inicio_doom, "01/01/2026")
         time.sleep(2)
         #CAMBIAR TIPO DE REPORTE POR RESUMEN
+        page.wait_for_selector("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-body/div/form/div[1]/div/div[4]/div/mat-form-field/div[1]/div[2]", timeout=100000)
         page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-body/div/form/div[1]/div/div[4]/div/mat-form-field/div[1]/div[2]").click()
         time.sleep(1)
+        page.wait_for_selector("xpath=//html/body/div[3]/div[2]/div/div/mat-option[2]", timeout=100000)
         page.locator("xpath=//html/body/div[3]/div[2]/div/div/mat-option[2]").click()
         time.sleep(1)
         #"
+        page.wait_for_selector("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-header/div[2]/button", timeout=100000)
         page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-header/div[2]/button").click()
         #page.locator("xpath=///html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-header/div[2]/button").click()
         
-        page.locator("/html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-body/div/div/ejs-grid/div[3]/div/table/tbody/tr[1]/td[3]")
+        page.wait_for_selector("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-body/div/div/ejs-grid/div[3]/div/table/tbody/tr[1]/td[3]", timeout=100000)
+        page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-body/div/div/ejs-grid/div[3]/div/table/tbody/tr[1]/td[3]")
         time.sleep(1)
         # Definir ruta de descarga
         # Definir ruta de descarga dinámica (compatible Linux/Windows)

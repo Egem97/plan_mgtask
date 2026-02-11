@@ -139,3 +139,22 @@ def ma_load_data():
         print(f"❌ Error al subir el archivo")
         return False
 
+
+def meq_load_data():
+    access_token = get_access_token()
+    print(f"📤 Subiendo archivo 'MILIEQUIVALENTES' a OneDrive...")
+    meq= transform_kissflow_meq()
+    resultado = subir_archivo_con_reintento(
+        access_token=access_token,
+        dataframe=meq,
+        nombre_archivo="MILIEQUIVALENTES.parquet",
+        drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
+        type_file="parquet"
+    )
+    if resultado:
+        print(f"✅ Proceso completado exitosamente")
+        return True
+    else:
+        print(f"❌ Error al subir el archivo")
+        return False

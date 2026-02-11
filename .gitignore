@@ -117,5 +117,9 @@ exe_pipeline_agritracer.py
 pruebas_streamlit.py
 download_meteo.py
 pruebas_meteo.py
+fertiriego_kissflow.py
 
 *.parquet
+
+BIOMETRIA_2026.xlsx
+last_script.py

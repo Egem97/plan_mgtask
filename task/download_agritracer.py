@@ -3,7 +3,7 @@ import time
 import pandas as pd
 from io import BytesIO
 import os
-from utils.get_token import get_access_token, load_config
+from utils.get_token import load_config
 from utils.helpers import create_format_excel_in_memory
 
 config = load_config()
@@ -43,8 +43,8 @@ def download_files_c1():
         # Llenar formulario de login usando XPath
         print("👤 Llenando formulario de login...")
         # Usando XPath para encontrar campos
-        page.fill('xpath=//html/body/kt-auth/div/div/div[2]/kt-login/div/div/form/div[1]/mat-form-field/div[1]/div[2]/div/input', config['agritracer']['user'])
-        page.fill('xpath=//html/body/kt-auth/div/div/div[2]/kt-login/div/div/form/div[2]/mat-form-field/div[1]/div[2]/div/input', config['agritracer']['password'])
+        page.fill('xpath=//html/body/kt-auth/div/div/div[2]/kt-login/div/div/form/div[1]/mat-form-field/div[1]/div[2]/div/input', config['agritracer']['user'])#
+        page.fill('xpath=//html/body/kt-auth/div/div/div[2]/kt-login/div/div/form/div[2]/mat-form-field/div[1]/div[2]/div/input', config['agritracer']['password'])#
         page.click('xpath=//html/body/kt-auth/div/div/div[2]/kt-login/div/div/form/div[3]/button')
         
         # Esperar a que el login se complete y cambie la URL
@@ -189,3 +189,4 @@ def download_files_c1():
             # Guardar
             download.save_as(save_path)
             print(f"💾 Archivo guardado exitosamente en: {save_path}")
+

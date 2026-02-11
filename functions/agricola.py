@@ -128,6 +128,16 @@ def aplicativoNutricional():
     df["UNIDAD"] = df["UNIDAD"].str.upper()
 
     df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
+    df["VIA DE APLICACIÓN"] = df["VIA DE APLICACIÓN"].str.strip()
+    df["VIA DE APLICACIÓN"] = df["VIA DE APLICACIÓN"].replace(
+        {
+            "FUMIGACION":"FOLIAR",
+            "FUMIGACIÓN":"FOLIAR",
+            "FUMIGACION-ADICIONAL":"FOLIAR"
+        }
+    )
+    df["MES"] = df["MES"].str.upper()
+    
     return df
 
 
@@ -179,7 +189,7 @@ def FertiRiego():
     fertiriego_df["FUNDO"] = fertiriego_df["FUNDO"].fillna("NO ESPECIFICADO")
     fertiriego_df["FUNDO"] = fertiriego_df["FUNDO"].str.strip()
     fertiriego_df["FUNDO"] = fertiriego_df["FUNDO"].str.upper()
-    fertiriego_df["FUNDO"] = fertiriego_df["FUNDO"].replace({"QBERRIES":"LICAPA","CANYON BERRIES":"EL POTRERO"})
+    fertiriego_df["FUNDO"] = fertiriego_df["FUNDO"].replace({"QBERRIES":"LICAPA","CANYON BERRIES":"EL POTRERO","QBERRIES II":"LICAPA II"})
     fertiriego_df["FECHA"] = pd.to_datetime(fertiriego_df["FECHA"]).dt.date
 
     var_float = ['LECTURA DE HIDROMETRO INICIAL',
@@ -201,7 +211,6 @@ def FertiRiego():
     ]
 
     for c in var_float:
-        print(c)
         fertiriego_df[c] = fertiriego_df[c].fillna("0")
         fertiriego_df[c] = fertiriego_df[c].astype(str)
         fertiriego_df[c] = fertiriego_df[c].str.strip()
@@ -273,6 +282,7 @@ def parametros_campo():
     df_general["L MIN"] = df_general["L MIN"].fillna(0)
     df_general["L MAX"] = df_general["L MAX"].fillna(0)
     df_general["FECHA"] = pd.to_datetime(df_general["FECHA"]).dt.date
+    df_general["TIPO DE MUESTRA"] = df_general["TIPO DE MUESTRA"].str.upper()
     df_general["INDEX"] = df_general["TIPO DE MUESTRA"].replace({
         "CANAL":1,
         "DECANTADOR":2,
@@ -314,7 +324,7 @@ def drenaje_campo():
     df["FUNDO"] = df["FUNDO"].fillna("NO ESPECIFICADO")
     df["FUNDO"] = df["FUNDO"].str.strip()
     df["FUNDO"] = df["FUNDO"].str.upper()
-    df["FUNDO"] = df["FUNDO"].replace({"CANYON BERRIES":"EL POTRERO","QBERRIES":"LICAPA"})
+    df["FUNDO"] = df["FUNDO"].replace({"CANYON BERRIES":"EL POTRERO","QBERRIES":"LICAPA","QBERRIES II":"LICAPA II"})
 
     df["MODULO"] = df["MODULO"].fillna("MX")
     df["MODULO"] = df["MODULO"].str.strip()
@@ -343,8 +353,8 @@ def drenaje_campo():
     cols_num_drenaje = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
         'VOL DREN.1', 'VOL DREN. 2', 'VOLUMEN AFORO', '% DRENAJE REAL',
         '% MÍNIMO', '% MÁXIMO']
-    import streamlit as st
-    st.write(df)
+    #import streamlit as st
+    #st.write(df)
     for c in cols_num_drenaje:
         print(c)
         df[c] = df[c].fillna(0)
@@ -411,8 +421,7 @@ def data_cosecha():
         df.columns = [str(c).strip().upper() for c in df.columns]
         if file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
             df = lacolina_transform(df)
-        print(file)
-        print(df.shape)
+        
         data = pd.concat([data, df], axis=0)
 
     # Convertir FECHA (puede venir como serial Excel tipo "45968") a datetime
@@ -446,7 +455,7 @@ def data_cosecha():
 
     data["MODULO"] = data["MODULO"].fillna("MX")
     data["MODULO"] = data["MODULO"].replace({"I":"M1","II":"M2"})
-    print(data["MODULO"].unique())
+    
     data["TURNO"] = data["TURNO"].fillna(0)
     cols_numeric = ['HA REAL', 'KG/HA REAL', 'HA', 'JORNAL', 'JABAS', 'JARRAS',
         'KILOS BRUTOS', 'KILOS /HA', 'JARRAS/JR', 'KG/JR', 'DESCARTE']
@@ -677,3 +686,120 @@ def clean_cosecha_2():
     data = data.rename(columns={"KG+DESCARTE(KILOS BRUTOS)": "KILOS BRUTOS"})
     data["FUNDO"] = data["FUNDO"].replace({"QBERRIES":"LICAPA","GAP":"GAP BERRIES","CANYON BERRIES":"EL POTRERO"})
     return data
+
+
+def kissflow_apl_nutricionales(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT4N7QGTHMP56JDY6Q3IMPH4SJGN"
+    )
+    file_general = get_download_url_by_name(data, "Registros Kissflow - Aplicaciones nutricionales General.xlsx")
+    file_qberries = get_download_url_by_name(data, "Registros Kissflow - Aplicaciones nutricionales Qberries.xlsx")
+    general_ap_df = pd.read_excel(file_general)
+    qberries_ap_df = pd.read_excel(file_qberries)
+
+    return  pd.concat([general_ap_df,qberries_ap_df],axis=0)
+
+def kissflow_drenajes(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT4N7QGTHMP56JDY6Q3IMPH4SJGN"
+    )
+    file_general = get_download_url_by_name(data, "Registros Kissflow - Drenajes general.xlsx")
+    file_qberries = get_download_url_by_name(data, "Registros Kissflow - Drenajes Qberries.xlsx")
+    general_ap_df = pd.read_excel(file_general)
+    qberries_ap_df = pd.read_excel(file_qberries)
+
+    return  pd.concat([general_ap_df,qberries_ap_df],axis=0)
+
+def kissflow_muestras(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT4N7QGTHMP56JDY6Q3IMPH4SJGN"
+    )
+    file_general = get_download_url_by_name(data, "Registros Kissflow - PH y CE general.xlsx")
+    file_qberries = get_download_url_by_name(data, "Registros Kissflow - PH y CE Qberries.xlsx")
+    general_ap_df = pd.read_excel(file_general)
+    qberries_ap_df = pd.read_excel(file_qberries)
+
+    return  pd.concat([general_ap_df,qberries_ap_df],axis=0)
+
+
+
+def transform_kissflow_nutricionales():
+    access_token = get_access_token()
+    df = kissflow_apl_nutricionales(access_token)
+    df = df[(df["FECHA"]!="Text data")&(df["FECHA"].notna())]
+    df["CAMPAÑA"] = df["CAMPAÑA"].str.upper()
+    df["FECHA"] = pd.to_datetime(df["FECHA"], format="%Y-%m-%d").dt.date
+    df["TURNO"] = df["TURNO"].str[1:].astype(int)
+    df["LOTE"] = df["LOTE"].str.replace("LT","LOTE ")
+    df["OBSERVACION"] = df["OBSERVACION"].fillna("-")
+    df["OBJETIVO"] = df["OBJETIVO"].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
+    df["OBJETIVO"] = df["OBJETIVO"].str.upper()
+    df.columns = [str(c).strip().upper() for c in df.columns]
+    apl_nutri_historico_df = pd.read_parquet("./data/APLICACIONES NUTRICIONALES.parquet")
+    dff = pd.concat([apl_nutri_historico_df,df])
+    return dff
+
+
+def transform_kissflow_drenajes():
+    access_token = get_access_token()
+    df = kissflow_drenajes(access_token)
+    df.columns = [str(c).strip().upper() for c in df.columns]
+    df = df[df["FECHA"].notna()]
+    df["MODULO"] = df["MODULO"].fillna("MX")
+    df["MODULO"] = df["MODULO"].str.strip()
+    df["MODULO"] = df["MODULO"].str.upper()
+    df["TURNO"] = df["TURNO"].str[1:].astype(int)
+    df["TURNO"] = df["TURNO"].astype(str)
+    df["UBICACIÓN"] = df["UBICACIÓN"].fillna("NO ESPECIFICADO")
+    df["UBICACIÓN"] = df["UBICACIÓN"].str.strip()
+    df["UBICACIÓN"] = df["UBICACIÓN"].str.upper()
+
+    cols = ['FECHA','FUNDO', 'MODULO', 'TURNO', 'VARIEDAD',
+        'UBICACIÓN']
+    cols_float = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
+        'VOL DREN.1', 'VOL DREN. 2', 'VOLUMEN AFORO', '% DRENAJE REAL',
+        '% MÍNIMO', '% MÁXIMO','VALVULA']
+    for col in cols_float:
+        df[col] = df[col].astype(float)
+
+    df['AÑO'] = df['AÑO'].astype(int)
+    df['SEMANA'] = df['SEMANA'].astype(int)
+    drenajes_historico_df = pd.read_parquet("./data/DRENAJES.parquet")
+    dff = pd.concat([drenajes_historico_df,df])
+    return dff
+
+def transform_kissflow_meq():
+    access_token = get_access_token()
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT4N7QGTHMP56JDY6Q3IMPH4SJGN"
+    )
+    df = pd.read_excel(get_download_url_by_name(
+        data, 
+        "Registros Kissflow - MEQ.xlsx"),
+        #sheet_name = "REGISTRO",
+    )
+    df.columns = [str(c).strip().upper() for c in df.columns]
+    dff = pd.read_excel("./data/MEQ - ZONA SUR.xlsx")
+    dff = dff.drop(columns = ["Unnamed: 0"])
+    dff.columns = [str(c).strip().upper() for c in dff.columns]
+    meq_dff = pd.concat([df,dff],axis=0)
+    meq_dff["FUNDO"] = meq_dff["FUNDO"].str.strip()
+    meq_dff["FUNDO"] = meq_dff["FUNDO"].replace("GAP","GAP BERRIES")
+    meq_dff["FECHA"] = pd.to_datetime(meq_dff["FECHA"],errors='coerce').dt.date
+    cols_numeric = ['NH4', 'NO3', 'K', 'CA', 'MG', 'SO4', 'H2PO4','% NH4', '%NO3', 'N/K', 'CA/MG']
+    for col in cols_numeric:
+        meq_dff[col] = meq_dff[col].fillna(0)
+        meq_dff[col] = pd.to_numeric(meq_dff[col],errors='coerce')
+    
+    meq_dff = meq_dff.melt(id_vars=["FUNDO","FECHA"],value_vars=cols_numeric,var_name="Atributo",value_name="Valor")
+    meq_dff["Atributo"] = meq_dff["Atributo"].replace({"CA":"Ca","MG":"Mg"})
+    meq_dff = meq_dff[meq_dff["Valor"]>0]
+    return meq_dff

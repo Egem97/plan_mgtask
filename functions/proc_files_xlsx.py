@@ -71,6 +71,8 @@ def pipeline_agritracer():
     access_token = get_access_token()
     hdf = historico_agritracer(access_token)
     df = pd.concat([hdf, df], ignore_index=True)
+    df["DOCUMENTO"] = df["DOCUMENTO"].astype(str)
+    df["DOCUMENTO"] = df["DOCUMENTO"].str.replace(".0","")
     print(f"📤 Subiendo archivo 'AGRITRACER' a OneDrive...")
     
     resultado = subir_archivo_con_reintento(

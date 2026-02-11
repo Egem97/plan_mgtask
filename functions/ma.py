@@ -16,7 +16,7 @@ from utils.get_token import get_access_token
 def read_ma():
     access_token = get_access_token()
     files = [
-        "MA BIG BERRIES.xlsx",
+        "MA BIG BERRIES.xlsx",#["MA BIG BERRIES","xlsx"]
         "MA CANYON.xlsx",
         "MA EXCELLENCE.xlsx",
         "MA GAP.xlsx",

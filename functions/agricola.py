@@ -728,6 +728,16 @@ def kissflow_muestras(access_token):
     return  pd.concat([general_ap_df,qberries_ap_df],axis=0)
 
 
+def kissflow_riego_fertirriego(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT4N7QGTHMP56JDY6Q3IMPH4SJGN"
+    )
+    file_general = get_download_url_by_name(data, "Registros Kissflow - Riego y fertirriego.xlsx")
+    return  pd.read_excel(file_general)
+
+
 
 def transform_kissflow_nutricionales():
     access_token = get_access_token()
@@ -735,11 +745,19 @@ def transform_kissflow_nutricionales():
     df = df[(df["FECHA"]!="Text data")&(df["FECHA"].notna())]
     df["CAMPAÑA"] = df["CAMPAÑA"].str.upper()
     df["FECHA"] = pd.to_datetime(df["FECHA"], format="%Y-%m-%d").dt.date
-    df["TURNO"] = df["TURNO"].str[1:].astype(int)
-    df["LOTE"] = df["LOTE"].str.replace("LT","LOTE ")
+    #df["TURNO"] = df["TURNO"].str[1:].astype(int)
+    #df["LOTE"] = df["LOTE"].str.replace("LT","LOTE ")
+    df["LOTE"] = df["LOTE"].astype(str)
+    df["LOTE"] = df["LOTE"].apply(format_lote)
+    df["MODULO"] = df["MODULO"].fillna(0)
+    df["MODULO"] = "M"+df["MODULO"].astype(int).astype(str)
     df["OBSERVACION"] = df["OBSERVACION"].fillna("-")
     df["OBJETIVO"] = df["OBJETIVO"].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
     df["OBJETIVO"] = df["OBJETIVO"].str.upper()
+
+    df["OBJETIVO"] = df["OBJETIVO"].fillna("-")
+    df["VOLUMEN"] = df["VOLUMEN"].fillna(0)
+    df["GRUPO"] = df["GRUPO"].replace("BIOESTIMULANTE","BIOESTIMULATES")
     df.columns = [str(c).strip().upper() for c in df.columns]
     apl_nutri_historico_df = pd.read_parquet("./data/APLICACIONES NUTRICIONALES.parquet")
     dff = pd.concat([apl_nutri_historico_df,df])
@@ -751,26 +769,31 @@ def transform_kissflow_drenajes():
     df = kissflow_drenajes(access_token)
     df.columns = [str(c).strip().upper() for c in df.columns]
     df = df[df["FECHA"].notna()]
-    df["MODULO"] = df["MODULO"].fillna("MX")
-    df["MODULO"] = df["MODULO"].str.strip()
-    df["MODULO"] = df["MODULO"].str.upper()
-    df["TURNO"] = df["TURNO"].str[1:].astype(int)
+    df["MODULO"] = df["MODULO"].fillna(0)
+    df["MODULO"] = df["MODULO"].astype(int)
+    df["MODULO"] = "M"+df["MODULO"].astype(str)
+    df["TURNO"] = df["TURNO"].fillna(0)
     df["TURNO"] = df["TURNO"].astype(str)
+    df["FUNDO"] = df["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
+    #df["TURNO"] = df["TURNO"].astype(str)
     df["UBICACIÓN"] = df["UBICACIÓN"].fillna("NO ESPECIFICADO")
     df["UBICACIÓN"] = df["UBICACIÓN"].str.strip()
     df["UBICACIÓN"] = df["UBICACIÓN"].str.upper()
-
-    cols = ['FECHA','FUNDO', 'MODULO', 'TURNO', 'VARIEDAD',
-        'UBICACIÓN']
+    df["VALVULA"] = df["VALVULA"].fillna(0)
+    df["VALVULA"] = df["VALVULA"].astype(int)
+    df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
+    df["VARIEDAD"] = df["VARIEDAD"].str.strip()
+    df["VARIEDAD"] = df["VARIEDAD"].str.upper()
+    
     cols_float = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
         'VOL DREN.1', 'VOL DREN. 2', 'VOLUMEN AFORO', '% DRENAJE REAL',
         '% MÍNIMO', '% MÁXIMO','VALVULA']
     for col in cols_float:
         df[col] = df[col].astype(float)
-
+    df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
     df['AÑO'] = df['AÑO'].astype(int)
     df['SEMANA'] = df['SEMANA'].astype(int)
-    drenajes_historico_df = pd.read_parquet("./data/DRENAJES.parquet")
+    drenajes_historico_df = pd.read_parquet("./data/DRENAJE.parquet")
     dff = pd.concat([drenajes_historico_df,df])
     return dff
 
@@ -803,3 +826,81 @@ def transform_kissflow_meq():
     meq_dff["Atributo"] = meq_dff["Atributo"].replace({"CA":"Ca","MG":"Mg"})
     meq_dff = meq_dff[meq_dff["Valor"]>0]
     return meq_dff
+
+
+def completed_kissflow_muestras():
+    access_token = get_access_token()
+    df = kissflow_muestras(access_token)
+
+
+    df["FUNDO"] = df["FUNDO"].fillna("NO ESPECIFICADO")
+    df["FUNDO"] = df["FUNDO"].str.strip()
+    df["TIPO DE MUESTRA"] = df["TIPO DE MUESTRA"].fillna("NO ESPECIFICADO")
+    df["TIPO DE MUESTRA"] = df["TIPO DE MUESTRA"].str.strip()
+    df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
+    df["VARIEDAD"] = df["VARIEDAD"].str.strip()
+    df["FUNDO"] = df["FUNDO"].fillna("NO ESPECIFICADO")
+    df["FUNDO"] = df["FUNDO"].str.strip()
+    df["FUNDO"] = df["FUNDO"].str.upper()
+    df["FUNDO"] = df["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
+    df["MES"] = df["MES"].fillna("NO ESPECIFICADO")
+    df["MES"] = df["MES"].str.strip()
+    df["MES"] = df["MES"].str.upper()
+    df["MES"] = df["MES"].str.upper()
+    df["PROFUNDIDAD"] = df["PROFUNDIDAD"].fillna("0")
+    df["PROFUNDIDAD"] = (
+            df["PROFUNDIDAD"].astype(str)
+            .str.extract(r"(\d+(?:\.\d+)?)", expand=False)
+            .fillna("0")
+            .astype(float)
+            .astype(int)
+    )
+    df["MODULO"] = df["MODULO"].fillna(0)
+    df["MODULO"] = df["MODULO"].astype(int)
+    df["MODULO"] = "M"+df["MODULO"].astype(str)
+    df["TURNO"] = df["TURNO"].fillna(0)
+    df["TURNO"] = df["TURNO"].astype(int)
+    df["TURNO"] = df["TURNO"].astype(str)
+    mask_colina_ = df["FUNDO"] == "LA COLINA"
+    df.loc[mask_colina_ & df["TURNO"].isin(["1","2","3","4","5","6","7","8","9","10"]), "TURNO"] = "1"
+        
+    df["PARAMETRO"] = df["PARAMETRO"].fillna("XX")
+    df["PARAMETRO"] = df["PARAMETRO"].str.upper()
+    df["LECTURA"] = df["LECTURA"].fillna(0)
+    df["L MIN"] = df["L MIN"].fillna(0)
+    df["L MAX"] = df["L MAX"].fillna(0)
+    df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
+    df["TIPO DE MUESTRA"] = df["TIPO DE MUESTRA"].str.upper()
+    df["INDEX"] = df["TIPO DE MUESTRA"].replace({
+            "CANAL":1,
+            "DECANTADOR":2,
+            "REACTOR":3,
+            "RESERVORIO":4,
+            "FILTRADO":5,
+            "SFR":6,
+            "SS":7,
+            "DRENAJE":8,
+            "SUSTRATO":9,
+            "SOL. FIBRA COCO":10,
+            "POZO 01":11,
+            "OSMOSIS":12,
+            "GOTERO":13,
+            
+            "SALMUERA":14,
+            "POZO 02":15,
+            "POZO 3":16,
+            "POZO 4":17,
+            "POZO EXISTENTE":18,
+            "OSMOSIS 1":19,
+            "OSMOSIS 2":20,
+            "NO ESPECIFICADO":99
+    })
+
+    hist_df = pd.read_parquet("./data/MUESTRAS.parquet")
+    return pd.concat([df,hist_df])
+
+
+def transform_kissflow_insumos():
+    #df = kissflow_riego_fertirriego(get_access_token())
+    fertiriego_historico_df = pd.read_parquet("./data/INSUMOS.parquet")
+    return fertiriego_historico_df

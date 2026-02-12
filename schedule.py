@@ -12,7 +12,7 @@ async def main():
     scheduler = AsyncIOScheduler()
     
     scheduler.add_job(cosecha_load_data, 'interval', minutes=15)
-    #scheduler.add_job(fertiriego_load_data, 'interval', minutes=45)
+    scheduler.add_job(load_kissflow_fertirriego, 'interval', minutes=45)
     scheduler.add_job(tipo_cambio_load_data, 'cron', hour=7, minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_hubcrop, 'cron', hour='9,15', minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_agritracer, 'cron', hour='8,17', minute=30, timezone='America/Lima')

@@ -171,17 +171,21 @@ def qberries1_biometria_2026(data):
     )
     df["FUNDO"] = "LICAPA"
     df["FECHA DE PLANTACION"] = None
+    print("qberries 1cols")
+    print(df.columns)
     return df
 
 def qberries2_biometria_2026(data):
 
     df = pd.read_excel(get_download_url_by_name(
         data, 
-        "REGISTRO DE BIOMETRÍA ETAPA O2_CAMPAÑA 2026 (1).xlsx"),
+        "REGISTRO DE BIOMETRÍA ETAPA O2_CAMPAÑA 2026.xlsx"),
         sheet_name = "REGISTRO",
         skiprows=1,
     )
     df["FUNDO"] = "LICAPA II"
+    
+
     return df
 
 #@st.cache_data(persist=True)
@@ -306,7 +310,7 @@ def pipeline_biometria():
     else:
         qberries_biometria1_26_df = qberries_biometria1_26_df[qbe26_columns+['SEMANA POST PODA']]
     ###################################################################################################
-    """
+    
     qberries_biometria_26_df = qberries2_biometria_2026(data = data)    
     qberries_biometria_26_df.columns = (
             qberries_biometria_26_df.columns.astype(str)
@@ -325,6 +329,13 @@ def pipeline_biometria():
         (qberries_biometria_26_df["TURNO"].notna())&
         (qberries_biometria_26_df["LOTE"].notna())
     ]
+    qberries_biometria_26_df = qberries_biometria_26_df.rename(columns={
+        
+        "DIF DIAS":"Difdias",
+        "ALTURA DE PLANTA (cm)":"ALTURA DE PLANTA CM",
+        "LONG BROTES RETONOS (cm)":"LONG BROTES RETONOS/CM",
+        "TC RETONOS (cm)":"TC RETONOS/CM"
+    })
     qberries_biometria_26_df = qberries_biometria_26_df.rename(columns={"SEM":"SEMANA","LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","DDP":"DDPL"})
     qberries_biometria_26_df["ZONA"] = "PAIJAN"
     #['FECHA DE PODA', 'DDPO', 'RETONOS POR PLANTA']
@@ -340,7 +351,7 @@ def pipeline_biometria():
     ]
     qberries_biometria_26_df = qberries_biometria_26_df[qbe26_columns]
     qberries_biometria_26_df["FECHA DE PODA"] = None
-    """
+    
     ##################################################################################################33
     general_df = biometria_2026(data = data)
     print("FUNDOS")
@@ -354,7 +365,7 @@ def pipeline_biometria():
         'LONG BROTES RETONOS/CM', 
         'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES']
     general_df= general_df[g26_columns]
-    dff = pd.concat([qberries_biometria1_26_df,general_df])#,qberries_biometria_26_df
+    dff = pd.concat([qberries_biometria1_26_df,qberries_biometria_26_df,general_df])#,qberries_biometria_26_df
     dff = dff.rename(columns = {"ANO":"AÑO","Difdias":"DIFERENCIA DE DIAS"})
     dff["FUNDO"] = dff["FUNDO"].str.upper()
     dff["ZONA"] = dff["ZONA"].fillna("NO ESPECIFICADO")

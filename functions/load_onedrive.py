@@ -3,8 +3,7 @@ import logging
 from utils.get_api import subir_archivo_con_reintento
 from utils.get_token import get_access_token
 from functions.agricola import *
-from functions.recursos_humanos import read_costo_laboral
-from functions.ma import read_ma
+
 from functions.biometria import pipeline_biometria
 
 

@@ -4,7 +4,7 @@ from functions.proc_files_xlsx import agritacer_data_detalle,agri_xlsx_data
 from utils.helpers import get_download_url_by_name
 from utils.utils import *
 from functions.recursos_humanos import read_costo_laboral
-from functions.load_onedrive import costo_laboral_diario_load,kg_campo_load,ma_load_data
+
 from functions.agricola import cosecha_datasets,clean_cosecha_2
 import pandas as pd
 import os
@@ -171,8 +171,8 @@ def qberries1_biometria_2026(data):
     )
     df["FUNDO"] = "LICAPA"
     df["FECHA DE PLANTACION"] = None
-    print("qberries 1cols")
-    print(df.columns)
+    df = df.rename(columns={"SDPO":"SPP",})
+   
     return df
 
 def qberries2_biometria_2026(data):
@@ -249,7 +249,7 @@ def biometria_2026(data):
         .str.strip()
     )
     
-    rename_source = {"LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","OBS":"OBSERVACIONES","DDP":"DDPL"}
+    rename_source = {"LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","OBS":"OBSERVACIONES"}
     sj1_df = sj1_df.rename(columns=rename_source)
     canyon_df = canyon_df.rename(columns=rename_source)
     gap_df = gap_df.rename(columns=rename_source)
@@ -274,7 +274,7 @@ def pipeline_biometria():
         "01KM43WTYIAMKEILBABBD3YV6E7PSSUZLG"
     )
     qbe26_columns = [
-        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION', 'DDPL',   'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
+        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION','SPP',    'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
         'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD',
         
         'N CANAS',
@@ -285,8 +285,9 @@ def pipeline_biometria():
     ]
     #########################################################################################################    
     qberries_biometria1_26_df = qberries1_biometria_2026(data = data)
-    print("QBERRIES1")
-    print(list(qberries_biometria1_26_df.columns))
+    
+    #print("QBERRIES1")
+    #print(list(qberries_biometria1_26_df.columns))
     qberries_biometria1_26_df.columns = (
             qberries_biometria1_26_df.columns.astype(str)
             .str.normalize('NFKD')
@@ -302,7 +303,7 @@ def pipeline_biometria():
         (qberries_biometria1_26_df["TURNO"].notna())&
         (qberries_biometria1_26_df["LOTE"].notna())
     ]
-    qberries_biometria1_26_df = qberries_biometria1_26_df.rename(columns={"SEM":"SEMANA","LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","DDP":"DDPL"})
+    qberries_biometria1_26_df = qberries_biometria1_26_df.rename(columns={"SEM":"SEMANA","LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)"})
     qberries_biometria1_26_df["ZONA"] = "PAIJAN"
     if "SEMANA POST PODA" not in qberries_biometria1_26_df.columns:
         qberries_biometria1_26_df["SEMANA POST PODA"] = None
@@ -321,8 +322,8 @@ def pipeline_biometria():
             .str.replace('.', '', regex=False)
             .str.strip()
         )
-    print("QBERRIES2")
-    print(list(qberries_biometria_26_df.columns))
+    #print("QBERRIES2")
+    #print(list(qberries_biometria_26_df.columns))
     qberries_biometria_26_df = qberries_biometria_26_df[
         (qberries_biometria_26_df["FECHA DE EVALUACION"].notna())&
         (qberries_biometria_26_df["MODULO"].notna())&
@@ -336,11 +337,11 @@ def pipeline_biometria():
         "LONG BROTES RETONOS (cm)":"LONG BROTES RETONOS/CM",
         "TC RETONOS (cm)":"TC RETONOS/CM"
     })
-    qberries_biometria_26_df = qberries_biometria_26_df.rename(columns={"SEM":"SEMANA","LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","DDP":"DDPL"})
+    qberries_biometria_26_df = qberries_biometria_26_df.rename(columns={"SEM":"SEMANA","LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)"})
     qberries_biometria_26_df["ZONA"] = "PAIJAN"
     #['FECHA DE PODA', 'DDPO', 'RETONOS POR PLANTA']
     qbe26_columns = [
-        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION', 'DDPL',   'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
+        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION','SPP',    'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
         'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD',
         
         'N CANAS',
@@ -354,10 +355,11 @@ def pipeline_biometria():
     
     ##################################################################################################33
     general_df = biometria_2026(data = data)
-    print("FUNDOS")
-    print(list(general_df.columns))
+    general_df["SPP"] = None
+    #print("FUNDOS")
+    #print(list(general_df.columns))
     g26_columns = [
-        'FUNDO', 'ZONA', 'ANO', 'FECHA DE PLANTACION', 'DDPL', 'FECHA DE PODA',  'EVALUACION ANTERIOR', 'FECHA DE EVALUACION', 
+        'FUNDO', 'ZONA', 'ANO', 'FECHA DE PLANTACION','SPP', 'FECHA DE PODA',  'EVALUACION ANTERIOR', 'FECHA DE EVALUACION', 
         'Difdias', 'SEMANA','SEMANA POST PODA', 'MODULO', 'TURNO', 'LOTE', 'VARIEDAD', 
         'N CANAS', 'BROTES DE CANAS',
         'TC BROTE (F1)','LONG BROTES (F1)','N BROTES (F1)', 'TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',
@@ -398,6 +400,7 @@ def pipeline_biometria():
     for col_ in cols_numeric:
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
     dff = dff.drop(columns = ["EVALUACION ANTERIOR"])
+    
     return dff
 
 

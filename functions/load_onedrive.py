@@ -5,6 +5,7 @@ from utils.get_token import get_access_token
 from functions.agricola import *
 from functions.recursos_humanos import read_costo_laboral
 from functions.ma import read_ma
+from functions.biometria import pipeline_biometria
 
 
 
@@ -97,26 +98,6 @@ def kg_campo_load():
 
 
 
-
-def costo_laboral_diario_load():
-    access_token = get_access_token()
-    print(f"📤 Subiendo archivo 'COSTO LABORAL DIARIO' a OneDrive...")
-    costo_laboral_diario= read_costo_laboral()
-    resultado = subir_archivo_con_reintento(
-        access_token=access_token,
-        dataframe=costo_laboral_diario,
-        nombre_archivo="COSTO LABORAL DIARIO.parquet",
-        drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
-        #folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
-        folder_id="01XOBWFSAIDPG5FEZ5AJGK24FSIZY5YRUD",
-        type_file="parquet"
-    )
-    if resultado:
-        print(f"✅ Proceso completado exitosamente")
-        return True
-    else:
-        print(f"❌ Error al subir el archivo")
-        return False
 
 
 def ma_load_data():
@@ -222,3 +203,22 @@ def load_kissflow_fertirriego():
     load_kissflow_apl_nutricionales()
     meq_load_data()
     print("FINALIZADO FERTIRRIEGO")
+
+
+def load_biometria_2026():
+    print(f"📤 Subiendo archivos 'BIOMETRIA 2026' a OneDrive...")
+    
+    upload = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=pipeline_biometria(),
+        nombre_archivo="BIOMETRIA_2026.parquet",
+        drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        folder_id="01XOBWFSEADJMTLAK7QNE3PNMDWQT2ZLF2",
+        type_file="parquet"
+    )
+    if upload:
+        print(f"✅ Proceso completado exitosamente")
+        return True
+    else:
+        print(f"❌ Error al subir el archivo")
+        return False

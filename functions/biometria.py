@@ -234,6 +234,21 @@ def biometria_2026(data):
         .str.replace('.', '', regex=False)
         .str.strip()
     )
+    sj2_df = pd.read_excel(get_download_url_by_name(
+        data, 
+        "BIOMETRIA San Jose II-2026.xlsx"),
+        sheet_name = "REGISTRO",
+    )
+    sj2_df.columns = (
+        sj2_df.columns.astype(str)
+        .str.normalize('NFKD')
+        .str.encode('ascii', errors='ignore')
+        .str.decode('utf-8')
+        .str.replace('\n', ' ', regex=False)
+        .str.replace('.', '', regex=False)
+        .str.strip()
+    )
+
     sp_df = pd.read_excel(get_download_url_by_name(
         data, 
         "BIOMETRIA FUNDO SAN PEDRO 2026.xlsx"),
@@ -248,15 +263,33 @@ def biometria_2026(data):
         .str.replace('.', '', regex=False)
         .str.strip()
     )
+
+    tara_df = pd.read_excel(get_download_url_by_name(
+        data, 
+        "BIOMETRIA TARA FARM 2026.xlsx"),
+        sheet_name = "REGISTRO",
+    )
+    tara_df.columns = (
+        tara_df.columns.astype(str)
+        .str.normalize('NFKD')
+        .str.encode('ascii', errors='ignore')
+        .str.decode('utf-8')
+        .str.replace('\n', ' ', regex=False)
+        .str.replace('.', '', regex=False)
+        .str.strip()
+    )
+
     
     rename_source = {"LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","OBS":"OBSERVACIONES"}
     sj1_df = sj1_df.rename(columns=rename_source)
     canyon_df = canyon_df.rename(columns=rename_source)
     gap_df = gap_df.rename(columns=rename_source)
     sp_df = sp_df.rename(columns=rename_source)
+    sj2_df = sj2_df.rename(columns=rename_source)
+    tara_df = tara_df.rename(columns=rename_source)
 
     sj1_df = sj1_df.drop(columns=["No DE BROTES TOTALES/CANAS"])
-    dff = pd.concat([canyon_df,gap_df,sj1_df,sp_df])
+    dff = pd.concat([canyon_df,gap_df,sj1_df,sp_df,sj2_df,tara_df])
     dff = dff.drop(columns=["PRESENTACION (CC)","PRECENTACION (CC)"])
     dff = dff[
         (dff["FECHA DE EVALUACION"].notna())&

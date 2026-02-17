@@ -297,6 +297,8 @@ def biometria_2026(data):
         (dff["TURNO"].notna())&
         (dff["LOTE"].notna())
     ]
+    dff["FUNDO"] = dff["FUNDO"].replace("TARA FARM","LAS BRISAS")
+    
     return dff
 
 
@@ -388,6 +390,7 @@ def pipeline_biometria():
     
     ##################################################################################################33
     general_df = biometria_2026(data = data)
+    general_df["FUNDO"] = general_df["FUNDO"].replace("Tara Farm","LAS BRISAS")
     general_df["SPP"] = None
     #print("FUNDOS")
     #print(list(general_df.columns))

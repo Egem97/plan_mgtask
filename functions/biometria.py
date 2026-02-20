@@ -166,6 +166,7 @@ def qberries1_biometria_2026(data):
     df = pd.read_excel(get_download_url_by_name(
         data, 
         "REGISTRO DE BIOMETRÍA ETAPA O1_CAMPAÑA 2026.xlsx"),
+         
         
         sheet_name = "REGISTRO",
         skiprows=1,
@@ -284,13 +285,27 @@ def biometria_2026(data):
     rename_source = {"LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","OBS":"OBSERVACIONES"}
     sj1_df = sj1_df.rename(columns=rename_source)
     canyon_df = canyon_df.rename(columns=rename_source)
+    print("CANYON")
+    print(canyon_df)
     gap_df = gap_df.rename(columns=rename_source)
+    print("GAP")
+    print(gap_df)
     sp_df = sp_df.rename(columns=rename_source)
+    print("san pedro")
+    print(sp_df)
     sj2_df = sj2_df.rename(columns=rename_source)
-    tara_df = tara_df.rename(columns=rename_source)
-
+    print("san jose 2")
+    print(sj2_df)
+    #tara_df = tara_df.rename(columns=rename_source)
+    print("tara")
+    print(tara_df)
     sj1_df = sj1_df.drop(columns=["No DE BROTES TOTALES/CANAS"])
-    dff = pd.concat([canyon_df,gap_df,sj1_df,sp_df,sj2_df,tara_df])
+    print("san jose 1")
+    print(sj1_df)
+    
+    dff = pd.concat([canyon_df,gap_df,sj1_df,sp_df,sj2_df])#,tara_df
+    print("all")
+    print(dff)
     dff = dff.drop(columns=["PRESENTACION (CC)","PRECENTACION (CC)"])
     dff = dff[
         (dff["FECHA DE EVALUACION"].notna())&

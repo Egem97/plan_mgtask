@@ -813,16 +813,21 @@ def transform_kissflow_meq():
     dff = pd.read_excel("./data/MEQ - ZONA SUR.xlsx")
     dff = dff.drop(columns = ["Unnamed: 0"])
     dff.columns = [str(c).strip().upper() for c in dff.columns]
+    dff["MODULO"] = "1"
     meq_dff = pd.concat([df,dff],axis=0)
     meq_dff["FUNDO"] = meq_dff["FUNDO"].str.strip()
     meq_dff["FUNDO"] = meq_dff["FUNDO"].replace("GAP","GAP BERRIES")
     meq_dff["FECHA"] = pd.to_datetime(meq_dff["FECHA"],errors='coerce').dt.date
+    meq_dff["MODULO"] = meq_dff["MODULO"].fillna(0)
+    meq_dff["MODULO"] = meq_dff["MODULO"].astype(str)
+    meq_dff["MODULO"] = "M"+meq_dff["MODULO"]
+    meq_dff["MODULO"] = meq_dff["MODULO"].str.replace(".0","")
     cols_numeric = ['NH4', 'NO3', 'K', 'CA', 'MG', 'SO4', 'H2PO4','% NH4', '%NO3', 'N/K', 'CA/MG']
     for col in cols_numeric:
         meq_dff[col] = meq_dff[col].fillna(0)
         meq_dff[col] = pd.to_numeric(meq_dff[col],errors='coerce')
     
-    meq_dff = meq_dff.melt(id_vars=["FUNDO","FECHA"],value_vars=cols_numeric,var_name="Atributo",value_name="Valor")
+    meq_dff = meq_dff.melt(id_vars=["FUNDO","FECHA","MODULO"],value_vars=cols_numeric,var_name="Atributo",value_name="Valor")
     meq_dff["Atributo"] = meq_dff["Atributo"].replace({"CA":"Ca","MG":"Mg"})
     meq_dff = meq_dff[meq_dff["Valor"]>0]
     return meq_dff
@@ -897,7 +902,11 @@ def completed_kissflow_muestras():
     })
 
     hist_df = pd.read_parquet("./data/MUESTRAS.parquet")
-    return pd.concat([df,hist_df])
+
+    dataframe = pd.concat([df,hist_df])
+    dataframe = dataframe[dataframe["TIPO DE MUESTRA"]!="SOL. FIBRA COCO"]
+    dataframe = dataframe[dataframe["TIPO DE MUESTRA"]!="GOTERO"]
+    return dataframe
 
 
 def transform_kissflow_insumos():

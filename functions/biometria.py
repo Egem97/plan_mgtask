@@ -166,6 +166,7 @@ def qberries1_biometria_2026(data):
     df = pd.read_excel(get_download_url_by_name(
         data, 
         "REGISTRO DE BIOMETRÍA ETAPA O1_CAMPAÑA 2026.xlsx"),
+        
         sheet_name = "REGISTRO",
         skiprows=1,
     )

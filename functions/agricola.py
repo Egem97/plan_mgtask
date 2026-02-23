@@ -925,6 +925,7 @@ def transform_kissflow_meq():
     ).reset_index()
     qberries["Valor"] = qberries["Valor"].round(2)
     meq_dff = pd.concat([meq_dff,qberries],axis=0)
+    meq_dff = meq_dff.reset_index()
     return meq_dff
 
 

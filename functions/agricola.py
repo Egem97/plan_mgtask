@@ -845,7 +845,14 @@ def transform_kissflow_nutricionales():
     df["VOLUMEN"] = df["VOLUMEN"].fillna(0)
     df["GRUPO"] = df["GRUPO"].replace("BIOESTIMULANTE","BIOESTIMULATES")
     df.columns = [str(c).strip().upper() for c in df.columns]
+    df["FUNDO"] = df["FUNDO"].fillna("NO ESPECIFICADO")
+    df["FUNDO"] = df["FUNDO"].str.upper()
+    df["FUNDO"] = df["FUNDO"].str.strip()
+    df["FUNDO"] = df["FUNDO"].replace("QBERRIES","LICAPA")
+    df["FUNDO"] = df["FUNDO"].replace("QBERRIES II","LICAPA II")
+    df["FUNDO"] = df["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
     apl_nutri_historico_df = pd.read_parquet("./data/APLICACIONES NUTRICIONALES.parquet")
+    apl_nutri_historico_df["FUNDO"] = apl_nutri_historico_df["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
     dff = pd.concat([apl_nutri_historico_df,df])
     return dff
 
@@ -930,6 +937,7 @@ def transform_kissflow_meq():
     qberries["Valor"] = qberries["Valor"].round(2)
     meq_dff = pd.concat([meq_dff,qberries],axis=0)
     meq_dff = meq_dff.reset_index()
+    meq_dff = meq_dff.drop(columns = ["index"])
     return meq_dff
 
 

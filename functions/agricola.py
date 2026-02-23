@@ -735,7 +735,93 @@ def kissflow_riego_fertirriego(access_token):
         "01KM43WT4N7QGTHMP56JDY6Q3IMPH4SJGN"
     )
     file_general = get_download_url_by_name(data, "Registros Kissflow - Riego y fertirriego.xlsx")
-    return  pd.read_excel(file_general)
+    file_qberries = get_download_url_by_name(data, "Registros Kissflow - Riego y fertirriego Qberries.xlsx")
+    df = pd.concat([pd.read_excel(file_general),pd.read_excel(file_qberries)],axis=0)
+    df = df.drop(columns = ["AÑO","SEMANA","TOTAL ()"])#
+    df = df[df["FECHA"]>='2026-02-03']
+    df.columns = [str(c).strip().upper() for c in df.columns]
+    df = df[df["FECHA"].notna()]
+    df["TURNO ORIGINAL"] = df["TURNO"]
+    df["TURNO ORIGINAL"] = df["TURNO ORIGINAL"].fillna("0")
+    df["TURNO ORIGINAL"] = df["TURNO ORIGINAL"].astype(str)
+    df["TURNO"] = df["TURNO"].fillna(99)
+
+    df["MES"] = df["MES"].str.upper()
+    df["MODULO"] = df["MODULO"].fillna("X")
+    df["MODULO"] = df["MODULO"].astype(str)
+    df["MODULO"] = 'M' +df["MODULO"].astype(str)
+    df["MODULO"] = df["MODULO"].str.replace(".0","")
+    df["TURNO"] = df["TURNO"].apply(clean_turno).astype(int)
+    df["TURNO"] = df["TURNO"].astype(int)
+
+    df["FASE"] = df["FASE"].fillna("NO ESPECIFICADO")
+    df["FASE"] = df["FASE"].str.strip()
+    df["EQUIPO"] = df["EQUIPO"].fillna("NO ESPECIFICADO")
+    df["EQUIPO"] = df["EQUIPO"].str.strip()
+    df["SUPERVISOR"] = df["SUPERVISOR"].fillna("NO ESPECIFICADO")
+    df["SUPERVISOR"] = df["SUPERVISOR"].str.strip()
+    df["DESCRIPCIÓN"] = df["DESCRIPCIÓN"].fillna("NO ESPECIFICADO")   
+    df["DESCRIPCIÓN"] = df["DESCRIPCIÓN"].str.strip()
+
+    df["AREA"] = df["AREA"].fillna("0")
+    df["AREA"] = df["AREA"].astype(str)
+    df["AREA"] = df["AREA"].str.strip()
+    df["AREA"] = df["AREA"].replace("","0")
+    df["AREA"] = df["AREA"].replace("-","0")
+    df["AREA"] = df["AREA"].astype(float)
+
+    df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
+    df["VARIEDAD"] = df["VARIEDAD"].str.strip()
+    df["VARIEDAD"] = df["VARIEDAD"].str.upper()
+    df["VARIEDAD"] = df["VARIEDAD"].replace("SEKOYA","SEKOYA POP")
+    df["FUNDO"] = df["FUNDO"].fillna("NO ESPECIFICADO")
+    df["FUNDO"] = df["FUNDO"].str.strip()
+    df["FUNDO"] = df["FUNDO"].str.upper()
+    df["FUNDO"] = df["FUNDO"].replace({"QBERRIES":"LICAPA","CANYON BERRIES":"EL POTRERO","QBERRIES II":"LICAPA II"})
+    df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
+
+    var_float = ['LECTURA DE HIDROMETRO INICIAL',
+            'LECTURA DE HIDROMETRO FINAL', 'AGUA PROGRAMADA (M3)', 'ETO',
+            'LAMINA (MM)', '% REPOSICION', 'TANQ. 1', 'TANQ. 2', 'TANQ. 3',
+            'TANQ. 4', 'TANQ. 5', 'TANQ. 6', 'TANQ.7',
+            'SULFATO DE AMONIO (N) 21 %N - 0 - 24 %S',
+            'NITRATO DE AMONIO (N) 0 - 33 %N - 3 %P2O5',
+            'ACIDO FOSFORICO (P) 0 - 60 %P - 0',
+            'SULFATO DE POTASIO (K) 0 - 0 - 50 %K2O',
+            'SULFATO DE MAGNESIO (MG) 16 %MGO',
+            'NITRATO DE CALCIO (CA) 15 %N - 0 -0   24 %CA',
+            'FOSFATO MONOPOTASICO (0-52-34)',
+            'FOSFATO MONOAMONICO 12%N - 61%P2O5 - 0',
+            'NITRATO DE POTASIO (13.5-0-46)', 'SULFATO DE ZINC', 'QUELATOS', 'N',
+            'P', 'K', 'MG', 'CA', 'ZN', 'FE', 'S', 'SULFATO DE MANGANESO',
+            'NANOFERT NITRO N 8%', 'EPSOTOP MGO 16%  S 13%',
+            'ALLGANIC POTASSIUM K2O 52% S 18%', 'ORGANICHEM CALCIO 23% CAO', 'MN',
+    ]
+
+    for c in var_float:
+            df[c] = df[c].fillna("0")
+            df[c] = df[c].astype(str)
+            df[c] = df[c].str.strip()
+            df[c] = df[c].replace("","0")
+            df[c] = df[c].replace("-","0")
+            df[c] = df[c].astype(float)
+    df = df.drop(columns=["TURNO ORIGINAL","TOTAL (MIN)"])
+    df["TURNO"] = df["TURNO"].astype(str)
+    mask_gap = df["FUNDO"] == "GAP BERRIES"
+    df.loc[mask_gap & df["TURNO"].isin(["1","2","3","4"]), "TURNO"] = "1"
+    df.loc[mask_gap & df["TURNO"].isin(["5","6","7","8"]), "TURNO"] = "2"
+    df.loc[mask_gap & df["TURNO"].isin(["9","10","11"]), "TURNO"] = "3"
+    df.loc[mask_gap & df["TURNO"].isin(["12","13","14"]), "TURNO"] = "4"
+    df.loc[mask_gap & df["TURNO"].isin(["15","16","17"]), "TURNO"] = "5"
+    df.loc[mask_gap & df["TURNO"].isin(["18","19","20"]), "TURNO"] = "6"
+    df.loc[mask_gap & df["TURNO"].isin(["21","22","23"]), "TURNO"] = "7"
+    df.loc[mask_gap & df["TURNO"].isin(["24","25","26"]), "TURNO"] = "8"
+    df.loc[mask_gap & df["TURNO"].isin(["27","28"]), "TURNO"] = "9"
+    df.loc[mask_gap & df["TURNO"].isin(["29","30","31"]), "TURNO"] = "10"
+
+    mask_colina = df["FUNDO"] == "LA COLINA"
+    df.loc[mask_colina & df["TURNO"].isin(["1","2","3","4","5","6","7","8","9","10"]), "TURNO"] = "1"
+    return df
 
 
 
@@ -910,6 +996,7 @@ def completed_kissflow_muestras():
 
 
 def transform_kissflow_insumos():
-    #df = kissflow_riego_fertirriego(get_access_token())
+    df = kissflow_riego_fertirriego(get_access_token())
     fertiriego_historico_df = pd.read_parquet("./data/INSUMOS.parquet")
-    return fertiriego_historico_df
+    fertiriego_historico_df = fertiriego_historico_df[pd.to_datetime(fertiriego_historico_df["FECHA"])<"2026-02-03"]
+    return pd.concat([df,fertiriego_historico_df],axis=0)

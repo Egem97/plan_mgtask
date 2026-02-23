@@ -903,7 +903,7 @@ def transform_kissflow_meq():
     meq_dff = pd.concat([df,dff],axis=0)
     meq_dff["FUNDO"] = meq_dff["FUNDO"].str.strip()
     meq_dff["FUNDO"] = meq_dff["FUNDO"].replace("GAP","GAP BERRIES")
-    meq_dff["FECHA"] = pd.to_datetime(meq_dff["FECHA"],errors='coerce').dt.date
+    meq_dff["FECHA"] = pd.to_datetime(meq_dff["FECHA"],errors='coerce')
     meq_dff["MODULO"] = meq_dff["MODULO"].fillna(0)
     meq_dff["MODULO"] = meq_dff["MODULO"].astype(str)
     meq_dff["MODULO"] = "M"+meq_dff["MODULO"]
@@ -916,6 +916,15 @@ def transform_kissflow_meq():
     meq_dff = meq_dff.melt(id_vars=["FUNDO","FECHA","MODULO"],value_vars=cols_numeric,var_name="Atributo",value_name="Valor")
     meq_dff["Atributo"] = meq_dff["Atributo"].replace({"CA":"Ca","MG":"Mg"})
     meq_dff = meq_dff[meq_dff["Valor"]>0]
+    meq_dff["SEMANA"] = meq_dff["FECHA"].dt.isocalendar().week
+    meq_dff["FECHA"] = meq_dff["FECHA"].dt.date
+    qberries = meq_dff[meq_dff["FUNDO"].isin(["LICAPA","LICAPA II"])]
+    meq_dff = meq_dff[~meq_dff["FUNDO"].isin(["LICAPA","LICAPA II"])]
+    qberries = qberries.groupby(["FUNDO","MODULO","Atributo","SEMANA"]).agg(
+        {"Valor": "mean","FECHA":"min"}
+    ).reset_index()
+    qberries["Valor"] = qberries["Valor"].round(2)
+    meq_dff = pd.concat([meq_dff,qberries],axis=0)
     return meq_dff
 
 

@@ -920,6 +920,10 @@ def transform_kissflow_meq():
     meq_dff["FECHA"] = meq_dff["FECHA"].dt.date
     qberries = meq_dff[meq_dff["FUNDO"].isin(["LICAPA","LICAPA II"])]
     meq_dff = meq_dff[~meq_dff["FUNDO"].isin(["LICAPA","LICAPA II"])]
+    meq_dff = meq_dff.groupby(["FUNDO","MODULO","Atributo","SEMANA"]).agg(
+        {"Valor": "sum","FECHA":"min"}
+    ).reset_index()
+
     qberries = qberries.groupby(["FUNDO","MODULO","Atributo","SEMANA"]).agg(
         {"Valor": "mean","FECHA":"min"}
     ).reset_index()

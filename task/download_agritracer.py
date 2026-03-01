@@ -49,7 +49,7 @@ def download_files_c1():
         
         # Esperar a que el login se complete y cambie la URL
         print("⏳ Esperando autenticación...")
-        page.wait_for_url(lambda url: "auth/login" not in url, timeout=90000)
+        page.wait_for_url(lambda url: "auth/login" not in url, timeout=300)
         #page.wait_for_load_state('networkidle')
 
         #https://alzaperu.agritracer.app/#/manoobra/reportes/campo/rpt-horas
@@ -57,7 +57,7 @@ def download_files_c1():
         # Debug: Imprimir opciones del sidebar para verificar
         print("📍 Inspeccionando sidebar...")
         # Intentar esperar a que el sidebar cargue
-        page.wait_for_selector("kt-aside-left ul li", timeout=100000)
+        page.wait_for_selector("kt-aside-left ul li", timeout=300)
         
         # Opción 1: Navegación Directa (Más robusta si la URL es constante)
         # target_url = "https://alzaperu.agritracer.app/#/manoobra/reportes/campo/rpt-horas"
@@ -89,7 +89,7 @@ def download_files_c1():
              sidebar_item_2.click()
         else:
              print("   ⚠️ El item 2 no es visible, intentando forzar espera o selector alternativo...")
-             sidebar_item_2.wait_for(state="visible", timeout=5000)
+             sidebar_item_2.wait_for(state="visible", timeout=300)
              sidebar_item_2.click()
         time.sleep(1)
 
@@ -103,7 +103,7 @@ def download_files_c1():
             sidebar_item_3.click()
         else:
              print("   ⚠️ El item 3 no es visible...")
-             sidebar_item_3.wait_for(state="visible", timeout=5000)
+             sidebar_item_3.wait_for(state="visible", timeout=300)
              sidebar_item_3.click()
         
         # Esperar carga final
@@ -119,7 +119,7 @@ def download_files_c1():
         page.wait_for_selector("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-body/div/form/div[1]/div/div[4]/div/mat-form-field/div[1]/div[2]", timeout=100000)
         page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-body/div/form/div[1]/div/div[4]/div/mat-form-field/div[1]/div[2]").click()
         time.sleep(1)
-        page.wait_for_selector("xpath=//html/body/div[3]/div[2]/div/div/mat-option[2]", timeout=100000)
+        page.wait_for_selector("xpath=//html/body/div[3]/div[2]/div/div/mat-option[2]", timeout=300)
         page.locator("xpath=//html/body/div[3]/div[2]/div/div/mat-option[2]").click()
         time.sleep(1)
         #"
@@ -143,7 +143,7 @@ def download_files_c1():
         print(f"⬇️ Iniciando descarga... Esperando archivo en: {save_path}")
         
         # Esperar la descarga al hacer click QBERRIES
-        with page.expect_download(timeout=900000) as download_info:
+        with page.expect_download(timeout=300) as download_info:
             page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-header/div[2]/div/button").click()
         
         download = download_info.value
@@ -180,7 +180,7 @@ def download_files_c1():
             print(f"⬇️ Iniciando descarga... Esperando archivo en: {save_path}")
             
             # Esperar la descarga
-            with page.expect_download(timeout=60000) as download_info:
+            with page.expect_download(timeout=300) as download_info:
                 page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-header/div[2]/div/button").click()
             
             download = download_info.value

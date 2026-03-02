@@ -10,7 +10,7 @@ config = load_config()
 
 def download_files_c1():
     print("🚀 Ejecutando Playwright en modo headless...")
-    time_wait = 600
+    time_wait = 500 * 1000 # 600 segundos en milisegundos
     with sync_playwright() as p:
         # Lanzar navegador en modo headless (sin ventana visible)
         # Lanzar navegador en modo headless con argumentos adicionales
@@ -144,8 +144,10 @@ def download_files_c1():
         print(f"⬇️ Iniciando descarga... Esperando archivo en: {save_path}")
         
         # Esperar la descarga al hacer click QBERRIES
+        btn_download_xpath = "xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-header/div[2]/div/button"
+        page.wait_for_selector(btn_download_xpath, timeout=time_wait)
         with page.expect_download(timeout=time_wait) as download_info:
-            page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-header/div[2]/div/button").click()
+            page.locator(btn_download_xpath).click(timeout=time_wait)
         
         download = download_info.value
         print(f"✅ Descarga detectada: {download.suggested_filename}")
@@ -181,8 +183,9 @@ def download_files_c1():
             print(f"⬇️ Iniciando descarga... Esperando archivo en: {save_path}")
             
             # Esperar la descarga
+            page.wait_for_selector(btn_download_xpath, timeout=time_wait)
             with page.expect_download(timeout=time_wait) as download_info:
-                page.locator("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[2]/div/kt-portlet-header/div[2]/div/button").click()
+                page.locator(btn_download_xpath).click(timeout=time_wait)
             
             download = download_info.value
             print(f"✅ Descarga detectada: {download.suggested_filename}")

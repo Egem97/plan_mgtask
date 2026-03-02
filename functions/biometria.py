@@ -292,12 +292,12 @@ def biometria_2026(data):
     
     sj2_df = sj2_df.rename(columns=rename_source)
     
-    #tara_df = tara_df.rename(columns=rename_source)
+    tara_df = tara_df.rename(columns=rename_source)
    
     sj1_df = sj1_df.drop(columns=["No DE BROTES TOTALES/CANAS"])
     
     
-    dff = pd.concat([canyon_df,gap_df,sj1_df,sp_df,sj2_df])#,tara_df
+    dff = pd.concat([canyon_df,gap_df,sj1_df,sp_df,sj2_df,tara_df])#
     
     dff = dff.drop(columns=["PRESENTACION (CC)","PRECENTACION (CC)"])
     dff = dff[

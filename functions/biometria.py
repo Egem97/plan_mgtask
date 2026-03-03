@@ -318,7 +318,7 @@ def pipeline_biometria():
         "01KM43WTYIAMKEILBABBD3YV6E7PSSUZLG"
     )
     qbe26_columns = [
-        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION','SPP',    'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
+        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION','SEMANA POST PODA',    'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
         'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD',
         
         'N CANAS',
@@ -329,6 +329,16 @@ def pipeline_biometria():
     ]
     #########################################################################################################    
     qberries_biometria1_26_df = qberries1_biometria_2026(data = data)
+   
+    cols_transform_qberries = [
+        'R1 B1', 'R1 B2', 'R2 B1', 'R2 B2', 'R3 B1', 'R3 B2', 'R4 B1', 'R4 B2 ', 'R5 B1', 'R5 B2',
+        'P1 D1', 'P1 D2', 'P2 D1', 'P2 D2', 'P3 D1', 'P3 D2', 'P4 D1', 'P4 D2', 'P5 D1', 'P5 D2', 
+        'P1 B1 (F2)', 'P1 B2 (F2)', 'P1 B3 (F2)', 'P1 B4 (F2)', 'P1 B5 (F2)', 'P2 B1 (F2)', 'P2 B2 (F2)',
+        'P2 B3 (F2)', 'P2 B4 (F2)', 'P2 B5 (F2)', 'P3 B1 (F2)', 'P3 B2 (F2)', 'P3 B3 (F2)', 'P3 B4 (F2)', 'P3 B5 (F2)', 'P4 B1 (F2)', 'P4 B2 (F2)', 'P4 B3 (F2)', 'P4 B4 (F2)', 'P4 B5 (F2)', 'P5 B1 (F2)', 'P5 B2 (F2)', 'P5 B3 (F2)', 'P5 B4 (F2)', 'P5 B5 (F2)'
+    ]
+    for colq in cols_transform_qberries:
+        qberries_biometria1_26_df[colq] = qberries_biometria1_26_df[colq].replace(" -   ",0)
+        qberries_biometria1_26_df[colq] = qberries_biometria1_26_df[colq].replace(" ",0)
     
     #print("QBERRIES1")
     #print(list(qberries_biometria1_26_df.columns))
@@ -386,7 +396,7 @@ def pipeline_biometria():
     #['FECHA DE PODA', 'DDPO', 'RETONOS POR PLANTA']
     qbe26_columns = [
         'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION',   'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
-        'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD','SEMANA POST PODA',
+        'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD',#'SEMANA POST PODA',
         
         'N CANAS',
         'TC BROTE (F1)', 'LONG BROTES (F1)', 'N BROTES (F1)','TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',
@@ -400,6 +410,8 @@ def pipeline_biometria():
     ##################################################################################################33
     general_df = biometria_2026(data = data)
     general_df["FUNDO"] = general_df["FUNDO"].replace("Tara Farm","LAS BRISAS")
+    
+    
     #general_df["SPP"] = None
     #print("FUNDOS")
     #print(list(general_df.columns))
@@ -444,7 +456,7 @@ def pipeline_biometria():
         'BROTES TOTALES', 'OBSERVACIONES', 'BROTES DE CANAS',]
     for col_ in cols_numeric:
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
-    print(dff.columns)
+    
     dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA'])["FECHA DE EVALUACION"].transform("min")
     dff = dff.drop(columns = ["EVALUACION ANTERIOR"])
     return dff

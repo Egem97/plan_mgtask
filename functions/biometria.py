@@ -445,7 +445,7 @@ def pipeline_biometria():
     for col_ in cols_numeric:
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
     print(dff.columns)
-    dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'LOTE', 'SEMANA POST PODA'])["FECHA DE EVALUACION"].transform("min")
+    dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA'])["FECHA DE EVALUACION"].transform("min")
     dff = dff.drop(columns = ["EVALUACION ANTERIOR"])
     return dff
 

@@ -173,7 +173,7 @@ def qberries1_biometria_2026(data):
     )
     df["FUNDO"] = "LICAPA"
     df["FECHA DE PLANTACION"] = None
-    df = df.rename(columns={"SDPO":"SPP",})
+    df = df.rename(columns={"SDPO":"SEMANA POST PODA",})
    
     return df
 
@@ -186,7 +186,7 @@ def qberries2_biometria_2026(data):
         skiprows=1,
     )
     df["FUNDO"] = "LICAPA II"
-    
+    df = df.rename(columns={"SPP":"SEMANA POST PODA",})
 
     return df
 
@@ -352,8 +352,8 @@ def pipeline_biometria():
     if "SEMANA POST PODA" not in qberries_biometria1_26_df.columns:
         qberries_biometria1_26_df["SEMANA POST PODA"] = None
         qberries_biometria1_26_df = qberries_biometria1_26_df[qbe26_columns+['SEMANA POST PODA']]
-    else:
-        qberries_biometria1_26_df = qberries_biometria1_26_df[qbe26_columns+['SEMANA POST PODA']]
+    #else:
+        #qberries_biometria1_26_df = qberries_biometria1_26_df[qbe26_columns+['SEMANA POST PODA']]
     ###################################################################################################
     
     qberries_biometria_26_df = qberries2_biometria_2026(data = data)    
@@ -385,8 +385,8 @@ def pipeline_biometria():
     qberries_biometria_26_df["ZONA"] = "PAIJAN"
     #['FECHA DE PODA', 'DDPO', 'RETONOS POR PLANTA']
     qbe26_columns = [
-        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION','SPP',    'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
-        'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD',
+        'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION',   'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
+        'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD','SEMANA POST PODA',
         
         'N CANAS',
         'TC BROTE (F1)', 'LONG BROTES (F1)', 'N BROTES (F1)','TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',
@@ -400,11 +400,11 @@ def pipeline_biometria():
     ##################################################################################################33
     general_df = biometria_2026(data = data)
     general_df["FUNDO"] = general_df["FUNDO"].replace("Tara Farm","LAS BRISAS")
-    general_df["SPP"] = None
+    #general_df["SPP"] = None
     #print("FUNDOS")
     #print(list(general_df.columns))
     g26_columns = [
-        'FUNDO', 'ZONA', 'ANO', 'FECHA DE PLANTACION','SPP', 'FECHA DE PODA',  'EVALUACION ANTERIOR', 'FECHA DE EVALUACION', 
+        'FUNDO', 'ZONA', 'ANO', 'FECHA DE PLANTACION', 'FECHA DE PODA',  'EVALUACION ANTERIOR', 'FECHA DE EVALUACION', 
         'Difdias', 'SEMANA','SEMANA POST PODA', 'MODULO', 'TURNO', 'LOTE', 'VARIEDAD', 
         'N CANAS', 'BROTES DE CANAS',
         'TC BROTE (F1)','LONG BROTES (F1)','N BROTES (F1)', 'TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',

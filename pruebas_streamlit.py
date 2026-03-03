@@ -17,13 +17,13 @@ st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
 
 
-
+from functions.load_onedrive import cosecha_load_data
 from functions.biometria import *
-#load_biometria_2026()
-#st.success("CARGADO BIOMETRIA")
-dff = pipeline_biometria()
-st.write(dff.shape)
-st.dataframe(dff)
+cosecha_load_data()
+st.success("CARGADO cosecha")
+#dff = pipeline_biometria()
+#st.write(dff.shape)
+#st.dataframe(dff)
 #if st.button("SAVE"):
 #    dff.to_parquet(r"C:\Users\EdwardoGiampiereEnri\OneDrive - ALZA PERU GROUP S.A.C\DATASETS_BI\GENERAL DATA\BIOMETRIA\BIOMETRIA_2026.parquet",index=False)
 

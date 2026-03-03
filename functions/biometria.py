@@ -412,7 +412,7 @@ def pipeline_biometria():
         'LONG BROTES RETONOS/CM', 
         'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES']
     general_df= general_df[g26_columns]
-    dff = pd.concat([qberries_biometria1_26_df,qberries_biometria_26_df,general_df])#,qberries_biometria_26_df
+    dff = pd.concat([qberries_biometria1_26_df,qberries_biometria_26_df,general_df], ignore_index=True)#,qberries_biometria_26_df
     dff = dff.rename(columns = {"ANO":"AÑO","Difdias":"DIFERENCIA DE DIAS"})
     dff["FUNDO"] = dff["FUNDO"].str.upper()
     dff["ZONA"] = dff["ZONA"].fillna("NO ESPECIFICADO")
@@ -444,7 +444,8 @@ def pipeline_biometria():
         'BROTES TOTALES', 'OBSERVACIONES', 'BROTES DE CANAS',]
     for col_ in cols_numeric:
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
-    dff["FECHA MIN SEMANA POST PODA"] = dff.groupby("SEMANA POST PODA")["FECHA DE EVALUACION"].transform("min")
+    print(dff.columns)
+    dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'LOTE', 'SEMANA POST PODA'])["FECHA DE EVALUACION"].transform("min")
     dff = dff.drop(columns = ["EVALUACION ANTERIOR"])
     return dff
 

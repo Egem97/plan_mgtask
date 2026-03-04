@@ -329,7 +329,7 @@ def pipeline_biometria():
     ]
     #########################################################################################################    
     qberries_biometria1_26_df = qberries1_biometria_2026(data = data)
-   
+    print(qberries_biometria1_26_df.columns)
     cols_transform_qberries = [
         'R1 B1', 'R1 B2', 'R2 B1', 'R2 B2', 'R3 B1', 'R3 B2', 'R4 B1', 'R4 B2 ', 'R5 B1', 'R5 B2',
         'P1 D1', 'P1 D2', 'P2 D1', 'P2 D2', 'P3 D1', 'P3 D2', 'P4 D1', 'P4 D2', 'P5 D1', 'P5 D2', 

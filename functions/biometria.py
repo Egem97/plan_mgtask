@@ -396,7 +396,7 @@ def pipeline_biometria():
     #['FECHA DE PODA', 'DDPO', 'RETONOS POR PLANTA']
     qbe26_columns = [
         'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION',   'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
-        'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD',#'SEMANA POST PODA',
+        'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD','SEMANA POST PODA',
         
         'N CANAS',
         'TC BROTE (F1)', 'LONG BROTES (F1)', 'N BROTES (F1)','TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',

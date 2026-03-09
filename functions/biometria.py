@@ -458,7 +458,9 @@ def pipeline_biometria():
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
     
     dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA'])["FECHA DE EVALUACION"].transform("min")
-    dff = dff.drop(columns = ["EVALUACION ANTERIOR"])
+    dff["FECHA ACTUALIZACION"] = dff.groupby(['FUNDO'])["FECHA DE EVALUACION"].transform("max")
+    dff['FECHA ACTUALIZACION'] = pd.to_datetime(dff['FECHA ACTUALIZACION'])
+    dff['SEMANA ACTUALIZACION'] = dff['FECHA ACTUALIZACION'].dt.isocalendar().week
     return dff
 
 

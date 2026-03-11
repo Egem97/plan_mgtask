@@ -910,6 +910,7 @@ def transform_kissflow_meq():
     meq_dff = pd.concat([df,dff],axis=0)
     meq_dff["FUNDO"] = meq_dff["FUNDO"].str.strip()
     meq_dff["FUNDO"] = meq_dff["FUNDO"].replace("GAP","GAP BERRIES")
+    meq_dff["FUNDO"] = meq_dff["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
     meq_dff["FECHA"] = pd.to_datetime(meq_dff["FECHA"],errors='coerce')
     meq_dff["MODULO"] = meq_dff["MODULO"].fillna(0)
     meq_dff["MODULO"] = meq_dff["MODULO"].astype(str)

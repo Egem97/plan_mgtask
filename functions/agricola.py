@@ -1022,4 +1022,22 @@ def transform_kissflow_insumos():
     df = kissflow_riego_fertirriego(get_access_token())
     fertiriego_historico_df = pd.read_parquet("./data/INSUMOS.parquet")
     fertiriego_historico_df = fertiriego_historico_df[pd.to_datetime(fertiriego_historico_df["FECHA"])<"2026-02-03"]
-    return pd.concat([df,fertiriego_historico_df],axis=0)
+    drenaje_df = transform_kissflow_drenajes()
+    drenaje_df = drenaje_df[drenaje_df["AGUA PROGRAMADA (M3)"].notna()]
+    columns_drenajes_insumos = [
+    'FECHA','FUNDO','MODULO', 'TURNO', 'VARIEDAD','AGUA PROGRAMADA (M3)','ETO MM/DIA',
+    'LÁMINA(MM)','REPOSICIÓN MM'
+    ]
+    drenaje_df = drenaje_df[columns_drenajes_insumos]
+    drenaje_df["CAMPAÑA"] = "CAMPAÑA 2026"
+    drenaje_df["FASE"] = "FASE 2"
+    drenaje_df["EQUIPO"] = "NO ESPECIFICADO"
+    drenaje_df["SUPERVISOR"] = "NO ESPECIFICADO"
+    drenaje_df["DESCRIPCIÓN"] = "NO ESPECIFICADO"
+    drenaje_df = drenaje_df.rename(columns = {
+            'ETO MM/DIA':'ETO',
+            'LÁMINA(MM)':'LAMINA (MM)',
+            'REPOSICIÓN MM':'% REPOSICION'
+    })
+    
+    return pd.concat([df,fertiriego_historico_df,drenaje_df],axis=0)

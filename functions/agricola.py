@@ -474,9 +474,9 @@ def sede():
     return sedes_df
 
 
-def poligonos(access_token):
+def poligonos():
     data = listar_archivos_en_carpeta_compartida(
-        access_token,
+        get_access_token(),
         #"b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
         "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         "01XOBWFSG3TINCMZG2RVHIU5OP6DGFNVX3"

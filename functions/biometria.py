@@ -464,3 +464,89 @@ def pipeline_biometria():
     return dff
 
 
+def pipeline_biometria_experimental():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WTYIAMKEILBABBD3YV6E7PSSUZLG"
+    )
+    dff = pd.read_excel(get_download_url_by_name(
+        data, 
+        "BIOMETRIA VARIEDADES_ TEST BLOCK 2026.xlsx"),
+        sheet_name = "REGISTRO",
+    )
+    dff.columns = (
+        dff.columns.astype(str)
+        .str.normalize('NFKD')
+        .str.encode('ascii', errors='ignore')
+        .str.decode('utf-8')
+        .str.replace('\n', ' ', regex=False)
+        .str.replace('.', '', regex=False)
+        .str.strip()
+    )
+
+    rename_source = {"LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)","OBS":"OBSERVACIONES"}
+    dff = dff.rename(columns=rename_source)
+    dff = dff[
+        #(experi_df["FECHA DE EVALUACION"].notna())&
+        (dff["MODULO"].notna())&
+        (dff["TURNO"].notna())&
+        (dff["LOTE"].notna())
+    ]
+    cols_exp = [
+        'FUNDO', 'ZONA', 'ANO', 'FECHA DE SIEMBRA', 'DDS', 'FECHA DE PODA', 'DDP', 'SDP', 
+        'EVALUACION ANTERIOR', 'FECHA DE HOY', 'Difdias', 'SEMANA', 'MODULO', 'TURNO', 
+        'LOTE', 'VARIEDAD', 'N CANAS',  'BROTES DE CANAS', 'ALTURA DE PLANTA', 'TC ALTURA DE PLANTA',
+        'N BROTES (F1)', 'LONG BROTES (F1)',  'TC BROTE (F1)', 'N BROTES (F2)', 'LONG BROTES (F2)',
+        'TC BROTE (F2)', 'N RETONOS', 'LONG BROTES RETONOS', 'TC RETONOS', 'DIAMETRO', 'BROTES TOTALES',
+        'OBSERVACIONES'
+    ]
+    dff = dff[cols_exp]
+    dff = dff.rename(columns = {
+        'TC ALTURA DE PLANTA':'TC DE ALTURA PLANTA/CM',
+        'ALTURA DE PLANTA':'ALTURA DE PLANTA CM',
+        'LONG BROTES RETONOS':'LONG BROTES RETONOS/CM',
+        'DIAMETRO':'DIAMETRO (MM)',
+        'TC RETONOS':'TC RETONOS/CM',
+        "ANO":"AÑO",
+        "Difdias":"DIFERENCIA DE DIAS",
+        'FECHA DE HOY':'FECHA DE EVALUACION',
+        'SDP':'SEMANA POST PODA'
+    })
+    dff["FUNDO"] = dff["FUNDO"].str.upper()
+    dff["ZONA"] = dff["ZONA"].fillna("NO ESPECIFICADO")
+    dff["ZONA"] = dff["ZONA"].str.upper()
+    dff["FECHA DE SIEMBRA"] = pd.to_datetime(dff["FECHA DE SIEMBRA"], errors='coerce').dt.date
+    dff["FECHA DE PODA"] = pd.to_datetime(dff["FECHA DE PODA"], errors='coerce').dt.date
+    #FECHA DE HOY
+    dff["FECHA DE EVALUACION"] = pd.to_datetime(dff["FECHA DE EVALUACION"], errors='coerce').dt.date
+    dff["MODULO"] = dff["MODULO"].fillna("X")
+    dff["MODULO"] = dff["MODULO"].astype(str)
+    dff["MODULO"] = dff["MODULO"].str.strip()
+    dff["MODULO"] = dff["MODULO"].str.upper()
+    dff["MODULO"] = dff["MODULO"].replace("I", "1")
+    dff["MODULO"] = dff["MODULO"].str.replace(".0", "")
+    dff["MODULO"] = "M"+dff["MODULO"].astype(str)
+    dff["TURNO"] = dff["TURNO"].fillna(0)
+    dff["TURNO"] = dff["TURNO"].astype(str)
+    dff["TURNO"] = dff["TURNO"].str.replace(".0","")
+    dff["TURNO"] = "T"+dff["TURNO"]
+    dff["LOTE"] = dff["LOTE"].fillna("x")
+    dff["LOTE"] = dff["LOTE"].astype(str)
+    dff["LOTE"] = dff["LOTE"].str.replace(".0","")
+    dff["LOTE"] = dff["LOTE"].apply(format_lote)
+    dff["VARIEDAD"] = dff["VARIEDAD"].fillna("NO ESPECIFICADO")
+    dff["VARIEDAD"] = dff["VARIEDAD"].str.strip()
+    dff["VARIEDAD"] = dff["VARIEDAD"].str.upper()
+    cols_numeric = ['N CANAS',  'TC BROTE (F1)', 'LONG BROTES (F1)',
+        'N BROTES (F1)', 'TC DE ALTURA PLANTA/CM', 'ALTURA DE PLANTA CM',
+        'N BROTES (F2)', 'LONG BROTES (F2)', 'TC BROTE (F2)', 'N RETONOS',
+        'LONG BROTES RETONOS/CM', 'TC RETONOS/CM', 'DIAMETRO (MM)',
+        'BROTES TOTALES', 'OBSERVACIONES', 'BROTES DE CANAS',]
+    for col_ in cols_numeric:
+        dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
+    dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA'])["FECHA DE EVALUACION"].transform("min")
+    dff["FECHA ACTUALIZACION"] = dff.groupby(['FUNDO'])["FECHA DE EVALUACION"].transform("max")
+    dff['FECHA ACTUALIZACION'] = pd.to_datetime(dff['FECHA ACTUALIZACION'])
+    dff['SEMANA ACTUALIZACION'] = dff['FECHA ACTUALIZACION'].dt.isocalendar().week
+    return dff

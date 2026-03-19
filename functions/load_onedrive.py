@@ -4,7 +4,7 @@ from utils.get_api import subir_archivo_con_reintento
 from utils.get_token import get_access_token
 from functions.agricola import *
 
-from functions.biometria import pipeline_biometria
+from functions.biometria import pipeline_biometria,pipeline_biometria_experimental
 
 
 
@@ -229,6 +229,24 @@ def load_biometria_2026():
         access_token=get_access_token(),
         dataframe=pipeline_biometria(),
         nombre_archivo="BIOMETRIA_2026.parquet",
+        drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        folder_id="01XOBWFSEADJMTLAK7QNE3PNMDWQT2ZLF2",
+        type_file="parquet"
+    )
+    if upload:
+        print(f"✅ Proceso completado exitosamente")
+        return True
+    else:
+        print(f"❌ Error al subir el archivo")
+        return False
+
+def load_biometria_experimental_2026():
+    print(f"📤 Subiendo archivos 'BIOMETRIA EXPERIMENTAL 2026' a OneDrive...")
+    
+    upload = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=pipeline_biometria_experimental(),
+        nombre_archivo="BIOMETRIA_EXPERIMENTAL_2026.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSEADJMTLAK7QNE3PNMDWQT2ZLF2",
         type_file="parquet"

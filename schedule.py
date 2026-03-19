@@ -36,6 +36,7 @@ async def main():
     scheduler.add_job(cosecha_load_data, 'cron', hour=10, timezone='America/Lima')
     scheduler.add_job(load_kissflow_fertirriego, 'interval', minutes=8)
     scheduler.add_job(load_biometria_2026, 'interval', minutes=5)
+    scheduler.add_job(load_biometria_experimental_2026, 'interval', minutes=10)
     scheduler.add_job(tipo_cambio_load_data, 'cron', hour=7, minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_hubcrop, 'cron', hour='9,15,17', minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_agritracer_job, 'cron', hour='8-23', minute=25, timezone='America/Lima')

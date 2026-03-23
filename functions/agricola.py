@@ -837,7 +837,9 @@ def transform_kissflow_nutricionales():
     df["LOTE"] = df["LOTE"].apply(format_lote)
     df["MODULO"] = df["MODULO"].fillna(0)
     df["MODULO"] = "M"+df["MODULO"].astype(int).astype(str)
+    
     df["OBSERVACION"] = df["OBSERVACION"].fillna("-")
+    df["OBSERVACION"] = df["OBSERVACION"].astype(str)
     df["OBJETIVO"] = df["OBJETIVO"].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
     df["OBJETIVO"] = df["OBJETIVO"].str.upper()
 

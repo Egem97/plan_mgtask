@@ -1046,5 +1046,9 @@ def transform_kissflow_insumos():
             'LÁMINA(MM)':'LAMINA (MM)',
             'REPOSICIÓN MM':'% REPOSICION'
     })
-    
-    return pd.concat([df,fertiriego_historico_df,drenaje_df],axis=0)
+    dff = pd.concat([df,fertiriego_historico_df,drenaje_df],axis=0)
+    dff["VARIEDAD"] = dff["VARIEDAD"].replace({
+        "MÁGICA": "MAGICA",
+        
+    })
+    return dff

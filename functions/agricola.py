@@ -584,7 +584,7 @@ def informe_plantacion(access_token):
     ).dt.date
 
 
-
+    dff["LOTE"] = dff["LOTE"].str.replace("-A","A")
     dff["LOTE"] = dff["LOTE"].apply(format_lote)
     dff["LOTE"] = dff["LOTE"].str.replace(" -1","-1")
     dff["ID"] = dff["FUNDO"]+"_"+dff["LOTE"]
@@ -879,6 +879,8 @@ def transform_kissflow_drenajes():
     df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
     df["VARIEDAD"] = df["VARIEDAD"].str.strip()
     df["VARIEDAD"] = df["VARIEDAD"].str.upper()
+    df = df[(df["VOL DREN.1"].notna())&(df["VOL DREN. 2"].notna())]
+    df = df[(df["VOL DREN.1"]!=0)&(df["VOL DREN. 2"]!=0)]
     
     cols_float = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
         '% DRENAJE REAL',
@@ -889,7 +891,8 @@ def transform_kissflow_drenajes():
     df['AÑO'] = df['AÑO'].astype(int)
     df['SEMANA'] = df['SEMANA'].astype(int)
     #print(df.columns)
-    df = df[(df["VOL DREN.1"]!=0)|(df["VOL DREN. 2"]!=0)]
+    df = df[(df["VOL DREN.1"].notna())&(df["VOL DREN. 2"].notna())]
+    df = df[(df["VOL DREN.1"]!=0)&(df["VOL DREN. 2"]!=0)]
     drenajes_historico_df = pd.read_parquet("./data/DRENAJE.parquet")
     dff = pd.concat([drenajes_historico_df,df])
     return dff

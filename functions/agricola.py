@@ -881,13 +881,15 @@ def transform_kissflow_drenajes():
     df["VARIEDAD"] = df["VARIEDAD"].str.upper()
     
     cols_float = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
-        'VOL DREN.1', 'VOL DREN. 2', 'VOLUMEN AFORO', '% DRENAJE REAL',
+        '% DRENAJE REAL',
         '% MÍNIMO', '% MÁXIMO','VALVULA']
     for col in cols_float:
         df[col] = df[col].astype(float)
     df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
     df['AÑO'] = df['AÑO'].astype(int)
     df['SEMANA'] = df['SEMANA'].astype(int)
+    #print(df.columns)
+    df = df[(df["VOL DREN.1"]!=0)|(df["VOL DREN. 2"]!=0)]
     drenajes_historico_df = pd.read_parquet("./data/DRENAJE.parquet")
     dff = pd.concat([drenajes_historico_df,df])
     return dff

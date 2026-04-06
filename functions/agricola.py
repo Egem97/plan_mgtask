@@ -709,8 +709,8 @@ def kissflow_drenajes(access_token):
     )
     file_general = get_download_url_by_name(data, "Registros Kissflow - Drenajes general.xlsx")
     file_qberries = get_download_url_by_name(data, "Registros Kissflow - Drenajes Qberries.xlsx")
-    general_ap_df = pd.read_excel(file_general)
-    qberries_ap_df = pd.read_excel(file_qberries)
+    general_ap_df = pd.read_excel(file_general,dtype={'Agua Programada (M3)':str})
+    qberries_ap_df = pd.read_excel(file_qberries,dtype={'Agua Programada (M3)':str})
 
     return  pd.concat([general_ap_df,qberries_ap_df],axis=0)
 
@@ -864,6 +864,7 @@ def transform_kissflow_drenajes():
     df = kissflow_drenajes(access_token)
     df.columns = [str(c).strip().upper() for c in df.columns]
     df = df[df["FECHA"].notna()]
+    #df.to_excel("prueba_aguaprogramada2.xlsx",index=False)
     df["MODULO"] = df["MODULO"].fillna(0)
     df["MODULO"] = df["MODULO"].astype(int)
     df["MODULO"] = "M"+df["MODULO"].astype(str)
@@ -881,10 +882,10 @@ def transform_kissflow_drenajes():
     df["VARIEDAD"] = df["VARIEDAD"].str.upper()
     df = df[(df["VOL DREN.1"].notna())&(df["VOL DREN. 2"].notna())]
     df = df[(df["VOL DREN.1"]!=0)&(df["VOL DREN. 2"]!=0)]
-    
+    df.to_excel("prueba_aguaprogramada.xlsx",index=False)
     cols_float = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
         '% DRENAJE REAL',
-        '% MÍNIMO', '% MÁXIMO','VALVULA']
+        '% MÍNIMO', '% MÁXIMO','VALVULA','AGUA PROGRAMADA (M3)']
     for col in cols_float:
         df[col] = df[col].astype(float)
     df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
@@ -1029,7 +1030,7 @@ def transform_kissflow_insumos():
     df = kissflow_riego_fertirriego(get_access_token())
     fertiriego_historico_df = pd.read_parquet("./data/INSUMOS.parquet")
     fertiriego_historico_df = fertiriego_historico_df[pd.to_datetime(fertiriego_historico_df["FECHA"])<"2026-02-03"]
-    drenaje_df = transform_kissflow_drenajes()
+    drenaje_df = transform_kissflow_drenajes_agua()
     drenaje_df = drenaje_df[drenaje_df["AGUA PROGRAMADA (M3)"].notna()]
     columns_drenajes_insumos = [
     'FECHA','FUNDO','MODULO', 'TURNO', 'VARIEDAD','AGUA PROGRAMADA (M3)','ETO MM/DIA',
@@ -1051,4 +1052,43 @@ def transform_kissflow_insumos():
         "MÁGICA": "MAGICA",
         
     })
+    return dff
+
+def transform_kissflow_drenajes_agua():
+    access_token = get_access_token()
+    df = kissflow_drenajes(access_token)
+    df.columns = [str(c).strip().upper() for c in df.columns]
+    df = df[df["FECHA"].notna()]
+    df["MODULO"] = df["MODULO"].fillna(0)
+    df["MODULO"] = df["MODULO"].astype(int)
+    df["MODULO"] = "M"+df["MODULO"].astype(str)
+    df["TURNO"] = df["TURNO"].fillna(0)
+    df["TURNO"] = df["TURNO"].astype(str)
+    df["FUNDO"] = df["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
+    #df["TURNO"] = df["TURNO"].astype(str)
+    df["UBICACIÓN"] = df["UBICACIÓN"].fillna("NO ESPECIFICADO")
+    df["UBICACIÓN"] = df["UBICACIÓN"].str.strip()
+    df["UBICACIÓN"] = df["UBICACIÓN"].str.upper()
+    df["VALVULA"] = df["VALVULA"].fillna(0)
+    df["VALVULA"] = df["VALVULA"].astype(int)
+    df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
+    df["VARIEDAD"] = df["VARIEDAD"].str.strip()
+    df["VARIEDAD"] = df["VARIEDAD"].str.upper()
+    #df = df[(df["VOL DREN.1"].notna())&(df["VOL DREN. 2"].notna())]
+    #df = df[(df["VOL DREN.1"]!=0)&(df["VOL DREN. 2"]!=0)]
+    #df.to_excel("prueba_aguaprogramada.xlsx",index=False)
+    cols_float = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
+        '% DRENAJE REAL',
+        '% MÍNIMO', '% MÁXIMO','VALVULA','AGUA PROGRAMADA (M3)']
+    for col in cols_float:
+        df[col] = df[col].astype(float)
+    df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
+    df['AÑO'] = df['AÑO'].astype(int)
+    df['SEMANA'] = df['SEMANA'].fillna(0)
+    df['SEMANA'] = df['SEMANA'].astype(int)
+    #print(df.columns)
+    #df = df[(df["VOL DREN.1"].notna())&(df["VOL DREN. 2"].notna())]
+    #df = df[(df["VOL DREN.1"]!=0)&(df["VOL DREN. 2"]!=0)]
+    drenajes_historico_df = pd.read_parquet("./data/DRENAJE.parquet")
+    dff = pd.concat([drenajes_historico_df,df])
     return dff

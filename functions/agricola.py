@@ -1112,7 +1112,8 @@ def proy_licapa_2026(access_token):
     licapa_bd["VARIEDAD"] = licapa_bd["VARIEDAD"].str.strip()
     licapa_bd["VARIABLE"] = licapa_bd["VARIABLE"].str.strip()
     licapa_bd["VARIABLE"] = licapa_bd["VARIABLE"].str.upper()
-    licapa_bd["KILOS"] = licapa_bd["KILOS"].str.upper()
+    licapa_bd["KILOS"] = licapa_bd["KILOS"].fillna(0)
+    licapa_bd["INDICADOR"] = licapa_bd["FUNDO"].astype(str)+"-"+licapa_bd["MODULO"].astype(str)+" "+licapa_bd["VARIABLE"].astype(str)
     print(licapa_bd.columns)
     licapa_ppt =read_excel_fast(url_excel, sheet_name="PPT KG26")
     licapa_ppt.columns = [str(c).strip().upper() for c in licapa_ppt.columns]
@@ -1150,3 +1151,36 @@ def proy_all_2026(access_token):
     print(all_ppt["FUNDO"].unique())
     print(len(all_ppt["FUNDO"].unique()))
     return all_df,all_ppt
+
+def proy_2026():
+    token = get_access_token()
+    proy_all_df,ppt_all_dff = proy_all_2026(token)
+    proy_licapa_df,ppt_licapa_df = proy_licapa_2026(token)
+    proy_df = pd.concat([proy_all_df,proy_licapa_df],axis=0)
+    proy_df["MODULO"] = proy_df["MODULO"].fillna("I")
+    mask_sanjose2 = proy_df["FUNDO"] == "SAN JOSE II"
+    proy_df.loc[mask_sanjose2 & (proy_df["MODULO"]=="I"), "MODULO"] = "II"
+    proy_df["FUNDO"] = proy_df["FUNDO"].replace({
+        'SAN JOSE I':'SAN JOSE',
+        'TARA FARM':'LAS BRISAS',
+        'CANYON':'EL POTRERO',
+        'LICAPA I':'LICAPA'
+    })
+    ppt_df = pd.concat([ppt_all_dff,ppt_licapa_df],axis=0)
+    ppt_df["MODULO"] = ppt_df["MODULO"].fillna("I")
+    maskppt_sanjose2 = ppt_df["FUNDO"] == "SAN JOSE II"
+    ppt_df.loc[maskppt_sanjose2 & (ppt_df["MODULO"]=="I"), "MODULO"] = "II"
+    ppt_df["VARIEDAD"] = ppt_df["VARIEDAD"].fillna("SEKOYA POP")
+    mask_ppt_canyon_madeira = (ppt_df["FUNDO"] == "CANYON MADEIRA")
+    mask_ppt_magica_magica = (ppt_df["FUNDO"] == "CANYON MAGIC")
+    ppt_df.loc[mask_ppt_canyon_madeira & (ppt_df["VARIEDAD"]=="SEKOYA POP"), "VARIEDAD"] = "MADEIRA"
+    ppt_df.loc[mask_ppt_magica_magica & (ppt_df["VARIEDAD"]=="SEKOYA POP"), "VARIEDAD"] = "MAGICA"
+    ppt_df["FUNDO"] = ppt_df["FUNDO"].replace({
+        'SAN JOSE I':'SAN JOSE',
+        'TARA FARM':'LAS BRISAS',
+        'CANYON':'EL POTRERO',
+        'LICAPA I':'LICAPA',
+        'CANYON MADEIRA':'EL POTRERO',
+        'CANYON MAGIC':'EL POTRERO',
+    })
+    return proy_df,ppt_df

@@ -42,7 +42,7 @@ async def main():
     scheduler.add_job(pipeline_agritracer_job, 'cron', hour='8-23', minute=25, timezone='America/Lima')
     
     scheduler.add_job(pipeline_meteorologia, 'cron', hour='8,20', minute=0, timezone='America/Lima')
-    
+    scheduler.add_job(proy_2026_load_data, 'cron', hour='8,20', minute=12, timezone='America/Lima')
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")
 

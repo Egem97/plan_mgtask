@@ -257,3 +257,33 @@ def load_biometria_experimental_2026():
     else:
         print(f"❌ Error al subir el archivo")
         return False
+
+
+def proy_2026_load_data():
+    print(f"📤 Subiendo archivos 'PROYECCIONES' a OneDrive...")
+    proy_df,ppt_df = proy_2026()
+    resultado_1 = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=proy_df,
+        nombre_archivo="PROYECCIONES_2026.parquet",
+        drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        folder_id="01XOBWFSFN5D6EQD4W3ZAJWFCCE6G5XRRA",
+        type_file="parquet"
+    )
+    print(f"✅ Proceso completado exitosamente 1")
+    resultado_2 = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=ppt_df,
+        nombre_archivo="PPTO_PROY_2026.parquet",
+        drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        folder_id="01XOBWFSFN5D6EQD4W3ZAJWFCCE6G5XRRA",
+        type_file="parquet"
+    )
+    print(f"✅ Proceso completado exitosamente 2") 
+
+    if resultado_2:
+        print(f"✅ Proceso completado exitosamente")
+        return True
+    else:
+        print(f"❌ Error al subir el archivo")
+        return False

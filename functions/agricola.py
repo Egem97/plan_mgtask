@@ -1052,6 +1052,8 @@ def transform_kissflow_insumos():
         "MÁGICA": "MAGICA",
         
     })
+    dff["TURNO"] = dff["TURNO"].astype(int)
+    dff["TURNO"] = dff["TURNO"].astype(str)
     return dff
 
 def transform_kissflow_drenajes_agua():
@@ -1110,13 +1112,15 @@ def proy_licapa_2026(access_token):
     licapa_bd["VARIEDAD"] = licapa_bd["VARIEDAD"].str.strip()
     licapa_bd["VARIABLE"] = licapa_bd["VARIABLE"].str.strip()
     licapa_bd["VARIABLE"] = licapa_bd["VARIABLE"].str.upper()
+    licapa_bd["KILOS"] = licapa_bd["KILOS"].str.upper()
     print(licapa_bd.columns)
     licapa_ppt =read_excel_fast(url_excel, sheet_name="PPT KG26")
     licapa_ppt.columns = [str(c).strip().upper() for c in licapa_ppt.columns]
     licapa_ppt["FUNDO"] = licapa_ppt["FUNDO"].str.strip()
     licapa_ppt["MODULO"] = licapa_ppt["MODULO"].str.strip()
     licapa_ppt["VARIEDAD"] = licapa_ppt["VARIEDAD"].str.strip()
-    
+    licapa_ppt["KG/PPTO 26"] = licapa_ppt["KG/PPTO 26"].fillna(0)
+    licapa_ppt["KG/PPTO 26"] = licapa_ppt["KG/PPTO 26"].astype(float)
     print(licapa_ppt.columns)
     return licapa_bd,licapa_ppt
 

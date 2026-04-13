@@ -19,8 +19,8 @@ st.title("pruebas")
 
 from functions.load_onedrive import cosecha_load_data
 from functions.biometria import *
-cosecha_load_data()
-st.success("CARGADO cosecha")
+df = pipeline_biometria()
+st.dataframe(df)
 #dff = pipeline_biometria()
 #st.write(dff.shape)
 #st.dataframe(dff)

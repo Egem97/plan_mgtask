@@ -394,6 +394,8 @@ def pipeline_biometria():
     qberries_biometria_26_df = qberries_biometria_26_df.rename(columns={"SEM":"SEMANA","LONG BROTES (F1)/CM":"LONG BROTES (F1)","TC BROTE (F1)/CM":"TC BROTE (F1)"})
     qberries_biometria_26_df["ZONA"] = "PAIJAN"
     #['FECHA DE PODA', 'DDPO', 'RETONOS POR PLANTA']
+    #print("QBERRIES COILS")
+    #print(list(qberries_biometria_26_df.columns))
     qbe26_columns = [
         'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION',   'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
         'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD','SEMANA POST PODA',
@@ -402,7 +404,8 @@ def pipeline_biometria():
         'TC BROTE (F1)', 'LONG BROTES (F1)', 'N BROTES (F1)','TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',
         'N BROTES (F2)', 'LONG BROTES (F2)',  'TC BROTE (F2)', 'N RETONOS', 
         'LONG BROTES RETONOS/CM', 
-        'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES'
+        'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES',
+        
     ]
     qberries_biometria_26_df = qberries_biometria_26_df[qbe26_columns]
     qberries_biometria_26_df["FECHA DE PODA"] = None
@@ -422,6 +425,9 @@ def pipeline_biometria():
         'TC BROTE (F1)','LONG BROTES (F1)','N BROTES (F1)', 'TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',
         'N BROTES (F2)','LONG BROTES (F2)', 'TC BROTE (F2)','N RETONOS', 
         'LONG BROTES RETONOS/CM', 
+        #FLUJO 3
+        'N BROTES (F3)','LONG BROTES (F3)','TC BROTE (F3)',
+        
         'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES']
     general_df= general_df[g26_columns]
     dff = pd.concat([qberries_biometria1_26_df,qberries_biometria_26_df,general_df], ignore_index=True)#,qberries_biometria_26_df
@@ -461,6 +467,16 @@ def pipeline_biometria():
     dff["FECHA ACTUALIZACION"] = dff.groupby(['FUNDO'])["FECHA DE EVALUACION"].transform("max")
     dff['FECHA ACTUALIZACION'] = pd.to_datetime(dff['FECHA ACTUALIZACION'])
     dff['SEMANA ACTUALIZACION'] = dff['FECHA ACTUALIZACION'].dt.isocalendar().week
+    dff = dff[['AÑO', 'SEMANA', 'FECHA DE EVALUACION', 'EVALUACION ANTERIOR', 'DIFERENCIA DE DIAS', 'FUNDO', 'VARIEDAD', 'FECHA DE PODA', 
+     'DDPO', 'SEMANA POST PODA', 'MODULO', 'TURNO', 'LOTE', 'N CANAS', 
+     'ALTURA DE PLANTA CM', 'PROM ANTERIOR', 'ALT PLANTA (MIN)', 'ALT PLANTA (MAX)', 'TC DE ALTURA PLANTA/CM', 
+      'N RETONOS', 'LONG BROTES RETONOS/CM', 'PROMEDIO DE LONG DE RETONO ANTERIOR', 'TC RETONOS/CM', 'N BROTES (F1)','LONG BROTES (F1)', 'PROMEDIO ANTERIOR', 'TC BROTE (F1)', 
+     'N BROTES (F2)', 'LONG BROTES (F2)', 'PROMEDIO ANTERIOR LONG BROTES F2', 
+     'TC BROTE (F2)', 'DIAMETRO (MM)', 
+     'BROTES TOTALES', 'OBSERVACIONES', 'FECHA DE PLANTACION', 'ZONA', 'BROTES DE CANAS', 'N BROTES (F3)', 'LONG BROTES (F3)', 
+     'TC BROTE (F3)', 'FECHA MIN SEMANA POST PODA', 'FECHA ACTUALIZACION', 'SEMANA ACTUALIZACION'
+    ]]
+    #print(list(dff.columns))
     return dff
 
 

@@ -1092,3 +1092,48 @@ def transform_kissflow_drenajes_agua():
     drenajes_historico_df = pd.read_parquet("./data/DRENAJE.parquet")
     dff = pd.concat([drenajes_historico_df,df])
     return dff
+
+
+def proy_licapa_2026(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT4X24C427242BC3VTLLENU7KEWG"
+    )
+    #url_excel_1 = get_download_url_by_name(data, "REGISTRO GENERAL DE APLICACIONES NUTRICIONALES.xlsx")
+    url_excel = get_download_url_by_name(data, "Kg LLICAPA I-II 2026.xlsx")
+    #PPT KG26
+    licapa_bd =read_excel_fast(url_excel, sheet_name="BD")
+    licapa_bd.columns = [str(c).strip().upper() for c in licapa_bd.columns]
+    print(licapa_bd.columns)
+    licapa_ppt =read_excel_fast(url_excel, sheet_name="PPT KG26")
+    licapa_ppt.columns = [str(c).strip().upper() for c in licapa_ppt.columns]
+    print(licapa_ppt.columns)
+    return licapa_bd,licapa_ppt
+
+def proy_all_2026(access_token):
+    data = listar_archivos_en_carpeta_compartida(
+        access_token,
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT4X24C427242BC3VTLLENU7KEWG"
+    )
+    #url_excel_1 = get_download_url_by_name(data, "REGISTRO GENERAL DE APLICACIONES NUTRICIONALES.xlsx")
+    url_excel = get_download_url_by_name(data, "Kg SJ GAP TARA SP CA-2026.xlsx")
+    #PPT KG26
+    all_df =read_excel_fast(url_excel, sheet_name="BD")
+    all_df.columns = [str(c).strip().upper() for c in all_df.columns]
+    all_df["VARIABLE"] = all_df["VARIABLE"].str.upper()
+    all_df["KILOS"] = all_df["KILOS"].fillna(0)
+    all_df["KILOS"] = all_df["KILOS"].astype(float)
+    all_df["FUNDO"] = all_df["FUNDO"].str.strip()
+    all_df["VARIABLE"] = all_df["VARIABLE"].str.strip()
+    all_df["INDICADOR"] = all_df["FUNDO"]+" "+all_df["VARIABLE"]
+    print(all_df["INDICADOR"].unique())
+    print(len(all_df["INDICADOR"].unique()))
+    all_ppt =read_excel_fast(url_excel, sheet_name="PPTO 26")
+    all_ppt.columns = [str(c).strip().upper() for c in all_ppt.columns]
+    all_ppt["KG/PPTO 26"] = all_ppt["KG/PPTO 26"].fillna(0)
+    all_ppt["KG/PPTO 26"] = all_ppt["KG/PPTO 26"].astype(float)
+    print(all_ppt["FUNDO"].unique())
+    print(len(all_ppt["FUNDO"].unique()))
+    return all_df,all_ppt

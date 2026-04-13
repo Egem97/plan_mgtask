@@ -476,6 +476,9 @@ def pipeline_biometria():
      'BROTES TOTALES', 'OBSERVACIONES', 'FECHA DE PLANTACION', 'ZONA', 'BROTES DE CANAS', 'N BROTES (F3)', 'LONG BROTES (F3)', 
      'TC BROTE (F3)', 'FECHA MIN SEMANA POST PODA', 'FECHA ACTUALIZACION', 'SEMANA ACTUALIZACION'
     ]]
+    dff['N BROTES (F3)'] = dff['N BROTES (F3)'].fillna(0)
+    dff['LONG BROTES (F3)'] = dff['LONG BROTES (F3)'].fillna(0)
+    dff['TC BROTE (F3)'] = dff['TC BROTE (F3)'].fillna(0)
     #print(list(dff.columns))
     return dff
 

@@ -1183,4 +1183,6 @@ def proy_2026():
         'CANYON MADEIRA':'EL POTRERO',
         'CANYON MAGIC':'EL POTRERO',
     })
+    proy_df["KILOS"] = proy_df["KILOS"].replace({0:None})
+    ppt_df["KG/PPTO 26"] = ppt_df["KG/PPTO 26"].replace({0:None})
     return proy_df,ppt_df

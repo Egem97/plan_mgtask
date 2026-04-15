@@ -69,7 +69,7 @@ def subir_archivo(access_token: str, dataframe: pd.DataFrame, nombre_archivo: st
         # Realizar la petición
         if type_file == "parquet":
             # Generar parquet en memoria (sin guardar archivo local)
-            parquet_buffer = dataframe.to_parquet(None)  # None = retorna bytes en memoria
+            parquet_buffer = dataframe.to_parquet(None,index=False)  # None = retorna bytes en memoria
             response = requests.put(url, headers=headers, data=parquet_buffer)
         else:
             response = requests.put(url, headers=headers, data=create_format_excel_in_memory(dataframe))

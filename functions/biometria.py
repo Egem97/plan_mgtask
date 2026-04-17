@@ -564,7 +564,7 @@ def pipeline_biometria_experimental():
         'BROTES TOTALES', 'OBSERVACIONES', 'BROTES DE CANAS',]
     for col_ in cols_numeric:
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
-    dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA'])["FECHA DE EVALUACION"].transform("min")
+    dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA','VARIEDAD'])["FECHA DE EVALUACION"].transform("min")
     dff["FECHA ACTUALIZACION"] = dff.groupby(['FUNDO'])["FECHA DE EVALUACION"].transform("max")
     dff['FECHA ACTUALIZACION'] = pd.to_datetime(dff['FECHA ACTUALIZACION'])
     dff['SEMANA ACTUALIZACION'] = dff['FECHA ACTUALIZACION'].dt.isocalendar().week

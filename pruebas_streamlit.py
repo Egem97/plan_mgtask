@@ -17,11 +17,12 @@ st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
 
 
-from functions.load_onedrive import cosecha_load_data
+from functions.load_onedrive import *
 from functions.biometria import *
-df = pipeline_biometria()
-st.dataframe(df)
-
+#df = pipeline_biometria_experimental()
+#st.dataframe(df)
+#load_biometria_experimental_2026()
+#st.success("listo")
 
 #dff = pipeline_biometria()
 #st.write(dff.shape)

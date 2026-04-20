@@ -1175,6 +1175,7 @@ def proy_2026():
     mask_ppt_magica_magica = (ppt_df["FUNDO"] == "CANYON MAGIC")
     ppt_df.loc[mask_ppt_canyon_madeira & (ppt_df["VARIEDAD"]=="SEKOYA POP"), "VARIEDAD"] = "MADEIRA"
     ppt_df.loc[mask_ppt_magica_magica & (ppt_df["VARIEDAD"]=="SEKOYA POP"), "VARIEDAD"] = "MAGICA"
+    ppt_df["FUNDO"] = ppt_df["FUNDO"].str.strip()
     ppt_df["FUNDO"] = ppt_df["FUNDO"].replace({
         'SAN JOSE I':'SAN JOSE',
         'TARA FARM':'LAS BRISAS',

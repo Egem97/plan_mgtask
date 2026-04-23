@@ -12,6 +12,19 @@ from utils.utils import read_excel_fast
 from pandas.core.frame import DataFrame
 from utils.get_token import get_access_token
 
+def inf_plantacion():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        "01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ"
+    )
+    url_parquet = get_download_url_by_name(data, "INFORME PLANTAS.parquet")
+    inf_pl_df = pd.read_parquet(url_parquet)
+    inf_pl_df = inf_pl_df.groupby(['Fundo', 'Modulo', 'Turno'])[["Area"]].sum().reset_index()
+    inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(int)
+    inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(str)
+    inf_pl_df.columns = [str(c).strip().upper() for c in inf_pl_df.columns]
+    return inf_pl_df
 
 def test1(access_token):
     data = listar_archivos_en_carpeta_compartida(
@@ -1054,6 +1067,14 @@ def transform_kissflow_insumos():
     })
     dff["TURNO"] = dff["TURNO"].astype(int)
     dff["TURNO"] = dff["TURNO"].astype(str)
+    dff = dff[['CAMPAÑA', 'FASE', 'MES', 'FECHA', 'EQUIPO', 'SUPERVISOR', 'FUNDO',
+       'DESCRIPCIÓN', 'MODULO', 'TURNO', 'VARIEDAD',
+       'LECTURA DE HIDROMETRO INICIAL', 'LECTURA DE HIDROMETRO FINAL',
+       'AGUA PROGRAMADA (M3)', 'ETO', 'LAMINA (MM)', '% REPOSICION', 'TANQ. 1',
+       'TANQ. 2', 'TANQ. 3', 'TANQ. 4', 'TANQ. 5', 'TANQ. 6', 'TANQ.7']]
+    inf_pl_df = inf_plantacion()
+    dff = pd.merge(dff, inf_pl_df, on=["FUNDO","MODULO","TURNO"], how="left")
+    dff["AREA"] = dff["AREA"].fillna(1)
     return dff
 
 def transform_kissflow_drenajes_agua():
@@ -1178,11 +1199,11 @@ def proy_2026():
     ppt_df["FUNDO"] = ppt_df["FUNDO"].str.strip()
     ppt_df["FUNDO"] = ppt_df["FUNDO"].replace({
         'SAN JOSE I':'SAN JOSE',
-        'TARA FARM':'LAS BRISAS',
-        'CANYON':'EL POTRERO',
+        #'TARA FARM':'LAS BRISAS',
+        #'CANYON':'EL POTRERO',
         'LICAPA I':'LICAPA',
-        'CANYON MADEIRA':'EL POTRERO',
-        'CANYON MAGIC':'EL POTRERO',
+        #'CANYON MADEIRA':'EL POTRERO',
+        #'CANYON MAGIC':'EL POTRERO',
     })
     proy_df["KILOS"] = proy_df["KILOS"].replace({0:None})
     ppt_df["KG/PPTO 26"] = ppt_df["KG/PPTO 26"].replace({0:None})

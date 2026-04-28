@@ -38,7 +38,7 @@ def transform_camaras_kias():
             .str.strip()
             .str.upper()
     )
-    cols = ['FECHA INICIO TRASLADO', 'RUTA', 'CONDICION RUTA', 'GREM FUNDO',
+    cols = ['SEM','FECHA INICIO TRASLADO', 'RUTA', 'CONDICION RUTA', 'GREM FUNDO',
        'GREM TRANSPORT', 'FACTURA', 'PLACA', 'TIPO UNID',
         'FUNDO PARTIDA', 'PACKING', 'N VIAJE VALIDADO',
        'H INICIO', 'HORA FIN', 'N PALLETS', 'PESO TRANSPORTADO',
@@ -59,7 +59,7 @@ def transform_camaras_kias():
     cols_num = [
         'N PALLETS', 'PESO TRANSPORTADO','CAPACIDAD PALLETS',
         'CAPAC (KG)','COSTO', 'COSTO PRORRATEADO',
-        'PESO TOTAL DEL VIAJE', 'COSTO / KG', '% OCUP',
+        'PESO TOTAL DEL VIAJE', 'COSTO / KG', '% OCUP','SEM',
     ]
     cols_time = [
         'H INICIO', 'HORA FIN','TIEMPO'
@@ -82,6 +82,8 @@ def transform_camaras_kias():
 
     camaras_df["FECHA INICIO TRASLADO"] = pd.to_datetime(camaras_df["FECHA INICIO TRASLADO"]).dt.date
     camaras_df["RUTA"] = camaras_df["RUTA"].str.split("-").str[0].str.strip()
+    camaras_df["CAMPAÑA"] = 2025
+    camaras_df = camaras_df.rename(columns = {"SEM":"SEMANA"})
     """
     """
     apg_kias.columns = (
@@ -95,7 +97,7 @@ def transform_camaras_kias():
             .str.upper()
     )
 
-    cols_kias =['FECHA', 'FUNDO', 'ACTIVIDAD', 'SERVICIO',
+    cols_kias =['SEMANA','FECHA', 'FUNDO', 'ACTIVIDAD', 'SERVICIO',
         'VALIDACION DETALLE DE VIAJE', 'RS FUNDO', 'PLACA',
         'PLACA REG', 'GRR', 'FACTURA', 'CONDUCTOR',
         'HORA ENTRADA', 'HORA SALIDA', 
@@ -111,7 +113,7 @@ def transform_camaras_kias():
             'PROVEEDOR-ZONA', 
         'COD TARIF PRO', 'MODULOS QBERRIES'
     ]
-    cols_num_kias = [ 'GRR',  'CAPAC TOTAL JARRAS', 'TARIFA', 'TARIFA TOTAL']
+    cols_num_kias = [ 'GRR',  'CAPAC TOTAL JARRAS', 'TARIFA', 'TARIFA TOTAL','SEMANA']
     cols_time_kias = [
             'HORA ENTRADA', 'HORA SALIDA',
     ]
@@ -136,6 +138,7 @@ def transform_camaras_kias():
         .str.encode('ascii', errors='ignore')
         .str.decode('utf-8')
     )
+    apg_kias["CAMPAÑA"] = 2025
     #.str.normalize('NFKD')
     return camaras_df,apg_kias
 

@@ -24,8 +24,7 @@ def clean_biometria_fundos():
     data24_df = pd.read_excel(get_download_url_by_name(data, "BIOMETRIA CAM2024.xlsx"),sheet_name = "BD")
     #data26_canyon_df = pd.read_excel(get_download_url_by_name(data, "BIOMETRIA CANYON 2026.xlsx"),sheet_name = "CANYON")
     data25_df = pd.concat([data25_df,data24_df])#,data26_canyon_df
-    st.write(f"JOIN WWW: {data25_df.shape}")
-    st.dataframe(data25_df)
+    
     data25_df.columns = (
         data25_df.columns.astype(str)
         .str.normalize('NFKD')
@@ -165,14 +164,16 @@ def qberries1_biometria_2026(data):
 
     df = pd.read_excel(get_download_url_by_name(
         data, 
-        "REGISTRO DE BIOMETRÍA ETAPA O1_CAMPAÑA 2026.xlsx"),
-         
+        "REGISTRO DE BIOMETRÍA ETAPA O1_ CAMPAÑA 2026.xlsx"),
+        
         
         sheet_name = "REGISTRO",
         skiprows=1,
     )
+    
     df["FUNDO"] = "LICAPA"
     df["FECHA DE PLANTACION"] = None
+    #df = df.rename(columns={"SDPO":"SEMANA POST PODA",})
     df = df.rename(columns={"SDPO":"SEMANA POST PODA",})
    
     return df
@@ -181,12 +182,13 @@ def qberries2_biometria_2026(data):
 
     df = pd.read_excel(get_download_url_by_name(
         data, 
-        "REGISTRO DE BIOMETRÍA ETAPA O2_CAMPAÑA 2026.xlsx"),
+        "REGISTRO DE BIOMETRÍA ETAPA O2_ CAMPAÑA 2026.xlsx"),
+         
         sheet_name = "REGISTRO",
         skiprows=1,
     )
     df["FUNDO"] = "LICAPA II"
-    df = df.rename(columns={"SPP":"SEMANA POST PODA",})
+    df = df.rename(columns={"SDP":"SEMANA POST PODA",})
 
     return df
 
@@ -325,11 +327,11 @@ def pipeline_biometria():
         'TC BROTE (F1)', 'LONG BROTES (F1)', 'N BROTES (F1)','TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',
         'N BROTES (F2)', 'LONG BROTES (F2)',  'TC BROTE (F2)', 'N RETONOS', 
         'LONG BROTES RETONOS/CM', 
-        'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES'
+        'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', #'OBSERVACIONES'
     ]
     #########################################################################################################    
     qberries_biometria1_26_df = qberries1_biometria_2026(data = data)
-    print(qberries_biometria1_26_df.columns)
+    
     cols_transform_qberries = [
         'R1 B1', 'R1 B2', 'R2 B1', 'R2 B2', 'R3 B1', 'R3 B2', 'R4 B1', 'R4 B2 ', 'R5 B1', 'R5 B2',
         'P1 D1', 'P1 D2', 'P2 D1', 'P2 D2', 'P3 D1', 'P3 D2', 'P4 D1', 'P4 D2', 'P5 D1', 'P5 D2', 
@@ -367,6 +369,7 @@ def pipeline_biometria():
     ###################################################################################################
     
     qberries_biometria_26_df = qberries2_biometria_2026(data = data)    
+    
     qberries_biometria_26_df.columns = (
             qberries_biometria_26_df.columns.astype(str)
             .str.normalize('NFKD')
@@ -395,7 +398,7 @@ def pipeline_biometria():
     qberries_biometria_26_df["ZONA"] = "PAIJAN"
     #['FECHA DE PODA', 'DDPO', 'RETONOS POR PLANTA']
     #print("QBERRIES COILS")
-    #print(list(qberries_biometria_26_df.columns))
+   
     qbe26_columns = [
         'FUNDO','ZONA',  'ANO', 'FECHA DE PLANTACION',   'EVALUACION ANTERIOR', 'FECHA DE EVALUACION',
         'Difdias', 'SEMANA', 'MODULO', 'TURNO', 'LOTE','VARIEDAD','SEMANA POST PODA',
@@ -404,7 +407,7 @@ def pipeline_biometria():
         'TC BROTE (F1)', 'LONG BROTES (F1)', 'N BROTES (F1)','TC DE ALTURA PLANTA/CM','ALTURA DE PLANTA CM',
         'N BROTES (F2)', 'LONG BROTES (F2)',  'TC BROTE (F2)', 'N RETONOS', 
         'LONG BROTES RETONOS/CM', 
-        'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES',
+        'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', #'OBSERVACIONES',
         
     ]
     qberries_biometria_26_df = qberries_biometria_26_df[qbe26_columns]
@@ -430,6 +433,7 @@ def pipeline_biometria():
         
         'TC RETONOS/CM','DIAMETRO (MM)', 'BROTES TOTALES', 'OBSERVACIONES']
     general_df= general_df[g26_columns]
+   
     dff = pd.concat([qberries_biometria1_26_df,qberries_biometria_26_df,general_df], ignore_index=True)#,qberries_biometria_26_df
     dff = dff.rename(columns = {"ANO":"AÑO","Difdias":"DIFERENCIA DE DIAS"})
     dff["FUNDO"] = dff["FUNDO"].str.upper()

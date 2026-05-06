@@ -17,6 +17,48 @@ def planes_trabajo_data():
     insumos = read_excel_fast(url_excel_1, sheet_name="HOJA 2")
     return (actividad,insumos)
 
+def plt_costos_insumos():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!DKrRhqg3EES4zcUVZUdhr281sFZAlBZDuFVNPqXRguBl81P5QY7KRpUL2n3RaODo",
+        "01PNBE7BASRPKOTFOOCVFLH2B57MZ5K35S"
+    )
+    url_excel_1 = get_download_url_by_name(data, "Insumos Canyon Berries.xlsx")
+    url_excel_2 = get_download_url_by_name(data, "Insumos Excellence Fruit.xlsx")
+    url_excel_3 = get_download_url_by_name(data, "Insumos Gap Berries.xlsx")
+    url_excel_4 = get_download_url_by_name(data, "Insumos Qberries.xlsx")
+    url_excel_5 = get_download_url_by_name(data, "Insumos Tara Farms.xlsx")
+    
+    insumos_canyon = read_excel_fast(url_excel_1, sheet_name="Hoja1")
+    insumos_excellence = read_excel_fast(url_excel_2, sheet_name="Hoja1")
+    insumos_gap = read_excel_fast(url_excel_3, sheet_name="Hoja1")
+    insumos_qberries = read_excel_fast(url_excel_4, sheet_name="Hoja1")
+    insumos_tara = read_excel_fast(url_excel_5, sheet_name="Hoja1")
+    df = pd.concat([insumos_canyon,insumos_excellence,insumos_gap,insumos_qberries,insumos_tara], ignore_index=True)
+    return df
+
+def plt_costos_actividades():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!DKrRhqg3EES4zcUVZUdhr281sFZAlBZDuFVNPqXRguBl81P5QY7KRpUL2n3RaODo",
+        "01PNBE7BASRPKOTFOOCVFLH2B57MZ5K35S"
+    )
+    url_excel_1 = get_download_url_by_name(data, "Insumos Canyon Berries.xlsx")
+    url_excel_2 = get_download_url_by_name(data, "Insumos Excellence Fruit.xlsx")
+    url_excel_3 = get_download_url_by_name(data, "Insumos Gap Berries.xlsx")
+    url_excel_4 = get_download_url_by_name(data, "Insumos Qberries.xlsx")
+    url_excel_5 = get_download_url_by_name(data, "Insumos Tara Farms.xlsx")
+    
+    insumos_canyon = read_excel_fast(url_excel_1, sheet_name="Hoja1")
+    insumos_excellence = read_excel_fast(url_excel_2, sheet_name="Hoja1")
+    insumos_gap = read_excel_fast(url_excel_3, sheet_name="Hoja1")
+    insumos_qberries = read_excel_fast(url_excel_4, sheet_name="Hoja1")
+    insumos_tara = read_excel_fast(url_excel_5, sheet_name="Hoja1")
+    df = pd.concat([insumos_canyon,insumos_excellence,insumos_gap,insumos_qberries,insumos_tara], ignore_index=True)
+    return df
+#def transform_
+
+
 def transform_plt():
     actividad_df,insumos_df = planes_trabajo_data()
     actividad_df.columns = (

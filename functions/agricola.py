@@ -1208,3 +1208,132 @@ def proy_2026():
     proy_df["KILOS"] = proy_df["KILOS"].replace({0:None})
     ppt_df["KG/PPTO 26"] = ppt_df["KG/PPTO 26"].replace({0:None})
     return proy_df,ppt_df
+
+def proyecciones_2026():
+    FILES = {
+    "GAP": "PROYECCIONES 2026- GAP.xlsx",
+    "SJ":  "PROYECCIONES 2026- SJ 1.xlsx",
+    "SP":  "PROYECCIONES 2026- SP.xlsx",
+    }
+
+    FUNDO_REPLACE = {
+        "GAP BERRIES 2026": "GAP BERRIES",
+        "SAN JOSE I 2026":  "SAN JOSE",
+        "SAN JOSE II 2026": "SAN JOSE",
+        "SAN PEDRO 2026":   "SAN PEDRO",
+    }
+
+    BOTON_FLORAL_REPLACE = {
+        "BF GAP BERRIES 2026": "BF GAP BERRIES",
+        "BF SAN JOSE I 2026":  "BF SAN JOSE",
+        "BF SAN JOSE II 2026": "BF SAN JOSE",
+        "BF SAN PEDRO 2026":   "BF SAN PEDRO",
+        "SAN PEDRO":           "BF SAN PEDRO",
+    }
+
+    NUMERIC_COLS = [
+        "N° BROTES", "YEMA  HINCHADA", "YEMA ABIERTA", "YEMA INACTIVA ",
+        "YEMA HINCHADA/BROTE", "YEMA ABIERTA/BROTE", "YEMA/ BROTE ",
+        "MILLONES DE BOTONES", "BOTON", "FLOR", "CUAJA",
+        "E1 (verde)", "E2 ", "E3", "E4 (50 %-70%)", "E5  (Maduro)",
+        "ORGANOS", "CARGADORES", "FRUTOS", "KG",
+        "YEMA  RP KG", "YEMA AB KG ", "YEMA IN KG ",
+        "BOTON KG", "FOR KG", "CUAJA KG",
+        "E1 KG", "E2 KG", "E3 KG", "E4 KG", "E5 KG",
+        "AREA",
+    ]
+
+    STRING_COLS = ["VARIEDAD", "FUNDO", "BOTON FLORAL", "MODULO"]
+
+
+    def clean_df(df: pd.DataFrame) -> pd.DataFrame:
+        # Strip column names
+        df.columns = [str(c).strip().upper() for c in df.columns]
+
+        # Remove unnamed columns
+        df = df.loc[:, [c for c in df.columns if not c.startswith("UNNAMED")]]
+
+        # Drop rows where FECHA is null (fully empty rows)
+        df = df[df["FECHA"].notna()].copy()
+
+        # --- String columns ---
+        for col in STRING_COLS:
+            if col in df.columns:
+                df[col] = df[col].astype(str).str.strip().str.upper()
+
+        # Clean FUNDO
+        df["FUNDO"] = df["FUNDO"].replace(FUNDO_REPLACE)
+        # Fallback: strip year suffix pattern like " 2026" or " I 2026"
+        df["FUNDO"] = df["FUNDO"].str.replace(r"\s+(I|II)?\s*2026$", "", regex=True).str.strip()
+
+        # Clean BOTON FLORAL
+        #df["BOTON FLORAL"] = df["BOTON FLORAL"].replace(BOTON_FLORAL_REPLACE)
+        #df["BOTON FLORAL"] = df["BOTON FLORAL"].str.replace(r"\s+(I|II)?\s*2026$", "", regex=True).str.strip()
+
+        # Clean MODULO (normalize to roman numeral string)
+        df["MODULO"] = df["MODULO"].astype(str).str.strip().str.upper()
+        df["MODULO"] = df["MODULO"].replace({"1": "I", "2": "II", "3": "III"})
+
+        # TURNO and LOTE as int then string (consistent with agricola.py pattern)
+        df["TURNO"] = df["TURNO"].fillna(0).astype(int).astype(str)
+        df["LOTE"]  = df["LOTE"].fillna(0).astype(int).astype(str)
+
+        # --- Date ---
+        df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
+
+        # --- Numeric columns: fill NaN with 0 ---
+        for col in NUMERIC_COLS:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+        # AÑO and SEMANA as int
+        df["AÑO"]    = df["AÑO"].fillna(2026).astype(int)
+        df["SEMANA"] = df["SEMANA"].fillna(0).astype(int)
+
+        # Add CAMPAÑA column for traceability
+        df.insert(0, "CAMPAÑA", "CAMPAÑA 2026")
+
+        # Final column order
+        col_order = [
+            "CAMPAÑA", "SEMANA", "AÑO", "FECHA",
+            "VARIEDAD", "FUNDO", "BOTON FLORAL", "MODULO", "TURNO", "LOTE", "AREA",
+            "N° BROTES",
+            "YEMA  HINCHADA", "YEMA ABIERTA", "YEMA INACTIVA ",
+            "YEMA HINCHADA/BROTE", "YEMA ABIERTA/BROTE", "YEMA/ BROTE ",
+            "MILLONES DE BOTONES",
+            "BOTON", "FLOR", "CUAJA",
+            "E1 (verde)", "E2 ", "E3", "E4 (50 %-70%)", "E5  (Maduro)",
+            "ORGANOS", "CARGADORES", "FRUTOS", "KG",
+            "YEMA  RP KG", "YEMA AB KG ", "YEMA IN KG ",
+            "BOTON KG", "FOR KG", "CUAJA KG",
+            "E1 KG", "E2 KG", "E3 KG", "E4 KG", "E5 KG",
+        ]
+        col_order = [c for c in col_order if c in df.columns]
+        df = df[col_order]
+
+        return df.reset_index(drop=True)
+    access_token = get_access_token()
+    dfs = []
+    for key, filename in FILES.items():
+        
+        data = listar_archivos_en_carpeta_compartida(
+            access_token,
+            "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+            "01KM43WT4BO3PJI4NFQFDYPGOO3EXBRQSN"
+        )
+        print(key)
+        print(filename)
+        print(data)
+        url_excel = get_download_url_by_name(data, filename)
+        
+        
+        raw = pd.read_excel(url_excel, sheet_name="BASE")
+        cleaned = clean_df(raw)
+        cleaned["ORIGEN"] = key
+        dfs.append(cleaned)
+        print(f"[{key}] {len(raw)} filas → {len(cleaned)} filas limpias | FUNDO: {cleaned['FUNDO'].unique()}")
+
+    df_all = pd.concat(dfs, axis=0, ignore_index=True)
+    print(f"\nTotal consolidado: {len(df_all)} filas")
+    print(f"FUNDOS: {sorted(df_all['FUNDO'].unique())}")
+    return df_all

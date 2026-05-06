@@ -287,3 +287,22 @@ def proy_2026_load_data():
     else:
         print(f"❌ Error al subir el archivo")
         return False
+
+def load_proyecciones_2026():
+    print(f"📤 Subiendo archivos 'MONITOREO_FENOLOGICO 2026' a OneDrive...")
+    
+    upload = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=proyecciones_2026(),
+        nombre_archivo="PROYECCIONES_MONITOREO_FENOLOGICO.parquet",
+        drive_id="b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        folder_id="01KM43WT2PAEL3U6VWF5CLO5JFZLKC3AKK",
+        type_file="parquet"
+    )
+    if upload:
+        print(f"✅ Proceso completado exitosamente")
+        return True
+    else:
+        print(f"❌ Error al subir el archivo")
+        return False
+#monitoreo fenológico 

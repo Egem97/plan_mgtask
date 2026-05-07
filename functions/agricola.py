@@ -1030,7 +1030,7 @@ def completed_kissflow_muestras():
             "OSMOSIS 2":20,
             "NO ESPECIFICADO":99,
             "OSMOSIS 2A":21,
-            "OSMOSIS 2B":21
+            "OSMOSIS 2B":22
     })
 
     hist_df = pd.read_parquet("./data/MUESTRAS.parquet")

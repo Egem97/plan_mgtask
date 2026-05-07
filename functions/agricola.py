@@ -1028,7 +1028,7 @@ def completed_kissflow_muestras():
             "POZO EXISTENTE":18,
             "OSMOSIS 1":19,
             "OSMOSIS 2":20,
-            "NO ESPECIFICADO":99
+            "NO ESPECIFICADO":99,
             "OSMOSIS 2A":21
     })
 

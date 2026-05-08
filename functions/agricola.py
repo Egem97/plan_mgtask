@@ -1216,6 +1216,7 @@ def proyecciones_2026():
     "GAP": "PROYECCIONES 2026- GAP.xlsx",
     "SJ":  "PROYECCIONES 2026- SJ 1.xlsx",
     "SP":  "PROYECCIONES 2026- SP.xlsx",
+    "2025": "PROYECCIONES 2024 -2025 SEM 04 SJ1,SJ2-TARA - GAP.xlsx"
     }
 
     FUNDO_REPLACE = {
@@ -1225,13 +1226,6 @@ def proyecciones_2026():
         "SAN PEDRO 2026":   "SAN PEDRO",
     }
 
-    BOTON_FLORAL_REPLACE = {
-        "BF GAP BERRIES 2026": "BF GAP BERRIES",
-        "BF SAN JOSE I 2026":  "BF SAN JOSE",
-        "BF SAN JOSE II 2026": "BF SAN JOSE",
-        "BF SAN PEDRO 2026":   "BF SAN PEDRO",
-        "SAN PEDRO":           "BF SAN PEDRO",
-    }
 
     NUMERIC_COLS = [
         "N° BROTES", "YEMA  HINCHADA", "YEMA ABIERTA", "YEMA INACTIVA ",
@@ -1242,7 +1236,7 @@ def proyecciones_2026():
         "YEMA  RP KG", "YEMA AB KG ", "YEMA IN KG ",
         "BOTON KG", "FOR KG", "CUAJA KG",
         "E1 KG", "E2 KG", "E3 KG", "E4 KG", "E5 KG",
-        "AREA",
+        "AREA","YEMA INACTIVA ","YEMA AB KG ", "YEMA IN KG "
     ]
 
     STRING_COLS = ["VARIEDAD", "FUNDO", "BOTON FLORAL", "MODULO"]
@@ -1284,9 +1278,14 @@ def proyecciones_2026():
         df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
 
         # --- Numeric columns: fill NaN with 0 ---
+        # Normalize names before matching (df.columns already stripped+uppercased)
         for col in NUMERIC_COLS:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+            col_clean = col.strip().upper()
+            if col_clean in df.columns:
+                df[col_clean] = pd.to_numeric(df[col_clean], errors="coerce").fillna(0)
+        # Catch-all: any remaining numeric-dtype columns with NaN → 0
+        num_cols = df.select_dtypes(include="number").columns
+        df[num_cols] = df[num_cols].fillna(0)
 
         # AÑO and SEMANA as int
         df["AÑO"]    = df["AÑO"].fillna(2026).astype(int)
@@ -1310,8 +1309,9 @@ def proyecciones_2026():
             "BOTON KG", "FOR KG", "CUAJA KG",
             "E1 KG", "E2 KG", "E3 KG", "E4 KG", "E5 KG",
         ]
-        col_order = [c for c in col_order if c in df.columns]
-        df = df[col_order]
+        ordered = [c for c in col_order if c in df.columns]
+        extras  = [c for c in df.columns if c not in col_order]
+        df = df[ordered + extras]
 
         return df.reset_index(drop=True)
     access_token = get_access_token()
@@ -1323,17 +1323,16 @@ def proyecciones_2026():
             "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
             "01KM43WT4BO3PJI4NFQFDYPGOO3EXBRQSN"
         )
-        print(key)
-        print(filename)
-        print(data)
+        
         url_excel = get_download_url_by_name(data, filename)
         
         
         raw = pd.read_excel(url_excel, sheet_name="BASE")
+        
         cleaned = clean_df(raw)
         cleaned["ORIGEN"] = key
         dfs.append(cleaned)
-        print(f"[{key}] {len(raw)} filas → {len(cleaned)} filas limpias | FUNDO: {cleaned['FUNDO'].unique()}")
+        #print(f"[{key}] {len(raw)} filas → {len(cleaned)} filas limpias | FUNDO: {cleaned['FUNDO'].unique()}")
 
     df_all = pd.concat(dfs, axis=0, ignore_index=True)
     print(f"\nTotal consolidado: {len(df_all)} filas")

@@ -32,10 +32,12 @@ from functions.biometria import *
 
 from functions.estacion_meteorologica import pipeline_meteorologia
 from utils.get_meteo import InnovaWeatherAPI
+from functions.costos import plt_load_data
+
 #api_client = InnovaWeatherAPI()
 #api_client.login()
 #df = api_client.get_all_stations_data()
 #st.write(df.shape)
 #st.dataframe(df)
-#pipeline_meteorologia()
-#st.success("uwu")
+plt_load_data()
+st.success("ssss")

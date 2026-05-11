@@ -8,6 +8,7 @@ from functions.tipo_cambio import tipo_cambio_load_data
 from functions.proc_files_xlsx import pipeline_agritracer
 from functions.hubcrop import pipeline_hubcrop
 from functions.estacion_meteorologica import pipeline_meteorologia
+from functions.costos import plt_load_data
 
 async def pipeline_agritracer_job():
     for attempt in range(1, 6):
@@ -42,6 +43,7 @@ async def main():
     scheduler.add_job(pipeline_agritracer_job, 'cron', hour='8-23', minute=25, timezone='America/Lima')
     
     scheduler.add_job(pipeline_meteorologia, 'cron', hour='8,20', minute=0, timezone='America/Lima')
+    scheduler.add_job(plt_load_data, 'interval', minutes=10)
     scheduler.add_job(proy_2026_load_data, 'interval', minutes=60)
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")

@@ -1216,14 +1216,24 @@ def proyecciones_2026():
     "GAP": "PROYECCIONES 2026- GAP.xlsx",
     "SJ":  "PROYECCIONES 2026- SJ 1.xlsx",
     "SP":  "PROYECCIONES 2026- SP.xlsx",
-    "2025": "PROYECCIONES 2024 -2025 SEM 04 SJ1,SJ2-TARA - GAP.xlsx"
+    "2025": "PROYECCIONES 2024 -2025 SEM 04 SJ1,SJ2-TARA - GAP.xlsx",
+    "QBERRIES":"PROYECCIONES 2026- QBERRIES.xlsx",
+    "CY":"PROYECCIONES 2026 CANYON.xlsx"
+    
     }
 
     FUNDO_REPLACE = {
         "GAP BERRIES 2026": "GAP BERRIES",
         "SAN JOSE I 2026":  "SAN JOSE",
-        "SAN JOSE II 2026": "SAN JOSE",
+        "SAN JOSE II 2026": "SAN JOSE II",
         "SAN PEDRO 2026":   "SAN PEDRO",
+        "GAP BERRIES 2024":"GAP BERRIES",
+        "GAP BERRIES 2025":"GAP BERRIES",
+        "SAN JOSE I 2024":"SAN JOSE",
+        "SAN JOSE I 2025":"SAN JOSE",
+        "SAN JOSE II 2025":"SAN JOSE II",
+        "SJ-I  2025":"SAN JOSE",
+        "TARA FARM I 2025":"LAS BRISAS"
     }
 
 
@@ -1272,7 +1282,7 @@ def proyecciones_2026():
 
         # TURNO and LOTE as int then string (consistent with agricola.py pattern)
         df["TURNO"] = df["TURNO"].fillna(0).astype(int).astype(str)
-        df["LOTE"]  = df["LOTE"].fillna(0).astype(int).astype(str)
+        df["LOTE"]  = df["LOTE"].fillna(0).astype(str)#.astype(int)
 
         # --- Date ---
         df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
@@ -1317,7 +1327,7 @@ def proyecciones_2026():
     access_token = get_access_token()
     dfs = []
     for key, filename in FILES.items():
-        
+        print(filename)
         data = listar_archivos_en_carpeta_compartida(
             access_token,
             "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
@@ -1330,6 +1340,8 @@ def proyecciones_2026():
         raw = pd.read_excel(url_excel, sheet_name="BASE")
         
         cleaned = clean_df(raw)
+        if "PROYECCIONES 2024 -2025 SEM 04 SJ1,SJ2-TARA - GAP":
+            cleaned["CAMPAÑA"] = "CAMPAÑA 2025"
         cleaned["ORIGEN"] = key
         dfs.append(cleaned)
         #print(f"[{key}] {len(raw)} filas → {len(cleaned)} filas limpias | FUNDO: {cleaned['FUNDO'].unique()}")

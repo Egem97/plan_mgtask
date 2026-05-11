@@ -30,4 +30,12 @@ from functions.biometria import *
 #if st.button("SAVE"):
 #    dff.to_parquet(r"C:\Users\EdwardoGiampiereEnri\OneDrive - ALZA PERU GROUP S.A.C\DATASETS_BI\GENERAL DATA\BIOMETRIA\BIOMETRIA_2026.parquet",index=False)
 
-
+from functions.estacion_meteorologica import pipeline_meteorologia
+from utils.get_meteo import InnovaWeatherAPI
+#api_client = InnovaWeatherAPI()
+#api_client.login()
+#df = api_client.get_all_stations_data()
+#st.write(df.shape)
+#st.dataframe(df)
+#pipeline_meteorologia()
+#st.success("uwu")

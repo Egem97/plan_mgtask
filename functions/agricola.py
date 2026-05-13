@@ -5,8 +5,8 @@ import altair as alt
 import os
 import re
 from utils.utils import *
-
-from utils.helpers import get_download_url_by_name
+from utils.get_kiss import fetch_all_kissflow
+from utils.helpers import get_download_url_by_name,get_month_name,calcular_semana_anclada_enero
 from utils.get_api import listar_archivos_en_carpeta_compartida
 from utils.utils import read_excel_fast
 from pandas.core.frame import DataFrame
@@ -20,9 +20,47 @@ def inf_plantacion():
     )
     url_parquet = get_download_url_by_name(data, "INFORME PLANTAS.parquet")
     inf_pl_df = pd.read_parquet(url_parquet)
-    inf_pl_df = inf_pl_df.groupby(['Fundo', 'Modulo', 'Turno'])[["Area"]].sum().reset_index()
+    inf_pl_df = inf_pl_df.groupby(['Fundo', 'Modulo', 'Turno'])[["Area"]].sum().reset_index()#,'Variedad'
     inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(int)
     inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(str)
+    inf_pl_df.columns = [str(c).strip().upper() for c in inf_pl_df.columns]
+    return inf_pl_df
+
+
+def inf_plantacion_variedad():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        "01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ"
+    )
+    url_parquet = get_download_url_by_name(data, "INFORME PLANTAS.parquet")
+    inf_pl_df = pd.read_parquet(url_parquet)
+    inf_pl_df = inf_pl_df.groupby(['Fundo', 'Modulo', 'Turno','Variedad'])[["Area"]].sum().reset_index()#,'Variedad'
+    inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(int)
+    #inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(str)
+    inf_pl_df["Modulo"] = inf_pl_df["Modulo"].str[1:]
+    inf_pl_df["Variedad"] = inf_pl_df["Variedad"].replace("MÁGICA","MAGICA")
+    inf_pl_df = inf_pl_df.drop(columns=["Area"])
+    
+    inf_pl_df.columns = [str(c).strip().upper() for c in inf_pl_df.columns]
+    return inf_pl_df
+
+
+def inf_plantacion_variedad_lote():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        "01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ"
+    )
+    url_parquet = get_download_url_by_name(data, "INFORME PLANTAS.parquet")
+    inf_pl_df = pd.read_parquet(url_parquet)
+    inf_pl_df = inf_pl_df.groupby(['Fundo', 'Modulo', 'Turno','Lote','Variedad'])[["Area"]].sum().reset_index()#,'Variedad'
+    inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(int)
+    #inf_pl_df["Turno"] = inf_pl_df["Turno"].astype(str)
+    inf_pl_df["Modulo"] = inf_pl_df["Modulo"].str[1:]
+    inf_pl_df["Variedad"] = inf_pl_df["Variedad"].replace("MÁGICA","MAGICA")
+    inf_pl_df = inf_pl_df.drop(columns=["Area"])
+    
     inf_pl_df.columns = [str(c).strip().upper() for c in inf_pl_df.columns]
     return inf_pl_df
 
@@ -842,6 +880,59 @@ def transform_kissflow_nutricionales():
     access_token = get_access_token()
     df = kissflow_apl_nutricionales(access_token)
     df = df[(df["FECHA"]!="Text data")&(df["FECHA"].notna())]
+
+    #####
+    dff = fetch_all_kissflow("RIE_03_1_BD")
+    dff = dff.rename(columns={
+        "FECHA_DE_REGISTRO":"FECHA",
+        "Fecha_de_creacion":"FECHA_DE_CREACION",
+        "AREA_PROGRAMADA":"ÁREA PROGRAMADA ",
+        "AREA_EJECUTADA":"ÁREA EJECUATADA",
+        "INGREDIENTE_ACTIVO":"INGREDIENTE ACTIVO",
+        "VIA_DE_APLICACION":"VIA DE APLICACIÓN",
+        "DOSISHA":"DOSIS/HA",
+        "CANTIDAD_TOTAL":"CANTIDAD TOTAL ",
+        "OBSERVACIONES":"OBSERVACION"
+        
+    })
+
+    
+    dff["CANTIDAD TOTAL "] = dff["CANTIDAD TOTAL "].astype(float)
+    dff["ÁREA PROGRAMADA "] = dff["ÁREA PROGRAMADA "].astype(float)
+    dff["CAMPAÑA"] = "CAMPAÑA 2026"
+    dff["FECHA"] = pd.to_datetime(dff["FECHA"], errors="coerce")
+    dff["AÑO"] = dff["FECHA"].dt.year
+    dff["MES"] = dff["FECHA"].dt.month
+    dff["MES"] = dff["MES"].map(get_month_name)
+    dff["SEMANA"] = dff["FECHA"].apply(calcular_semana_anclada_enero).astype("Int64")
+    #dff["FECHA_DE_REGISTRO"] = pd.to_datetime(dff["FECHA_DE_REGISTRO"], errors="coerce").dt.date
+    dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce")
+    partes = dff["TURNO_MODULO"].astype(str).str.extract(
+        r"^L(?P<LOTE>\S+)\s*-\s*T(?P<TURNO>\d+)\s*-\s*M(?P<MODULO>\d+)"
+    )
+    lote_limpio = partes["LOTE"].str.replace(r"^0+", "", regex=True)
+    dff["LOTE"] = lote_limpio.mask(lote_limpio == "", "0")
+    dff["TURNO"] = partes["TURNO"].astype("Int64")
+    dff["MODULO"] = partes["MODULO"]
+    
+   
+    dff = dff.drop(columns=["TURNO_MODULO"])
+    inf_pl_df = inf_plantacion_variedad_lote()
+    inf_pl_df["LOTE"] = (
+        inf_pl_df["LOTE"]
+        .astype(str)
+        .str.replace(r"(?i)\bLOTE\b", "", regex=True)
+        .str.strip()
+        .str.replace(r"^0+", "", regex=True)
+    )
+    inf_pl_df["LOTE"] = inf_pl_df["LOTE"].mask(inf_pl_df["LOTE"] == "", "0")
+
+    dff = pd.merge(dff, inf_pl_df, on=["FUNDO","MODULO","TURNO","LOTE"], how="left")
+    dff = dff[dff["FECHA_DE_CREACION"]>='2026-05-13']
+    dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce").dt.date
+    ######
+    df = pd.concat([df, dff],axis=0, ignore_index=True)
+    
     df["CAMPAÑA"] = df["CAMPAÑA"].str.upper()
     df["FECHA"] = pd.to_datetime(df["FECHA"], format="%Y-%m-%d").dt.date
     #df["TURNO"] = df["TURNO"].str[1:].astype(int)
@@ -866,17 +957,77 @@ def transform_kissflow_nutricionales():
     df["FUNDO"] = df["FUNDO"].replace("QBERRIES","LICAPA")
     df["FUNDO"] = df["FUNDO"].replace("QBERRIES II","LICAPA II")
     df["FUNDO"] = df["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
+   
     apl_nutri_historico_df = pd.read_parquet("./data/APLICACIONES NUTRICIONALES.parquet")
     apl_nutri_historico_df["FUNDO"] = apl_nutri_historico_df["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
-    dff = pd.concat([apl_nutri_historico_df,df])
+    df = pd.concat([apl_nutri_historico_df,df])
+    df["FECHA_DE_CREACION"] =df["FECHA_DE_CREACION"].fillna("2026-01-01")
+    df["FECHA_DE_CREACION"] = pd.to_datetime(df["FECHA_DE_CREACION"], errors="coerce").dt.date 
+    df["ÁREA EJECUATADA"] = df["ÁREA EJECUATADA"].astype(float)
+    df["DOSIS/HA"] = df["DOSIS/HA"].astype(float)
+    df["VOLUMEN"] = df["VOLUMEN"].astype(float)
+    return df
+
+def data_drenaje_kissflow():
+    dff = fetch_all_kissflow("RIE4_1_BD")
+    dff = dff.rename(columns={
+            "FECHA_DE_REGISTRO":"FECHA",
+            "NH4":"TURNOMODULO",
+            "UBICACION":"UBICACIÓN",
+            "Agua_Programada_M3":"AGUA PROGRAMADA (M3)",
+            "ETO":"ETO MM/DIA",
+            "LAMINA":"LÁMINA(MM)",
+            "REPOSICION":"REPOSICIÓN MM",
+            "CANT_DRENAJE_1":"VOL DREN.1",
+            "CANT_DREANJE_2":"VOL DREN. 2",
+            "MINIMO":"% MÍNIMO",
+            "MAXIMO":"% MÁXIMO",
+            "CALCULO_DE_DRENAJE_REAL":"% DRENAJE REAL",
+            "CANTIDAD_AFORO":"VOLUMEN AFORO"
+
+    })
+    dff["% MÍNIMO"] = pd.to_numeric(
+        dff["% MÍNIMO"].astype(str).str.replace("%", "", regex=False).str.strip(),
+        errors="coerce",
+    ) / 100
+    dff["% MÁXIMO"] = pd.to_numeric(
+        dff["% MÁXIMO"].astype(str).str.replace("%", "", regex=False).str.strip(),
+        errors="coerce",
+    ) / 100
+    dff["VOL DREN.1"] = dff["VOL DREN.1"].fillna(0)
+    dff["VOL DREN.1"] = dff["VOL DREN.1"].astype(float)
+    dff["VOL DREN. 2"] = dff["VOL DREN. 2"].fillna(0)
+    dff["VOL DREN. 2"] = dff["VOL DREN. 2"].astype(float)
+    dff["VOLUMEN AFORO"] = dff["VOLUMEN AFORO"].fillna(0)
+    dff["VOLUMEN AFORO"] = dff["VOLUMEN AFORO"].astype(float)
+    #dff["% DRENAJE REAL"] = dff["% DRENAJE REAL"].fillna(0)
+    #dff["% DRENAJE REAL"] = dff["% DRENAJE REAL"]/100
+    dff["FECHA"] = pd.to_datetime(dff["FECHA"], errors="coerce")
+    dff["AÑO"] = dff["FECHA"].dt.year
+    #dff["MES"] = dff["FECHA"].dt.month
+    #dff["MES"] = dff["MES"].map(get_month_name)
+    dff["SEMANA"] = dff["FECHA"].apply(calcular_semana_anclada_enero).astype("Int64")
+    dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce")
+    partes = dff["TURNOMODULO"].astype(str).str.extract(r"T(?P<TURNO>\d+)-M(?P<MODULO>\d+)")
+    dff["TURNO"] = partes["TURNO"].astype("Int64")
+    dff["MODULO"] =partes["MODULO"]
+    dff = dff.drop(columns=["TURNOMODULO","DE_REPOSICION","DRENAJE_REAL"])
+    dff = dff[dff["FECHA_DE_CREACION"]>='2026-05-13']
+    inf_pl_df =inf_plantacion_variedad()
+    dff = pd.merge(dff, inf_pl_df, on=["FUNDO","MODULO","TURNO"], how="left")
     return dff
 
-
-def transform_kissflow_drenajes():
+def transform_kissflow_drenajes(drenaje_kissflow):
     access_token = get_access_token()
     df = kissflow_drenajes(access_token)
     df.columns = [str(c).strip().upper() for c in df.columns]
     df = df[df["FECHA"].notna()]
+
+    ####
+    
+    df= pd.concat([df,drenaje_kissflow])
+
+    ###############
     #df.to_excel("prueba_aguaprogramada2.xlsx",index=False)
     df["MODULO"] = df["MODULO"].fillna(0)
     df["MODULO"] = df["MODULO"].astype(int)
@@ -895,7 +1046,7 @@ def transform_kissflow_drenajes():
     df["VARIEDAD"] = df["VARIEDAD"].str.upper()
     df = df[(df["VOL DREN.1"].notna())&(df["VOL DREN. 2"].notna())]
     df = df[(df["VOL DREN.1"]!=0)&(df["VOL DREN. 2"]!=0)]
-    df.to_excel("prueba_aguaprogramada.xlsx",index=False)
+    
     cols_float = ['ETO MM/DIA', 'LÁMINA(MM)', 'REPOSICIÓN MM',
         '% DRENAJE REAL',
         '% MÍNIMO', '% MÁXIMO','VALVULA','AGUA PROGRAMADA (M3)']
@@ -909,6 +1060,8 @@ def transform_kissflow_drenajes():
     df = df[(df["VOL DREN.1"]!=0)&(df["VOL DREN. 2"]!=0)]
     drenajes_historico_df = pd.read_parquet("./data/DRENAJE.parquet")
     dff = pd.concat([drenajes_historico_df,df])
+    dff["FECHA_DE_CREACION"] =dff["FECHA_DE_CREACION"].fillna("2026-01-01")
+    dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce").dt.date
     return dff
 
 def transform_kissflow_meq():
@@ -929,6 +1082,26 @@ def transform_kissflow_meq():
     dff.columns = [str(c).strip().upper() for c in dff.columns]
     dff["MODULO"] = "1"
     meq_dff = pd.concat([df,dff],axis=0)
+    #
+    
+    #####
+    df_kissflow = fetch_all_kissflow("RIE06_1_BD")
+    df_kissflow = df_kissflow.rename(columns={
+            "FECHA_DE_REGISTRO":"FECHA",
+            "OONH4":"% NH4",
+            "OONO3":"%NO3",
+            "NK":"N/K",
+            "CAMG":"CA/MG",
+
+    })
+    df_kissflow["MODULO"] = df_kissflow["MODULO"].fillna("M0")
+    df_kissflow["MODULO"] = df_kissflow["MODULO"].str[1:]
+    df_kissflow["MODULO"] = df_kissflow["MODULO"].astype(int)
+    df_kissflow["FECHA_DE_CREACION"] = pd.to_datetime(df_kissflow["FECHA_DE_CREACION"], errors="coerce")
+    df_kissflow = df_kissflow[df_kissflow["FECHA_DE_CREACION"]>='2026-05-13']
+    
+    ####
+    meq_dff = pd.concat([meq_dff,df_kissflow])
     meq_dff["FUNDO"] = meq_dff["FUNDO"].str.strip()
     meq_dff["FUNDO"] = meq_dff["FUNDO"].replace("GAP","GAP BERRIES")
     meq_dff["FUNDO"] = meq_dff["FUNDO"].replace("CANYON BERRIES","EL POTRERO")
@@ -966,7 +1139,31 @@ def transform_kissflow_meq():
 def completed_kissflow_muestras():
     access_token = get_access_token()
     df = kissflow_muestras(access_token)
-
+    #df["FECHA_DE_CREACION"] = datetime(2026,1,1)
+    ####
+    dff = fetch_all_kissflow("RIE_1_1_BD")
+    dff["FECHA_DE_REGISTRO"] = pd.to_datetime(dff["FECHA_DE_REGISTRO"], errors="coerce")
+    dff["AÑO"] = dff["FECHA_DE_REGISTRO"].dt.year
+    dff["MES"] = dff["FECHA_DE_REGISTRO"].dt.month
+    
+    dff["MES"] = dff["MES"].map(get_month_name)
+    dff["SEMANA"] = dff["FECHA_DE_REGISTRO"].apply(calcular_semana_anclada_enero).astype("Int64")
+    dff["FECHA_DE_REGISTRO"] = pd.to_datetime(dff["FECHA_DE_REGISTRO"], errors="coerce").dt.date
+    
+    dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce")#.dt.date
+    
+    partes = dff["TURNOMODULO"].astype(str).str.extract(r"T(?P<TURNO>\d+)-M(?P<MODULO>\d+)")
+    dff["TURNO"] = partes["TURNO"].astype("Int64")
+    dff["MODULO"] =partes["MODULO"]
+    dff = dff.rename(columns={"FECHA_DE_REGISTRO":"FECHA","TIPO_DE_MUESTRA":"TIPO DE MUESTRA","PARAMETROS":"PARAMETRO"})
+    dff = dff.drop(columns=["TURNOMODULO"])
+    dff = dff[dff["FECHA_DE_CREACION"]>='2026-05-13']
+    dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce").dt.date
+    inf_pl_df =inf_plantacion_variedad()
+    dff = pd.merge(dff, inf_pl_df, on=["FUNDO","MODULO","TURNO"], how="left")
+    print(dff.shape)
+    #########
+    df = pd.concat([df,dff])
 
     df["FUNDO"] = df["FUNDO"].fillna("NO ESPECIFICADO")
     df["FUNDO"] = df["FUNDO"].str.strip()
@@ -974,6 +1171,7 @@ def completed_kissflow_muestras():
     df["TIPO DE MUESTRA"] = df["TIPO DE MUESTRA"].str.strip()
     df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
     df["VARIEDAD"] = df["VARIEDAD"].str.strip()
+    df["VARIEDAD"] = df["VARIEDAD"].replace("MÁGICA","MAGICA")
     df["FUNDO"] = df["FUNDO"].fillna("NO ESPECIFICADO")
     df["FUNDO"] = df["FUNDO"].str.strip()
     df["FUNDO"] = df["FUNDO"].str.upper()
@@ -1030,7 +1228,12 @@ def completed_kissflow_muestras():
             "OSMOSIS 2":20,
             "NO ESPECIFICADO":99,
             "OSMOSIS 2A":21,
-            "OSMOSIS 2B":22
+            "OSMOSIS 2 A":21,
+            "OSMOSIS 2B":22,
+            "OSMOSIS 2 B":22,
+            "POZO 1":23,
+            "POZO 5":24,
+            "POZO 2":15
     })
 
     hist_df = pd.read_parquet("./data/MUESTRAS.parquet")
@@ -1038,14 +1241,17 @@ def completed_kissflow_muestras():
     dataframe = pd.concat([df,hist_df])
     dataframe = dataframe[dataframe["TIPO DE MUESTRA"]!="SOL. FIBRA COCO"]
     dataframe = dataframe[dataframe["TIPO DE MUESTRA"]!="GOTERO"]
-    return dataframe
+    dataframe["FECHA_DE_CREACION"] =dataframe["FECHA_DE_CREACION"].fillna("2026-01-01")
+    dataframe["FECHA_DE_CREACION"] = pd.to_datetime(dataframe["FECHA_DE_CREACION"], errors="coerce").dt.date
+    
+    return dataframe    
 
 
-def transform_kissflow_insumos():
+def transform_kissflow_insumos(drenaje_kissflow):
     df = kissflow_riego_fertirriego(get_access_token())
     fertiriego_historico_df = pd.read_parquet("./data/INSUMOS.parquet")
     fertiriego_historico_df = fertiriego_historico_df[pd.to_datetime(fertiriego_historico_df["FECHA"])<"2026-02-03"]
-    drenaje_df = transform_kissflow_drenajes_agua()
+    drenaje_df = transform_kissflow_drenajes_agua(drenaje_kissflow)
     drenaje_df = drenaje_df[drenaje_df["AGUA PROGRAMADA (M3)"].notna()]
     columns_drenajes_insumos = [
     'FECHA','FUNDO','MODULO', 'TURNO', 'VARIEDAD','AGUA PROGRAMADA (M3)','ETO MM/DIA',
@@ -1079,11 +1285,15 @@ def transform_kissflow_insumos():
     dff["AREA"] = dff["AREA"].fillna(1)
     return dff
 
-def transform_kissflow_drenajes_agua():
+def transform_kissflow_drenajes_agua(drenaje_kissflow):
     access_token = get_access_token()
     df = kissflow_drenajes(access_token)
     df.columns = [str(c).strip().upper() for c in df.columns]
     df = df[df["FECHA"].notna()]
+    ###
+    df = pd.concat([df,drenaje_kissflow])
+    ##
+    
     df["MODULO"] = df["MODULO"].fillna(0)
     df["MODULO"] = df["MODULO"].astype(int)
     df["MODULO"] = "M"+df["MODULO"].astype(str)

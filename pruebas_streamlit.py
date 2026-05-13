@@ -3,41 +3,32 @@ from utils.get_api import listar_archivos_en_carpeta_compartida,subir_archivo_co
 from functions.proc_files_xlsx import agritacer_data_detalle,agri_xlsx_data
 from utils.helpers import get_download_url_by_name
 from utils.utils import *
-from functions.recursos_humanos import read_costo_laboral
-
 import pandas as pd
 import os
 import streamlit as st
 import numpy as np
 from datetime import datetime
-
+from functions.load_onedrive import *
+from functions.biometria import *
+from functions.estacion_meteorologica import pipeline_meteorologia
+from utils.get_meteo import InnovaWeatherAPI
+from functions.costos import plt_load_data
+from utils.get_kiss import fetch_all_kissflow
 
 
 st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
-
-
-from functions.load_onedrive import *
-from functions.biometria import *
-#df = pipeline_biometria_experimental()
-#st.dataframe(df)
-#load_biometria_experimental_2026()
-#st.success("listo")
-
-#dff = pipeline_biometria()
-#st.write(dff.shape)
+with st.spinner("Wait for it...", show_time=True):
+    df = transform_kissflow_nutricionales()
+st.dataframe(df)
+st.success("owo")
+#meq_df = transform_kissflow_meq()
+#dff = fetch_all_kissflow("COP01_BD_PLANES_DE_TRABAJO")
 #st.dataframe(dff)
-#if st.button("SAVE"):
-#    dff.to_parquet(r"C:\Users\EdwardoGiampiereEnri\OneDrive - ALZA PERU GROUP S.A.C\DATASETS_BI\GENERAL DATA\BIOMETRIA\BIOMETRIA_2026.parquet",index=False)
-
-from functions.estacion_meteorologica import pipeline_meteorologia
-from utils.get_meteo import InnovaWeatherAPI
-from functions.costos import plt_load_data
-
 #api_client = InnovaWeatherAPI()
 #api_client.login()
 #df = api_client.get_all_stations_data()
 #st.write(df.shape)
 #st.dataframe(df)
-plt_load_data()
-st.success("ssss")
+#plt_load_data()
+#st.success("ssss")

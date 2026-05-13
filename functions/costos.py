@@ -5,6 +5,7 @@ from utils.helpers import get_download_url_by_name
 from utils.get_api import listar_archivos_en_carpeta_compartida,subir_archivo_con_reintento
 from utils.utils import read_excel_fast
 from utils.get_token import get_access_token
+from utils.get_kiss import fetch_all_kissflow
 
 def planes_trabajo_data():
     data = listar_archivos_en_carpeta_compartida(
@@ -60,6 +61,7 @@ def plt_costos_actividades():
 
 
 def transform_plt():
+    """
     actividad_df,insumos_df = planes_trabajo_data()
     actividad_df.columns = (
                 actividad_df.columns.astype(str)
@@ -81,7 +83,9 @@ def transform_plt():
                 .str.strip()
                 .str.upper()
     )
-    actividad_df = actividad_df.rename(columns={'SUB-AREA':'SUBAREA','ANO':'YEAR','TOTAL $':'TOTAL'})
+    """
+    actividad_df = fetch_all_kissflow("COP01_BDRG_JORNALES_PLANES_DE_TRABAJO")
+    actividad_df = actividad_df.rename(columns={'FECHAC_DE_INICIO':'FECHA','SUB_AREA':'SUBAREA','ANO':'YEAR'})#,'TOTAL $':'TOTAL'
     actividad_df["FECHA"] = pd.to_datetime(actividad_df["FECHA"]).dt.date
     for col_num in ["YEAR","SEMANA","FACTOR","JORNALES","TOTAL"]:
         actividad_df[col_num] = actividad_df[col_num].fillna(0)
@@ -108,13 +112,15 @@ def transform_plt():
     #})
     #print(actividad_df["ACTIVIDAD"].unique())
     ################################
+    insumos_df = fetch_all_kissflow("COP01_BD_PLANES_DE_TRABAJO")
+    
+    insumos_df = insumos_df.rename(columns={'ANO':'YEAR','FECHAC_DE_INICIO':'FECHA'})
     insumos_df["FECHA"] = pd.to_datetime(insumos_df["FECHA"]).dt.date
-    insumos_df = insumos_df.rename(columns={'ANO':'YEAR'})
-
+    
     for col_num in ["YEAR","SEMANA","FACTOR","CANTIDAD","TOTAL"]:
         insumos_df[col_num] = insumos_df[col_num].fillna(0)
         insumos_df[col_num] = insumos_df[col_num].astype(float)
-    st.dataframe(insumos_df)
+    
     for col_str in ["FUNDO","INSUMO","VARIEDAD","TIPO"]:    
         insumos_df[col_str] = insumos_df[col_str].fillna("-")
         insumos_df[col_str] = insumos_df[col_str].astype(str)

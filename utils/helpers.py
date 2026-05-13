@@ -341,3 +341,13 @@ def transform_kg_text_rp_packing(text_num):
         else:
             text_num = text_num.replace(",", ".")
         return text_num.replace(",",".")
+
+def calcular_semana_anclada_enero(fecha):
+    """Semana del año donde el 1 de enero siempre cae en la semana 1
+    (sin reasignar los primeros días de enero a la semana 52/53 del año anterior).
+    Las semanas mantienen alineación lunes-domingo."""
+    if pd.isna(fecha):
+        return pd.NA
+    fecha = pd.Timestamp(fecha)
+    jan_1 = pd.Timestamp(year=fecha.year, month=1, day=1)
+    return ((fecha - jan_1).days + jan_1.weekday()) // 7 + 1

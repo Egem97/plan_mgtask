@@ -158,12 +158,12 @@ def load_kissflow_muestras():
         print(f"❌ Error al subir el archivo")
         return False
 
-def load_kissflow_drenajes():
+def load_kissflow_drenajes(df):
     print(f"📤 Subiendo archivos 'DRENAJE' a OneDrive...")
     
     upload = subir_archivo_con_reintento(
         access_token=get_access_token(),
-        dataframe=transform_kissflow_drenajes(),
+        dataframe=transform_kissflow_drenajes(df),
         nombre_archivo="DRENAJE.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
@@ -195,12 +195,12 @@ def load_kissflow_apl_nutricionales():
         print(f"❌ Error al subir el archivo")
         return False
 
-def load_kissflow_insumos():
+def load_kissflow_insumos(df):
     print(f"📤 Subiendo archivos 'INSUMOS' a OneDrive...")
     
     upload = subir_archivo_con_reintento(
         access_token=get_access_token(),
-        dataframe=transform_kissflow_insumos(),
+        dataframe=transform_kissflow_insumos(df),
         nombre_archivo="INSUMOS.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
@@ -214,11 +214,12 @@ def load_kissflow_insumos():
         return False
 
 def load_kissflow_fertirriego():
+    df = data_drenaje_kissflow()
     load_kissflow_muestras()
-    load_kissflow_drenajes()
+    load_kissflow_drenajes(df)
     load_kissflow_apl_nutricionales()
     meq_load_data()
-    load_kissflow_insumos()
+    load_kissflow_insumos(df)
     print("FINALIZADO FERTIRRIEGO")
 
 

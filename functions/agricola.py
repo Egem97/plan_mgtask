@@ -1428,7 +1428,10 @@ def proyecciones_2026():
     "SP":  "PROYECCIONES 2026- SP.xlsx",
     "2025": "PROYECCIONES 2024 -2025 SEM 04 SJ1,SJ2-TARA - GAP.xlsx",
     "QBERRIES":"PROYECCIONES 2026- QBERRIES.xlsx",
-    "CY":"PROYECCIONES 2026 CANYON.xlsx"
+    "CY":"PROYECCIONES 2026 CANYON.xlsx",
+    "TF":"PROYECCIONES 2026 TARA FARM.xlsx",
+    "SJ2" : "PROYECCIONES 2026- SJ 2.xlsx"
+    
     
     }
 
@@ -1443,7 +1446,11 @@ def proyecciones_2026():
         "SAN JOSE I 2025":"SAN JOSE",
         "SAN JOSE II 2025":"SAN JOSE II",
         "SJ-I  2025":"SAN JOSE",
-        "TARA FARM I 2025":"LAS BRISAS"
+        "TARA FARM I 2025":"LAS BRISAS",
+        "TARA FARM I 2026":"LAS BRISAS",
+        "TARA FARM":"LAS BRISAS",
+        "LICAPA I 2026":"LICAPA"
+        
     }
 
 
@@ -1495,8 +1502,8 @@ def proyecciones_2026():
         df["LOTE"]  = df["LOTE"].fillna(0).astype(str)#.astype(int)
 
         # --- Date ---
-        df["FECHA"] = pd.to_datetime(df["FECHA"]).dt.date
-
+        df["FECHA"] = pd.to_datetime(df["FECHA"],errors="coerce").dt.date
+        df = df[df["FECHA"].notna()]
         # --- Numeric columns: fill NaN with 0 ---
         # Normalize names before matching (df.columns already stripped+uppercased)
         for col in NUMERIC_COLS:
@@ -1512,11 +1519,11 @@ def proyecciones_2026():
         df["SEMANA"] = df["SEMANA"].fillna(0).astype(int)
 
         # Add CAMPAÑA column for traceability
-        df.insert(0, "CAMPAÑA", "CAMPAÑA 2026")
-
+        #df.insert(0, "CAMPAÑA", "CAMPAÑA 2026")
+        
         # Final column order
         col_order = [
-            "CAMPAÑA", "SEMANA", "AÑO", "FECHA",
+            "SEMANA", "AÑO", "FECHA",#,
             "VARIEDAD", "FUNDO", "BOTON FLORAL", "MODULO", "TURNO", "LOTE", "AREA",
             "N° BROTES",
             "YEMA  HINCHADA", "YEMA ABIERTA", "YEMA INACTIVA ",
@@ -1550,13 +1557,13 @@ def proyecciones_2026():
         raw = pd.read_excel(url_excel, sheet_name="BASE")
         
         cleaned = clean_df(raw)
-        if "PROYECCIONES 2024 -2025 SEM 04 SJ1,SJ2-TARA - GAP":
-            cleaned["CAMPAÑA"] = "CAMPAÑA 2025"
+        
         cleaned["ORIGEN"] = key
         dfs.append(cleaned)
         #print(f"[{key}] {len(raw)} filas → {len(cleaned)} filas limpias | FUNDO: {cleaned['FUNDO'].unique()}")
 
     df_all = pd.concat(dfs, axis=0, ignore_index=True)
+    df_all["CAMPAÑA"] = df_all["CAMPAÑA"].fillna("CAMPAÑA 2026")
     print(f"\nTotal consolidado: {len(df_all)} filas")
     print(f"FUNDOS: {sorted(df_all['FUNDO'].unique())}")
     return df_all

@@ -928,7 +928,7 @@ def transform_kissflow_nutricionales():
     inf_pl_df["LOTE"] = inf_pl_df["LOTE"].mask(inf_pl_df["LOTE"] == "", "0")
 
     dff = pd.merge(dff, inf_pl_df, on=["FUNDO","MODULO","TURNO","LOTE"], how="left")
-    dff = dff[dff["FECHA_DE_CREACION"]>='2026-05-13']
+    dff = dff[(dff["FECHA_DE_CREACION"]>='2026-05-13')&(dff["OBSERVACION"]!="PRUEBA")]
     dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce").dt.date
     ######
     df = pd.concat([df, dff],axis=0, ignore_index=True)

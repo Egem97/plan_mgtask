@@ -45,6 +45,8 @@ async def main():
     scheduler.add_job(pipeline_meteorologia, 'cron', hour='8,20', minute=0, timezone='America/Lima')
     scheduler.add_job(plt_load_data, 'interval', minutes=10)
     scheduler.add_job(proy_2026_load_data, 'interval', minutes=60)
+    scheduler.add_job(load_proyecciones_2026, 'cron', hour='7-20', minute='28,55', timezone='America/Lima')
+    #load_proyecciones_2026()
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")
 

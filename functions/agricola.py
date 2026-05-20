@@ -1430,7 +1430,8 @@ def proyecciones_2026():
     "QBERRIES":"PROYECCIONES 2026- QBERRIES.xlsx",
     "CY":"PROYECCIONES 2026 CANYON.xlsx",
     "TF":"PROYECCIONES 2026 TARA FARM.xlsx",
-    "SJ2" : "PROYECCIONES 2026- SJ 2.xlsx"
+    "SJ2" : "PROYECCIONES 2026- SJ 2.xlsx",
+    "QBERRIES2":"PROYECCIONES 2026- QBERRIES EII.xlsx",
     
     
     }
@@ -1449,7 +1450,8 @@ def proyecciones_2026():
         "TARA FARM I 2025":"LAS BRISAS",
         "TARA FARM I 2026":"LAS BRISAS",
         "TARA FARM":"LAS BRISAS",
-        "LICAPA I 2026":"LICAPA"
+        "LICAPA I 2026":"LICAPA",
+        "LICAPA II 2026":"LICAPA II"
         
     }
 

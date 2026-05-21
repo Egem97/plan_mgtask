@@ -1432,6 +1432,7 @@ def proyecciones_2026():
     "TF":"PROYECCIONES 2026 TARA FARM.xlsx",
     "SJ2" : "PROYECCIONES 2026- SJ 2.xlsx",
     "QBERRIES2":"PROYECCIONES 2026- QBERRIES EII.xlsx",
+    "TESTBLOCK":"PROYECIONES VARIEDADES 2026_TEST BLOCK.xlsx"
     
     
     }
@@ -1546,7 +1547,7 @@ def proyecciones_2026():
     access_token = get_access_token()
     dfs = []
     for key, filename in FILES.items():
-        print(filename)
+        print(key)
         data = listar_archivos_en_carpeta_compartida(
             access_token,
             "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
@@ -1561,7 +1562,14 @@ def proyecciones_2026():
         cleaned = clean_df(raw)
         
         cleaned["ORIGEN"] = key
-        dfs.append(cleaned)
+        
+        if key == "TESTBLOCK":
+            cleaned = cleaned.drop(columns=["CAMPAÑA"])
+            cleaned["PROY_TIPO"] = "TEST BLOCK"
+        else:
+            
+            cleaned["PROY_TIPO"] = "NORMAL"
+        dfs.append(cleaned)    
         #print(f"[{key}] {len(raw)} filas → {len(cleaned)} filas limpias | FUNDO: {cleaned['FUNDO'].unique()}")
 
     df_all = pd.concat(dfs, axis=0, ignore_index=True)

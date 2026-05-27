@@ -1375,14 +1375,12 @@ def proy_all_2026(access_token):
     all_df["FUNDO"] = all_df["FUNDO"].str.strip()
     all_df["VARIABLE"] = all_df["VARIABLE"].str.strip()
     all_df["INDICADOR"] = all_df["FUNDO"]+" "+all_df["VARIABLE"]
-    print(all_df["INDICADOR"].unique())
-    print(len(all_df["INDICADOR"].unique()))
+    
     all_ppt =read_excel_fast(url_excel, sheet_name="PPTO 26")
     all_ppt.columns = [str(c).strip().upper() for c in all_ppt.columns]
     all_ppt["KG/PPTO 26"] = all_ppt["KG/PPTO 26"].fillna(0)
     all_ppt["KG/PPTO 26"] = all_ppt["KG/PPTO 26"].astype(float)
-    print(all_ppt["FUNDO"].unique())
-    print(len(all_ppt["FUNDO"].unique()))
+    
     return all_df,all_ppt
 
 def proy_2026():

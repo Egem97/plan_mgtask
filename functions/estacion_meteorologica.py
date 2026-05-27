@@ -15,21 +15,26 @@ from utils.get_token import get_access_token
 
 
 def pipeline_meteorologia():
+
     drive_id = "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR"
     folder_id = "01XOBWFSDBKVECP3XJCVDKF6KP6TJYVTQO"
-    #data = listar_archivos_en_carpeta_compartida(
-    #    get_access_token(),
-    #    drive_id,
-    #    folder_id
-    #)
-    #url_excel_1 = get_download_url_by_name(data, "ESTACIONES_METEOROLOGICAS_20250101_20260125.parquet")
-    #hdf = pd.read_parquet(url_excel_1)
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        drive_id,
+        folder_id
+    )
+    
+    url_excel_1 = get_download_url_by_name(data, "ESTACIONES_METEOROLOGICAS_20250101_20260125.parquet")
+    hdf = pd.read_parquet(url_excel_1)
+    
+    
+    
     api_client = InnovaWeatherAPI()
 
     api_client.login()
 
     df = api_client.get_all_stations_data()
-    #df = pd.concat([hdf,df],axis=0)
+    df = pd.concat([hdf,df],axis=0)
     resultado = subir_archivo_con_reintento(
         access_token=get_access_token(),
         dataframe=df,

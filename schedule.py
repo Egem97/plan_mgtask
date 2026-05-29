@@ -10,6 +10,10 @@ from functions.hubcrop import pipeline_hubcrop
 from functions.estacion_meteorologica import pipeline_meteorologia
 from functions.costos import plt_load_data
 from functions.net_pipeline import pipeline_netsuite_ordenes
+from functions.mayor_analitico_pipeline import (
+    incremental as mayor_analitico_incremental,
+    full_load as mayor_analitico_full_load,
+)
 
 async def pipeline_agritracer_job():
     for attempt in range(1, 6):
@@ -55,6 +59,27 @@ async def main():
         minute='0,30',
         timezone='America/Lima'
     )
+    # Mayor analítico (CDC) cada 30 min + recarga completa semanal (red de seguridad)
+    scheduler.add_job(
+        mayor_analitico_incremental,
+        'cron',
+        day_of_week='mon-fri',
+        hour='8-19',
+        minute='0,30',
+        timezone='America/Lima',
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        mayor_analitico_full_load,
+        'cron',
+        day_of_week='sun',
+        hour=3,
+        minute=15,
+        timezone='America/Lima',
+        max_instances=1,
+        coalesce=True,
+    )
     #load_proyecciones_2026()
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")
@@ -68,4 +93,11 @@ async def main():
 
 
 if __name__ == "__main__":
+    # Evita UnicodeEncodeError al imprimir emojis (✅/❌) en consolas cp1252 (Windows)
+    import sys
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     asyncio.run(main())

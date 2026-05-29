@@ -126,3 +126,5 @@ last_script.py
 pruebas_streamlit.py
 *.xlsx
 *.tmp.*
+
+*.sql

@@ -9,6 +9,7 @@ from functions.proc_files_xlsx import pipeline_agritracer
 from functions.hubcrop import pipeline_hubcrop
 from functions.estacion_meteorologica import pipeline_meteorologia
 from functions.costos import plt_load_data
+from functions.net_pipeline import pipeline_netsuite_ordenes
 
 async def pipeline_agritracer_job():
     for attempt in range(1, 6):
@@ -46,6 +47,14 @@ async def main():
     scheduler.add_job(plt_load_data, 'interval', minutes=10)
     scheduler.add_job(proy_2026_load_data, 'interval', minutes=60)
     scheduler.add_job(load_proyecciones_2026, 'cron', hour='7-20', minute='28,55', timezone='America/Lima')
+    scheduler.add_job(
+        pipeline_netsuite_ordenes,
+        'cron',
+        day_of_week='mon-fri',
+        hour='8-19',
+        minute='0,30',
+        timezone='America/Lima'
+    )
     #load_proyecciones_2026()
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")

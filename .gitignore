@@ -128,3 +128,4 @@ pruebas_streamlit.py
 *.tmp.*
 
 *.sql
+*.csv

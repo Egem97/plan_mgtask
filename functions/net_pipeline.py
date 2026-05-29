@@ -50,6 +50,43 @@ ONEDRIVE_FILENAME = "OC PACKING NETSUITE.parquet"
 # Tamaño de página de SuiteQL (máximo permitido por NetSuite)
 PAGE_SIZE = 1000
 
+# === Esquema de salida ===
+# El ORDEN de esta lista define el orden de las columnas del DataFrame y
+# refleja exactamente el orden de los alias de la query `ordenes.sql`.
+# El segundo valor es el tipo de dato pandas (nullable) a forzar.
+# Si modificas ordenes.sql, actualiza también esta lista.
+COLUMN_SCHEMA = [
+    ("id_transaccion",         "Int64"),
+    ("fecha_transaccion",      "datetime64[ns]"),
+    ("voucher_contable",       "string"),
+    ("empresa",                "string"),
+    ("razon_social",           "string"),
+    ("glosa",                  "string"),
+    ("moneda",                 "string"),
+    ("soles_cargo",            "float64"),
+    ("soles_abono",            "float64"),
+    ("soles_saldo",            "float64"),
+    ("dolares_cargo",          "float64"),
+    ("dolares_abono",          "float64"),
+    ("dolares_saldo",          "float64"),
+    ("estado_orden",           "string"),
+    ("facturas_vinculadas",    "string"),
+    ("estado_pago",            "string"),
+    ("departamento",           "string"),
+    ("clase",                  "string"),
+    ("almacen",                "string"),
+    ("cod_item",               "Int64"),
+    ("item",                   "string"),
+    ("cantidad",               "float64"),
+    ("unidad_medida",          "string"),
+    ("proyecto",               "string"),
+    ("parcela",                "string"),
+    ("linea_negocio",          "string"),
+    ("actividad",              "string"),
+    ("partida_presupuestaria", "string"),
+    ("macropartida",           "string"),
+]
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
@@ -215,11 +252,45 @@ def ejecutar_suiteql(query, ns=None):
     return filas
 
 
+def _apply_schema(df):
+    """Ordena y tipa el DataFrame según COLUMN_SCHEMA.
+
+    - Crea como vacías las columnas del esquema que NetSuite omitió
+      (SuiteQL no devuelve la clave cuando el valor es nulo en todas las filas).
+    - Fuerza el tipo de dato de cada columna.
+    - Reordena dejando primero las columnas del esquema (en su orden) y al
+      final cualquier columna extra inesperada que haya devuelto la query.
+    """
+    for col, dtype in COLUMN_SCHEMA:
+        if col not in df.columns:
+            df[col] = pd.NA
+
+        try:
+            if dtype == "datetime64[ns]":
+                df[col] = pd.to_datetime(df[col], errors="coerce")
+            elif dtype == "Int64":
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+            elif dtype == "float64":
+                # .astype fuerza float aunque todos los valores sean enteros
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+            else:  # string
+                df[col] = df[col].astype("string")
+        except Exception as exc:  # no abortar todo por una columna problemática
+            logger.warning("No se pudo convertir '%s' a %s: %s", col, dtype, exc)
+
+    ordenadas = [c for c, _ in COLUMN_SCHEMA]
+    extras = [c for c in df.columns if c not in ordenadas]
+    if extras:
+        logger.warning("Columnas no contempladas en el esquema: %s", extras)
+    return df[ordenadas + extras]
+
+
 def _to_dataframe(filas):
-    """Convierte las filas a un DataFrame de pandas limpiando metadatos."""
+    """Convierte las filas a un DataFrame de pandas, ordenado y tipado."""
     # SuiteQL agrega un campo "links" por fila que no aporta datos
     limpias = [{k: v for k, v in fila.items() if k != "links"} for fila in filas]
-    return pd.DataFrame(limpias)
+    df = pd.DataFrame(limpias)
+    return _apply_schema(df)
 
 
 def guardar_resultado(df, nombre=OUTPUT_NAME):

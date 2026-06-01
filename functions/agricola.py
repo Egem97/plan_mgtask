@@ -1307,7 +1307,7 @@ def transform_kissflow_drenajes_agua(drenaje_kissflow):
     df["UBICACIÓN"] = df["UBICACIÓN"].str.strip()
     df["UBICACIÓN"] = df["UBICACIÓN"].str.upper()
     df["VALVULA"] = df["VALVULA"].fillna(0)
-    df["VALVULA"] = df["VALVULA"].astype(int)
+    df["VALVULA"] = df["VALVULA"].astype(float)
     df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
     df["VARIEDAD"] = df["VARIEDAD"].str.strip()
     df["VARIEDAD"] = df["VARIEDAD"].str.upper()

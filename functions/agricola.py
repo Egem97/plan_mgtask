@@ -1041,6 +1041,7 @@ def transform_kissflow_drenajes(drenaje_kissflow):
     df["UBICACIÓN"] = df["UBICACIÓN"].str.strip()
     df["UBICACIÓN"] = df["UBICACIÓN"].str.upper()
     df["VALVULA"] = df["VALVULA"].fillna(0)
+    df["VALVULA"] = df["VALVULA"].replace("",0)
     df["VALVULA"] = df["VALVULA"].astype(int)
     df["VARIEDAD"] = df["VARIEDAD"].fillna("NO ESPECIFICADO")
     df["VARIEDAD"] = df["VARIEDAD"].str.strip()

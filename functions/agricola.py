@@ -397,6 +397,7 @@ def drenaje_campo():
     df["VARIEDAD"] = df["VARIEDAD"].str.upper()
 
     df["VALVULA"] = df["VALVULA"].fillna(0)
+    df["VALVULA"] = df["VALVULA"].replace("",0)
 
     df["UBICACIÓN"] = df["UBICACIÓN"].fillna("NO ESPECIFICADO")
     df["UBICACIÓN"] = df["UBICACIÓN"].str.strip()

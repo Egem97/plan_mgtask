@@ -267,7 +267,19 @@ def _apply_schema(df):
 
         try:
             if dtype == "datetime64[ns]":
-                df[col] = pd.to_datetime(df[col], errors="coerce")
+                # NetSuite (SuiteQL) devuelve las fechas como texto DD/MM/YYYY.
+                # Sin indicar el formato, pandas asume MM/DD/YYYY y convierte a
+                # NaT (columna vacía) todas las fechas cuyo día es > 12. Forzamos
+                # day-first y, como respaldo, intentamos inferir el resto.
+                parsed = pd.to_datetime(
+                    df[col], format="%d/%m/%Y", errors="coerce"
+                )
+                pendientes = parsed.isna() & df[col].notna()
+                if pendientes.any():
+                    parsed.loc[pendientes] = pd.to_datetime(
+                        df.loc[pendientes, col], dayfirst=True, errors="coerce"
+                    )
+                df[col] = parsed
             elif dtype == "Int64":
                 df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
             elif dtype == "float64":

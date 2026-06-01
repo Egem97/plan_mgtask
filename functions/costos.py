@@ -119,6 +119,7 @@ def transform_plt():
     
     for col_num in ["YEAR","SEMANA","FACTOR","CANTIDAD","TOTAL"]:
         insumos_df[col_num] = insumos_df[col_num].fillna(0)
+        insumos_df[col_num] = insumos_df[col_num].replace("",0)
         insumos_df[col_num] = insumos_df[col_num].astype(float)
     
     for col_str in ["FUNDO","INSUMO","VARIEDAD","TIPO"]:    

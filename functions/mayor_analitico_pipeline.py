@@ -279,7 +279,8 @@ def _apply_schema(df):
 def _to_dataframe(filas):
     """Lista de dicts -> DataFrame ordenado y tipado."""
     df = pd.DataFrame(filas)
-    return _apply_schema(df)
+    df = _apply_schema(df)
+    return df
 
 
 # --------------------------------------------------------------------------- #

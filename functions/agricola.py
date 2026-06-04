@@ -1382,7 +1382,8 @@ def proy_all_2026(access_token):
     all_ppt.columns = [str(c).strip().upper() for c in all_ppt.columns]
     all_ppt["KG/PPTO 26"] = all_ppt["KG/PPTO 26"].fillna(0)
     all_ppt["KG/PPTO 26"] = all_ppt["KG/PPTO 26"].astype(float)
-    
+    all_df["VARIABLE"] = all_df["VARIABLE"].replace('KG25','KG 25')
+    all_df["VARIABLE"] = all_df["VARIABLE"].replace('KG24','KG 24')
     return all_df,all_ppt
 
 def proy_2026():

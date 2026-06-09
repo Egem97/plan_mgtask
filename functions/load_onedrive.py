@@ -6,7 +6,15 @@ from functions.agricola import *
 
 from functions.biometria import pipeline_biometria,pipeline_biometria_experimental
 
-
+def cosecha_histo_data():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT2PAEL3U6VWF5CLO5JFZLKC3AKK"
+    )
+    url_ = get_download_url_by_name(data, "COSECHA_HISTORICO.parquet")
+    
+    return pd.read_parquet(url_)
 
 def cosecha_load_data():
     print(f"📤 Subiendo archivo 'COSECHA' a OneDrive...")

@@ -12,15 +12,23 @@ from functions.load_onedrive import *
 from functions.biometria import *
 from functions.estacion_meteorologica import pipeline_meteorologia
 from utils.get_meteo import InnovaWeatherAPI
-from functions.costos import plt_load_data
+from functions.costos import plt_load_data,PLT_ACTIVIDADES_GENERAL
 from utils.get_kiss import fetch_all_kissflow
 
 
 st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
-with st.spinner("Wait for it...", show_time=True):
-    load_proyecciones_2026()
-st.success("ww")
+#with st.spinner("Wait for it...", show_time=True):
+#    PLT_ACTIVIDADES_GENERAL()
+#st.success("ww")
+#from functions.costos import PLT_CORE_
+#df,dff,index_df = PLT_CORE_()
+#st.write(df.shape)
+#st.dataframe(df)
+#proy_df,ppt_df = proy_2026()
+#st.dataframe(proy_df)
+#st.dataframe(ppt_df)
+
 #df = proyecciones_2026()
 #st.dataframe(df)
 #st.success("owo")
@@ -34,3 +42,5 @@ st.success("ww")
 #st.dataframe(df)
 #plt_load_data()
 #st.success("ssss")
+
+#cosecha_datasets

@@ -12,6 +12,16 @@ from utils.utils import read_excel_fast
 from pandas.core.frame import DataFrame
 from utils.get_token import get_access_token
 
+def cosecha_histo():
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        "01KM43WT2PAEL3U6VWF5CLO5JFZLKC3AKK"
+    )
+    url_ = get_download_url_by_name(data, "COSECHA_HISTORICO.parquet")
+    
+    return pd.read_parquet(url_)
+
 def inf_plantacion():
     data = listar_archivos_en_carpeta_compartida(
         get_access_token(),
@@ -419,16 +429,20 @@ def drenaje_campo():
 def data_cosecha():
     #path_cosecha = r"C:\Users\EdwardoGiampiereEnri\OneDrive - ALZA PERU GROUP S.A.C\Archivos de Andy Rodriguez - INTELIGENCIA DE NEGOCIOS\DATA BI\AGRICOLA\PRODUCCION"
     access_token = get_access_token()
+    h_df = cosecha_histo()
+    h_df["MERCADO"] = h_df["PACKING"]
+    h_df["MERCADO"] = h_df["MERCADO"].replace(
+        {
+        "VENTA NACIONAL":"NACIONAL",   
+        "ALZA PERU PACKING":"EXPORTACION",  
+        "ALZA PACKING":"EXPORTACION",  
+        "ALZA + PACKING":"EXPORTACION",  
+        "ALZA PERU PACKING S.A.C.":"EXPORTACION",  
+        "SMART PACKING S.A.C.":"EXPORTACION",  
+        }
+    )
     list_files = [
-        "1. Cosecha Excelence Sur 2025 CAMPO San Jose I.xlsx",
-        "2. Cosecha Excelence Sur 2025 CAMPO San Jose II LIS (1).xlsx",
-        "5. Cosecha QBERRIES-CAMPAÑA-2025.xlsx",
-        "3. Cosecha GAP - 2025.xlsx",
-        "4. Cosecha TARA FARM - 2025.xlsx",
-        "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx",
-        
-        "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx",
-        "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx"
+        "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx"
 
         ]
 
@@ -441,7 +455,7 @@ def data_cosecha():
             preferred_sheet = "KG VARIEDAD"
         elif file == "3. Cosecha GAP - 2025.xlsx":
             preferred_sheet = "DATA EXP Y CAMP "
-        elif file == "5. Cosecha QBERRIES-CAMPAÑA-2025.xlsx":
+        elif file == "5. Cosecha QBERRIES-CAMPAÑA-2025.xlsx" or file == "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx":
             preferred_sheet = "DATA EXP Y CAMP  "
         else:
             preferred_sheet = "DATA EXP Y CAMP"
@@ -463,6 +477,14 @@ def data_cosecha():
         #st.dataframe(df)
         if file == "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":
             df = df.rename(columns={"KILOS": "KILOS BRUTOS","º":"MES"})
+            
+        elif file == "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx":
+            df["num_modulo"] = df['MODULO'].str.replace(r'\D', '', regex=True)
+            df["num_modulo"] = pd.to_numeric(df["num_modulo"], errors='coerce').fillna(0).astype(int)
+            mask_qberries = df["FUNDO"] == "QBERRIES"
+            df.loc[mask_qberries & (df["num_modulo"] > 5), "FUNDO"] = "LICAPA II"
+            df.loc[mask_qberries & (df["num_modulo"] <= 5), "FUNDO"] = "LICAPA"
+            df = df.drop(columns=["num_modulo"])
         # Si no se pudo leer, avisar y continuar con el siguiente archivo
         #if df is None:
         #    st.warning(f"No se pudo leer '{file}' (hoja: {preferred_sheet}).")
@@ -503,17 +525,19 @@ def data_cosecha():
             "CANYON BERRIES":"EL POTRERO",
         }
     )
-    data = data.drop(columns = ["Nª GUIA INTERNA","MES","SEMANA","REF","REF2","MERCADO"])
+    data = data.drop(columns = ["Nª GUIA INTERNA","MES","SEMANA","REF","REF2"])
 
     data["MODULO"] = data["MODULO"].fillna("MX")
     data["MODULO"] = data["MODULO"].replace({"I":"M1","II":"M2"})
     
     data["TURNO"] = data["TURNO"].fillna(0)
-    cols_numeric = ['HA REAL', 'KG/HA REAL', 'HA', 'JORNAL', 'JABAS', 'JARRAS',
+    cols_numeric = ['HA', 'JORNAL', 'JABAS', 'JARRAS',
         'KILOS BRUTOS', 'KILOS /HA', 'JARRAS/JR', 'KG/JR', 'DESCARTE']
     for col in cols_numeric:
         data[col] = data[col].fillna(0)
     data["FECHA"] = pd.to_datetime(data["FECHA"]).dt.date
+    data["CAMPAÑA"] = "Campaña 2026"
+    data = pd.concat([h_df,data],axis=0)
     return data
 
 #DATA QUE CAMBIA POCAS VECES O FRECUENCIA
@@ -1412,7 +1436,7 @@ def proy_2026():
     ppt_df["FUNDO"] = ppt_df["FUNDO"].str.strip()
     ppt_df["FUNDO"] = ppt_df["FUNDO"].replace({
         'SAN JOSE I':'SAN JOSE',
-        #'TARA FARM':'LAS BRISAS',
+        'TARA FARM':'LAS BRISAS',
         #'CANYON':'EL POTRERO',
         'LICAPA I':'LICAPA',
         #'CANYON MADEIRA':'EL POTRERO',

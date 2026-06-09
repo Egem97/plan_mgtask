@@ -8,12 +8,13 @@ from functions.tipo_cambio import tipo_cambio_load_data
 from functions.proc_files_xlsx import pipeline_agritracer
 from functions.hubcrop import pipeline_hubcrop
 from functions.estacion_meteorologica import pipeline_meteorologia
-from functions.costos import plt_load_data
+from functions.costos import plt_load_data,PLT_ACTIVIDADES_GENERAL
 from functions.net_pipeline import pipeline_netsuite_ordenes
 from functions.mayor_analitico_pipeline import (
     incremental as mayor_analitico_incremental,
     full_load as mayor_analitico_full_load,
 )
+
 
 async def pipeline_agritracer_job():
     for attempt in range(1, 6):
@@ -38,17 +39,17 @@ async def pipeline_agritracer_job():
 
 async def main():
     scheduler = AsyncIOScheduler()
-    
-    scheduler.add_job(cosecha_load_data, 'cron', hour=10, timezone='America/Lima')
+    scheduler.add_job(PLT_ACTIVIDADES_GENERAL, 'cron', hour='7-20', minute='27', timezone='America/Lima')
+    scheduler.add_job(cosecha_load_data, 'cron', hour='7-20', minute='28,55', timezone='America/Lima')
     scheduler.add_job(load_kissflow_fertirriego, 'interval', minutes=8)
     scheduler.add_job(load_biometria_2026, 'interval', minutes=5)
     scheduler.add_job(load_biometria_experimental_2026, 'interval', minutes=10)
     scheduler.add_job(tipo_cambio_load_data, 'cron', hour=7, minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_hubcrop, 'cron', hour='9,15,17', minute=0, timezone='America/Lima')
-    scheduler.add_job(pipeline_agritracer_job, 'cron', hour='8-23', minute=25, timezone='America/Lima')
+    scheduler.add_job(pipeline_agritracer_job, 'cron', hour='8-23', minute=20, timezone='America/Lima')
     
     scheduler.add_job(pipeline_meteorologia, 'cron', hour='8,20', minute=0, timezone='America/Lima')
-    scheduler.add_job(plt_load_data, 'interval', minutes=10)
+    scheduler.add_job(plt_load_data, 'cron', hour='8-23', minute=20, timezone='America/Lima')
     scheduler.add_job(proy_2026_load_data, 'interval', minutes=60)
     scheduler.add_job(load_proyecciones_2026, 'cron', hour='7-20', minute='28,55', timezone='America/Lima')
     scheduler.add_job(

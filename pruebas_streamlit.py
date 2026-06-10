@@ -12,15 +12,20 @@ from functions.load_onedrive import *
 from functions.biometria import *
 from functions.estacion_meteorologica import pipeline_meteorologia
 from utils.get_meteo import InnovaWeatherAPI
-from functions.costos import plt_load_data,PLT_ACTIVIDADES_GENERAL
+from functions.costos import plt_load_data,PLT_ACTIVIDADES_GENERAL,redimientos_ppto_costos
 from utils.get_kiss import fetch_all_kissflow
 
 
 st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
+
 #with st.spinner("Wait for it...", show_time=True):
-#    PLT_ACTIVIDADES_GENERAL()
+#    redimientos_ppto_costos()
 #st.success("ww")
+
+
+
+
 #from functions.costos import PLT_CORE_
 #df,dff,index_df = PLT_CORE_()
 #st.write(df.shape)
@@ -44,3 +49,5 @@ st.title("pruebas")
 #st.success("ssss")
 
 #cosecha_datasets
+
+

@@ -400,3 +400,34 @@ def PLT_ACTIVIDADES_GENERAL():
         print(f"✅ Proceso 3 completado exitosamente")
     else:
         print(f"❌ Error al subir el archivo")
+        
+
+def redimientos_ppto_costos():
+    print(f"📤 Subiendo archivos 'ACT - PLANES DE TRABAJO' a OneDrive...")
+    def cosecha_ppto_():
+        data = listar_archivos_en_carpeta_compartida(
+            get_access_token(),
+            "b!SVsG7KxV3EShgK6A6P5nH8F5fySlAsRHnUuG-SGbK8wEoIXhn_g4T4PoBqMjb_xH",
+            "016WMGJCUL63W2LEO4JVE2ABL7PVCROI4O"
+        )
+        url_excel_1 = get_download_url_by_name(data, "1. Costos Cosecha.xlsx")
+        rendimientos_df = read_excel_fast(url_excel_1, sheet_name="RENDIMIENTOS PPTO")
+        kg_formula_df = read_excel_fast(url_excel_1, sheet_name="KG PLANTA")
+        return (rendimientos_df,kg_formula_df)
+    rendimientos_df,kg_formula_df = cosecha_ppto_()
+    rendimientos_df["FUNDO"] = rendimientos_df["FUNDO"].str.strip()
+    kg_formula_df["FUNDO"] = kg_formula_df["FUNDO"].str.strip()
+    df = pd.merge(rendimientos_df,kg_formula_df, on=["FUNDO","CAMPAÑA"], how="inner")
+    df = df[df["CAMPAÑA"]=="CAMPAÑA 2026"]
+    resultado_1 = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=df,
+        nombre_archivo="PPTO_RENDIMIENTOS.parquet",
+        drive_id="b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        folder_id="01KM43WT4FS6JNXKKHRNCJZMAXLX56IOEQ",
+        type_file="parquet"
+    )
+    if resultado_1:
+        print(f"✅ Proceso 3 completado exitosamente")
+    else:
+        print(f"❌ Error al subir el archivo")

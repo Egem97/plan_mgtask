@@ -1442,6 +1442,16 @@ def proy_2026():
         #'CANYON MADEIRA':'EL POTRERO',
         #'CANYON MAGIC':'EL POTRERO',
     })
+    ppt_df["FUNDO_PPTO"] = ppt_df["FUNDO"]
+    ppt_df["FUNDO_PPTO"] = ppt_df["FUNDO_PPTO"].replace({
+        'LICAPA':'QBERRIES I',
+        'LICAPA II':'QBERRIES II',
+        'GAP BERRIES':'GAP',
+    })
+    ppt_df.loc[(ppt_df["FUNDO"] == "LICAPA II") & (ppt_df["VARIEDAD"] == "SEKOYA POP"), "FUNDO_PPTO"] = "QBERRIES III"
+    ppt_df["TIPO_PPTO"] = np.where(ppt_df["MODULO"].isin(["ETA.I", "ETA.II"]), "NO PPTO", "PPTO")
+    
+    
     proy_df["KILOS"] = proy_df["KILOS"].replace({0:None})
     ppt_df["KG/PPTO 26"] = ppt_df["KG/PPTO 26"].replace({0:None})
     return proy_df,ppt_df

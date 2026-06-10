@@ -20,10 +20,15 @@ st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
 
 #with st.spinner("Wait for it...", show_time=True):
-#    redimientos_ppto_costos()
+#    load_proyecciones_2026()
 #st.success("ww")
 
+#proy_df,ppt_df = proy_2026()
+#ppt_df["CAMPAÑA"] = "Campaña 2026"
+#ppt_df["Semana Año"] = ppt_df["SEMANA"].astype(str) + "-" + ppt_df["SEMANA"].apply(lambda x: "2027" if x < 23 else "2026")
 
+#st.write(ppt_df.shape)
+#st.dataframe(ppt_df)
 
 
 #from functions.costos import PLT_CORE_

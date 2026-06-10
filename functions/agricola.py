@@ -1450,7 +1450,8 @@ def proy_2026():
     })
     ppt_df.loc[(ppt_df["FUNDO"] == "LICAPA II") & (ppt_df["VARIEDAD"] == "SEKOYA POP"), "FUNDO_PPTO"] = "QBERRIES III"
     ppt_df["TIPO_PPTO"] = np.where(ppt_df["MODULO"].isin(["ETA.I", "ETA.II"]), "NO PPTO", "PPTO")
-    
+    ppt_df["CAMPAÑA"] = "Campaña 2026"
+    ppt_df["Semana Año"] = ppt_df["SEMANA"].astype(str) + "-" + ppt_df["SEMANA"].apply(lambda x: "2027" if x < 23 else "2026")
     
     proy_df["KILOS"] = proy_df["KILOS"].replace({0:None})
     ppt_df["KG/PPTO 26"] = ppt_df["KG/PPTO 26"].replace({0:None})

@@ -535,7 +535,7 @@ def data_cosecha():
         'KILOS BRUTOS', 'KILOS /HA', 'JARRAS/JR', 'KG/JR', 'DESCARTE']
     for col in cols_numeric:
         data[col] = data[col].fillna(0)
-    data["FECHA"] = pd.to_datetime(data["FECHA"]).dt.date
+    data["FECHA"] = pd.to_datetime(data["FECHA"])
     data["CAMPAÑA"] = "Campaña 2026"
     data = pd.concat([h_df,data],axis=0)
     return data
@@ -1445,10 +1445,11 @@ def proy_2026():
     ppt_df["FUNDO_PPTO"] = ppt_df["FUNDO"]
     ppt_df["FUNDO_PPTO"] = ppt_df["FUNDO_PPTO"].replace({
         'LICAPA':'QBERRIES I',
-        'LICAPA II':'QBERRIES II',
+        'LICAPA II':'QBERRIES II MAGICA',
+        
         'GAP BERRIES':'GAP',
     })
-    ppt_df.loc[(ppt_df["FUNDO"] == "LICAPA II") & (ppt_df["VARIEDAD"] == "SEKOYA POP"), "FUNDO_PPTO"] = "QBERRIES III"
+    ppt_df.loc[(ppt_df["FUNDO"] == "LICAPA II") & (ppt_df["VARIEDAD"] == "SEKOYA POP"), "FUNDO_PPTO"] = "QBERRIES II SEKOYA"
     ppt_df["TIPO_PPTO"] = np.where(ppt_df["MODULO"].isin(["ETA.I", "ETA.II"]), "NO PPTO", "PPTO")
     ppt_df["CAMPAÑA"] = "Campaña 2026"
     ppt_df["Semana Año"] = ppt_df["SEMANA"].astype(str) + "-" + ppt_df["SEMANA"].apply(lambda x: "2027" if x < 23 else "2026")

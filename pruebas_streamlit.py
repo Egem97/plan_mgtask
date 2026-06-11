@@ -12,7 +12,7 @@ from functions.load_onedrive import *
 from functions.biometria import *
 from functions.estacion_meteorologica import pipeline_meteorologia
 from utils.get_meteo import InnovaWeatherAPI
-from functions.costos import plt_load_data,PLT_ACTIVIDADES_GENERAL,redimientos_ppto_costos
+from functions.costos import *
 from utils.get_kiss import fetch_all_kissflow
 
 
@@ -20,11 +20,12 @@ st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
 
 #with st.spinner("Wait for it...", show_time=True):
-#    load_proyecciones_2026()
-#st.success("ww")
-
+#    cosecha_load_data()
+#st.success("ww"
 #proy_df,ppt_df = proy_2026()
-#ppt_df["CAMPAÑA"] = "Campaña 2026"
+#st.dataframe(ppt_df)
+#proy_df,ppt_df = proy_2026()s
+#ppt_df["CAMPAÑA"] = "Campañsa 2026"
 #ppt_df["Semana Año"] = ppt_df["SEMANA"].astype(str) + "-" + ppt_df["SEMANA"].apply(lambda x: "2027" if x < 23 else "2026")
 
 #st.write(ppt_df.shape)
@@ -56,3 +57,9 @@ st.title("pruebas")
 #cosecha_datasets
 
 
+from functions.costos import *
+
+
+#df,transp_df = costos_cosecha_2026()
+
+#st.dataframe(transp_df)

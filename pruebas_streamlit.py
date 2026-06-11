@@ -19,9 +19,9 @@ from utils.get_kiss import fetch_all_kissflow
 st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
 
-#with st.spinner("Wait for it...", show_time=True):
-#    cosecha_load_data()
-#st.success("ww"
+with st.spinner("Wait for it...", show_time=True):
+    proy_2026_load_data()
+st.success("ww")
 #proy_df,ppt_df = proy_2026()
 #st.dataframe(ppt_df)
 #proy_df,ppt_df = proy_2026()s

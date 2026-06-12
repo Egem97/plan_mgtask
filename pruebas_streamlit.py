@@ -23,9 +23,9 @@ from functions.transporte import *
 #    load_biometria_experimental_2026()
 #st.success("ww")
 
-#df,dff= proy_2026()
-#st.dataframe(df)
-#st.dataframe(dff)
+df = proyecciones_2026()
+st.dataframe(df)
+
 #proy_df,ppt_df = proy_2026()
 #st.dataframe(ppt_df)
 #proy_df,ppt_df = proy_2026()s

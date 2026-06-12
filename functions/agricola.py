@@ -1612,6 +1612,7 @@ def proyecciones_2026():
 
     df_all = pd.concat(dfs, axis=0, ignore_index=True)
     df_all["CAMPAÑA"] = df_all["CAMPAÑA"].fillna("CAMPAÑA 2026")
+    df_all["FECHA ACTUALIZACION"] = datetime.now()
     print(f"\nTotal consolidado: {len(df_all)} filas")
     print(f"FUNDOS: {sorted(df_all['FUNDO'].unique())}")
     return df_all

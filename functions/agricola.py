@@ -418,7 +418,7 @@ def drenaje_campo():
     #import streamlit as st
     #st.write(df)
     for c in cols_num_drenaje:
-        print(c)
+       
         df[c] = df[c].fillna(0)
         df[c] = df[c].astype(float)
 
@@ -1187,7 +1187,7 @@ def completed_kissflow_muestras():
     dff["FECHA_DE_CREACION"] = pd.to_datetime(dff["FECHA_DE_CREACION"], errors="coerce").dt.date
     inf_pl_df =inf_plantacion_variedad()
     dff = pd.merge(dff, inf_pl_df, on=["FUNDO","MODULO","TURNO"], how="left")
-    print(dff.shape)
+    
     #########
     df = pd.concat([df,dff])
 
@@ -1373,7 +1373,7 @@ def proy_licapa_2026(access_token):
     licapa_bd["VARIABLE"] = licapa_bd["VARIABLE"].str.upper()
     licapa_bd["KILOS"] = licapa_bd["KILOS"].fillna(0)
     licapa_bd["INDICADOR"] = licapa_bd["FUNDO"].astype(str)+"-"+licapa_bd["MODULO"].astype(str)+" "+licapa_bd["VARIABLE"].astype(str)
-    print(licapa_bd.columns)
+   
     licapa_ppt =read_excel_fast(url_excel, sheet_name="PPT KG26")
     licapa_ppt.columns = [str(c).strip().upper() for c in licapa_ppt.columns]
     licapa_ppt["FUNDO"] = licapa_ppt["FUNDO"].str.strip()
@@ -1381,7 +1381,7 @@ def proy_licapa_2026(access_token):
     licapa_ppt["VARIEDAD"] = licapa_ppt["VARIEDAD"].str.strip()
     licapa_ppt["KG/PPTO 26"] = licapa_ppt["KG/PPTO 26"].fillna(0)
     licapa_ppt["KG/PPTO 26"] = licapa_ppt["KG/PPTO 26"].astype(float)
-    print(licapa_ppt.columns)
+   
     return licapa_bd,licapa_ppt
 
 def proy_all_2026(access_token):
@@ -1455,6 +1455,7 @@ def proy_2026():
     ppt_df["Semana Año"] = ppt_df["SEMANA"].astype(str) + "-" + ppt_df["SEMANA"].apply(lambda x: "2027" if x < 23 else "2026")
     
     proy_df["KILOS"] = proy_df["KILOS"].replace({0:None})
+    proy_df["FECHA ACTUALIZACION"] = datetime.now()
     ppt_df["KG/PPTO 26"] = ppt_df["KG/PPTO 26"].replace({0:None})
     return proy_df,ppt_df
 
@@ -1584,7 +1585,7 @@ def proyecciones_2026():
     access_token = get_access_token()
     dfs = []
     for key, filename in FILES.items():
-        print(key)
+        
         data = listar_archivos_en_carpeta_compartida(
             access_token,
             "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",

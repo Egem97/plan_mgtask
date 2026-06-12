@@ -224,8 +224,8 @@ def PLT_CORE_():
         'RASTRILLADO DE  CAMPO':'RASTRILLADO DE CAMPO'
         
     })
-    print("lista agri")
-    print(agritracer_df["ACTIVIDAD"].unique())
+    
+    
     AGRI_SEMANA_MAX = agritracer_df[agritracer_df["YEAR"]==2026]["SEMANA"].max()
     # planes de trabajo jornales
     actividad_df["COSTO PROYECTADO"] = actividad_df["FACTOR"] * actividad_df["JORNALES"]
@@ -259,8 +259,7 @@ def PLT_CORE_():
     actividad_df = actividad_df[(actividad_df["YEAR"]==2026)&(actividad_df["SEMANA"]<=int(AGRI_SEMANA_MAX))]
     #st.dataframe(actividad_df)
     #
-    print("lista kissflow jornales")
-    print(actividad_df["ACTIVIDAD"].unique())
+    
     plt_ejec_df.columns = (
             plt_ejec_df.columns.astype(str)
             .str.normalize('NFKD')
@@ -291,21 +290,18 @@ def PLT_CORE_():
     hist_eject_df = plt_ejec_df[plt_ejec_df["SEMANA"]<=19]
     hist_eject_df = hist_eject_df.rename(columns={"JORNALES":"JORNALES_PROYECTADOS","COSTO":"COSTO PROYECTADO"})
     hist_eject_df["COSTO EJECUTADO"] = hist_eject_df["COSTO PROYECTADO"]
-    st.write("ejecutados menores a la semana 19")
-    st.dataframe(hist_eject_df)
+    
     costos_ejecutados = plt_ejec_df[plt_ejec_df["SEMANA"]>19]
     costos_ejecutados = costos_ejecutados.drop(columns=["JORNALES","AREA","SUBAREA"])
     costos_ejecutados = costos_ejecutados.rename(columns={"COSTO":"COSTO EJECUTADO"})
-    st.write("ejecutados")
-    st.dataframe(costos_ejecutados)
+    
     #JOINS "CONCAT HISTORICA-KISSFLOW PLT"
     plt_proyectados_jr = pd.concat([hist_eject_df,actividad_df], ignore_index=True)
-    st.write("ejecutados join historico vs actividad")
-    st.dataframe(plt_proyectados_jr)
+    
     #JOINS "CONCAT MERGE PLT - JR EJECUTADOS(AGRITRACER)"
     dataframe_join_1 = pd.merge(agritracer_df,plt_proyectados_jr,on=['YEAR', 'SEMANA', 'FUNDO','ACTIVIDAD',], how="outer")
     
-    st.dataframe(dataframe_join_1)
+    
     #JOINS "ERGE JR general - COSTOS (semana 20>=)"
     dataframe_join_1 = pd.merge(dataframe_join_1,costos_ejecutados,on=['YEAR', 'SEMANA', 'FUNDO','ACTIVIDAD',], how="left", suffixes=("_HIST", "_EJEC"))
     # Coalescer las dos columnas de COSTO EJECUTADO que genera el merge:

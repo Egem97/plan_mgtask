@@ -19,12 +19,13 @@ from utils.get_kiss import fetch_all_kissflow
 st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
 from functions.transporte import *
-with st.spinner("Wait for it...", show_time=True):
-    load_biometria_experimental_2026()
-st.success("ww")
+#with st.spinner("Wait for it...", show_time=True):
+#    load_biometria_experimental_2026()
+#st.success("ww")
 
-#df = pipeline_biometria_experimental()
+#df,dff= proy_2026()
 #st.dataframe(df)
+#st.dataframe(dff)
 #proy_df,ppt_df = proy_2026()
 #st.dataframe(ppt_df)
 #proy_df,ppt_df = proy_2026()s

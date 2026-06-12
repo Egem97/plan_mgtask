@@ -523,7 +523,8 @@ def pipeline_biometria_experimental():
         'N BROTES (F1)', 'LONG BROTES (F1)',  'TC BROTE (F1)', 'N BROTES (F2)', 'LONG BROTES (F2)',
         'TC BROTE (F2)', 'N RETONOS', 'LONG BROTES RETONOS', 'TC RETONOS', 'DIAMETRO', 'BROTES TOTALES',
         'OBSERVACIONES',
-        'N BROTES (F3)','LONG BROTES (F3)','TC BROTE (F3)'
+        'N BROTES (F3)','LONG BROTES (F3)','TC BROTE (F3)',
+        'N BROTES (F4)','LONG BROTES (F4)','TC BROTE (F4)',
     ]
     dff = dff[cols_exp]
     dff = dff.rename(columns = {
@@ -567,7 +568,9 @@ def pipeline_biometria_experimental():
         'N BROTES (F1)', 'TC DE ALTURA PLANTA/CM', 'ALTURA DE PLANTA CM',
         'N BROTES (F2)', 'LONG BROTES (F2)', 'TC BROTE (F2)', 'N RETONOS',
         'LONG BROTES RETONOS/CM', 'TC RETONOS/CM', 'DIAMETRO (MM)',
-        'BROTES TOTALES', 'OBSERVACIONES', 'BROTES DE CANAS','N BROTES (F3)','LONG BROTES (F3)','TC BROTE (F3)']
+        'BROTES TOTALES', 'OBSERVACIONES', 'BROTES DE CANAS','N BROTES (F3)','LONG BROTES (F3)','TC BROTE (F3)',
+        'N BROTES (F4)','LONG BROTES (F4)','TC BROTE (F4)',
+        ]
     for col_ in cols_numeric:
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
     dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA','VARIEDAD'])["FECHA DE EVALUACION"].transform("min")

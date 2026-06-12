@@ -18,10 +18,13 @@ from utils.get_kiss import fetch_all_kissflow
 
 st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
-
+from functions.transporte import *
 with st.spinner("Wait for it...", show_time=True):
-    proy_2026_load_data()
+    load_biometria_experimental_2026()
 st.success("ww")
+
+#df = pipeline_biometria_experimental()
+#st.dataframe(df)
 #proy_df,ppt_df = proy_2026()
 #st.dataframe(ppt_df)
 #proy_df,ppt_df = proy_2026()s
@@ -58,8 +61,9 @@ st.success("ww")
 
 
 from functions.costos import *
-
-
+from functions.transporte import *
+#df,kias_df = transform_camaras_kias()
 #df,transp_df = costos_cosecha_2026()
 
-#st.dataframe(transp_df)
+#st.dataframe(df)
+#st.dataframe(kias_df)

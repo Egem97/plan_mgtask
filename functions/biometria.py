@@ -537,6 +537,7 @@ def pipeline_biometria_experimental():
         'FECHA DE HOY':'FECHA DE EVALUACION',
         'SDP':'SEMANA POST PODA'
     })
+    dff["FUNDO"] = dff["FUNDO"].fillna("SAN JOSE")
     dff["FUNDO"] = dff["FUNDO"].str.upper()
     dff["ZONA"] = dff["ZONA"].fillna("NO ESPECIFICADO")
     dff["ZONA"] = dff["ZONA"].str.upper()
@@ -570,6 +571,7 @@ def pipeline_biometria_experimental():
     for col_ in cols_numeric:
         dff[col_] = pd.to_numeric(dff[col_], errors='coerce').fillna(0)
     dff["FECHA MIN SEMANA POST PODA"] = dff.groupby(['FUNDO', 'SEMANA POST PODA','VARIEDAD'])["FECHA DE EVALUACION"].transform("min")
+    print(dff["FECHA DE EVALUACION"].unique())
     dff["FECHA ACTUALIZACION"] = dff.groupby(['FUNDO'])["FECHA DE EVALUACION"].transform("max")
     dff['FECHA ACTUALIZACION'] = pd.to_datetime(dff['FECHA ACTUALIZACION'])
     dff['SEMANA ACTUALIZACION'] = dff['FECHA ACTUALIZACION'].dt.isocalendar().week

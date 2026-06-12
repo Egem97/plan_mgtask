@@ -15,15 +15,16 @@ def camaras_data():
     url_excel_1 = get_download_url_by_name(data, "APG ALZA - CONTROL T. CÁMARAS.xlsx")
     url_excel_2 = get_download_url_by_name(data, "APG TK - CONTROL DIARIO KIAS.xlsx")
     url_excel_3 = get_download_url_by_name(data, "CONTROL T. CÁMARAS ABG ALZA.xlsx")
-    
+    url_excel_4 = get_download_url_by_name(data, "APG TK - CONTROL DIARIO KIAS - 2026.xlsx")
     return (
         read_excel_fast(url_excel_1, sheet_name="BD", skiprows=2),
         read_excel_fast(url_excel_2, sheet_name="BD"),
-        read_excel_fast(url_excel_3, sheet_name="BD", skiprows=2)
+        read_excel_fast(url_excel_3, sheet_name="BD", skiprows=2),
+        read_excel_fast(url_excel_4, sheet_name="BD")
     )
 
 def transform_camaras_kias():
-    control_camaras,apg_kias,control_camaras25 = camaras_data()
+    control_camaras,apg_kias,control_camaras25,apg_kias26 = camaras_data()
     control_camaras["TIPO"] = "APG"
     control_camaras25["TIPO"] = "COMPARTIDO"
     control_camaras25 = control_camaras25.rename(columns = {'TIPO UN.':'TIPO UNID.'})
@@ -96,14 +97,28 @@ def transform_camaras_kias():
             .str.strip()
             .str.upper()
     )
-
+    apg_kias["CAMPAÑA"] = "Campaña 2025"
+    apg_kias26.columns = (
+            apg_kias26.columns.astype(str)
+            .str.normalize('NFKD')
+            .str.encode('ascii', errors='ignore')
+            .str.decode('utf-8')
+            .str.replace('\n', ' ', regex=False)
+            .str.replace('.', '', regex=False)
+            .str.strip()
+            .str.upper()
+    )
+    apg_kias26["CAMPAÑA"] = "Campaña 2026"
+    apg_kias = pd.concat([apg_kias,apg_kias26], axis=0)
+    
+    
     cols_kias =['SEMANA','FECHA', 'FUNDO', 'ACTIVIDAD', 'SERVICIO',
         'VALIDACION DETALLE DE VIAJE', 'RS FUNDO', 'PLACA',
         'PLACA REG', 'GRR', 'FACTURA', 'CONDUCTOR',
         'HORA ENTRADA', 'HORA SALIDA', 
         'CAPAC TOTAL JARRAS', 'ZONA', 'RAZON SOCIAL-PROVEEDOR',
             'PROVEEDOR-ZONA', 'TARIFA', 'TARIFA TOTAL',
-        'COD TARIF PRO', 'MODULOS QBERRIES']
+        'COD TARIF PRO', 'MODULOS QBERRIES','CAMPAÑA']
     apg_kias = apg_kias[cols_kias]
     apg_kias = apg_kias[(apg_kias["FECHA"].notna())]
     cols_str_kias = ['FUNDO', 'ACTIVIDAD', 'SERVICIO',
@@ -138,7 +153,7 @@ def transform_camaras_kias():
         .str.encode('ascii', errors='ignore')
         .str.decode('utf-8')
     )
-    apg_kias["CAMPAÑA"] = 2025
+    
     #.str.normalize('NFKD')
     return camaras_df,apg_kias
 

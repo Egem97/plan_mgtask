@@ -60,6 +60,7 @@ async def main():
         minute='0,30',
         timezone='America/Lima'
     )
+    """
     # Mayor analítico (CDC) cada 30 min + recarga completa semanal (red de seguridad)
     scheduler.add_job(
         mayor_analitico_incremental,
@@ -81,6 +82,7 @@ async def main():
         max_instances=1,
         coalesce=True,
     )
+    """
     #load_proyecciones_2026()
     scheduler.start()
     print("Scheduler iniciado. Ejecutando jobs.")

@@ -118,7 +118,7 @@ def download_files_c1():
         select_fecha_inicio = page.locator(select_fecha_inicio_doom)
         select_fecha_inicio.press("Control+A")
         select_fecha_inicio.press("Delete")
-        page.fill(select_fecha_inicio_doom, "01/01/2026")
+        page.fill(select_fecha_inicio_doom, "01/05/2026")
         time.sleep(2)
         #CAMBIAR TIPO DE REPORTE POR RESUMEN
         page.wait_for_selector("xpath=//html/body/kt-base/div/div/div/div/div/kt-horas-rpt/kt-portlet[1]/div/kt-portlet-body/div/form/div[1]/div/div[4]/div/mat-form-field/div[1]/div[2]", timeout=100000)

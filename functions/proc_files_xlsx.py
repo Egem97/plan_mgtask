@@ -64,7 +64,7 @@ def pipeline_agritracer():
             drive_id,
             folder_id
         )
-        url_parquet = get_download_url_by_name(data, "AGRITRACER_2025.parquet")
+        url_parquet = get_download_url_by_name(data, "AGRITRACER_HISTO.parquet")
         #url_excel_2 = get_download_url_by_name(data, "REGISTRO APLICACIONES NUTRICIONALES-FUNDO QBERRIES.xlsx")
         return pd.read_parquet(url_parquet, engine="pyarrow")
     df = agri_xlsx_data()

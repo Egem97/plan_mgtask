@@ -442,7 +442,8 @@ def data_cosecha():
         }
     )
     list_files = [
-        "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx"
+        "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx",
+        "1. Cosecha Excelence Sur 2026 CAMPO San Jose I.xlsx"
 
         ]
 
@@ -531,6 +532,7 @@ def data_cosecha():
     data["MODULO"] = data["MODULO"].replace({"I":"M1","II":"M2"})
     
     data["TURNO"] = data["TURNO"].fillna(0)
+    data["TURNO"] = data["TURNO"].astype(float)
     cols_numeric = ['HA', 'JORNAL', 'JABAS', 'JARRAS',
         'KILOS BRUTOS', 'KILOS /HA', 'JARRAS/JR', 'KG/JR', 'DESCARTE']
     for col in cols_numeric:
@@ -538,6 +540,15 @@ def data_cosecha():
     data["FECHA"] = pd.to_datetime(data["FECHA"])
     data["CAMPAÑA"] = "Campaña 2026"
     data = pd.concat([h_df,data],axis=0)
+    data["FUNDO_"] = data["FUNDO"].replace({
+        "GAP BERRIES":"GAP",
+        "LICAPA":"QBERRIES I"
+    })
+    data.loc[data["FUNDO"] == "LICAPA II", "FUNDO_"] = "QBERRIES II " + data.loc[data["FUNDO"] == "LICAPA II", "VARIEDAD"]
+    data.loc[data["FUNDO"] == "EL POTRERO", "FUNDO_"] = "CANYON " + data.loc[data["FUNDO"] == "EL POTRERO", "VARIEDAD"]
+    
+    
+    
     return data
 
 #DATA QUE CAMBIA POCAS VECES O FRECUENCIA
@@ -1019,6 +1030,9 @@ def data_drenaje_kissflow():
         dff["% MÁXIMO"].astype(str).str.replace("%", "", regex=False).str.strip(),
         errors="coerce",
     ) / 100
+    dff = dff[dff["FUNDO"]=="SAN JOSE"]
+    st.write(dff.shape)
+    st.dataframe(dff)
     dff["VOL DREN.1"] = dff["VOL DREN.1"].fillna(0)
     dff["VOL DREN.1"] = dff["VOL DREN.1"].astype(float)
     dff["VOL DREN. 2"] = dff["VOL DREN. 2"].fillna(0)

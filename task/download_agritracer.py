@@ -164,8 +164,8 @@ def download_files_c1():
             3:"TARA FARM.xlsx",
             4:"GAP.xlsx",
             5:"CANYON.xlsx",
-            6:"GOLDEN.xlsx",
-            7:"BIG.xlsx"
+            #6:"GOLDEN.xlsx",
+            #6:"BIG.xlsx"
         }
 
         for index,empresa in index_empresa.items():

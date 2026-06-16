@@ -141,6 +141,29 @@ def datos_costos_manual():
         df = read_excel_fast(url_excel_1, sheet_name="QBERRIES II MAGICA")
         df["FUNDO"] = "QBERRIES II MAGICA"
         return df
+    
+
+def datos_agritracer():
+        data = listar_archivos_en_carpeta_compartida(
+            get_access_token(),
+            "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+            "01XOBWFSG7XR5BMRB6XNAJBU7Q7KXU7BO3"
+        )
+        url_ = get_download_url_by_name(data, "AGRITRACER_GENERAL.parquet")
+        df = pd.read_parquet(url_)
+
+        return df
+
+def datos_cosecha_1():
+        data = listar_archivos_en_carpeta_compartida(
+            get_access_token(),
+            "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+            "01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ"
+        )
+        url_ = get_download_url_by_name(data, "COSECHA CAMPO.parquet")
+        df = pd.read_parquet(url_)
+
+        return df
 ######################################################################################
 #df = pd.read_parquet("AGRITRACER_GENERAL.parquet")
 
@@ -197,6 +220,7 @@ def builder_agri_jr(agritracer_df):
 
 def builder_cosecha(df):
     df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
+    df["MERCADO"] = df["MERCADO"].fillna(df["PACKING"])
     #df["MERCADO"] = 
     df = df[df["FECHA"]>="2026-01-01"]
     df["FUNDO_"] = df["FUNDO_"].replace({
@@ -206,15 +230,17 @@ def builder_cosecha(df):
     df = df.rename(columns = {"FUNDO_":"FUNDO"})
     df = df.drop(columns = ["CAMPAÑA","PACKING"])
     
-    df = df.groupby(["FECHA","FUNDO","FUNDO_ALTERNO"])[["HA","JORNAL","JABAS","JARRAS","KILOS BRUTOS","KILOS /HA","DESCARTE"]].sum().reset_index()
+    df = df.groupby(["FECHA","FUNDO","FUNDO_ALTERNO","MERCADO"])[["HA","JORNAL","JABAS","JARRAS","KILOS BRUTOS","KILOS /HA","DESCARTE"]].sum().reset_index()
+    
+
     df = df.rename(columns={c: f"{c}_COS" for c in ["HA","JORNAL","JABAS","JARRAS","KILOS BRUTOS","KILOS /HA","DESCARTE"]})
     return df
 
 def builder_transporte_personal(df,tc):
     df = df[df["FECHA"]>='2026-06-01']
     cols_pivot = [
-        'GAP (S/)', 'SAN JOSE II (S/)', 'SAN JOSE (S/)','CANYON (S/)', 'SAN PEDRO (S/)', 'BIG BERRIES (S/)', 'GOLDEN BERRIES (S/)', 
-        'QBERRIES (S/)', 'QBERRIES 2 (S/)', 'QBERRIES 3 (S/)', 'TARA (S/)', 
+        '(S/) GAP COSECHA','(S/) SAN JOSE II COSECHA','(S/) SAN JOSE COSECHA','(S/) CANYON COSECHA','(S/) SAN PEDRO COSECHA','(S/) BIG BERRIES COSECHA',
+        '(S/) GOLDEN BERRIES COSECHA','(S/) QBERRIES COSECHA','(S/) QBERRIES 2 COSECHA','(S/) QBERRIES 3 COSECHA','(S/) TARA COSECHA'
     ]
     df = df[['SEMANA', 'FECHA']+cols_pivot]
     df = df.melt(
@@ -223,21 +249,23 @@ def builder_transporte_personal(df,tc):
         var_name="FUNDO",
         value_name="MONTO (S/)",
     )
+    
     df["FUNDO"] = df["FUNDO"].replace(
         {
-        'GAP (S/)':'GAP',
-        'SAN JOSE II (S/)':"SAN JOSE II",
-        'SAN JOSE (S/)':"SAN JOSE",
-        'CANYON (S/)':"CANYON",
-        'SAN PEDRO (S/)':"SAN PEDRO",
-        'BIG BERRIES (S/)':"LA COLINA", 
-        'GOLDEN BERRIES (S/)':"LA COLINA",
-        'QBERRIES (S/)':"QBERRIES I",
-        'QBERRIES 2 (S/)':"QBERRIES II MAGICA",
-        'QBERRIES 3 (S/)':"QBERRIES II SEKOYA", 
-        'TARA (S/)' :"LAS BRISAS"
+        '(S/) GAP COSECHA':'GAP',
+        '(S/) SAN JOSE II COSECHA':"SAN JOSE II",
+        '(S/) SAN JOSE COSECHA':"SAN JOSE",
+        '(S/) CANYON COSECHA':"CANYON",
+        '(S/) SAN PEDRO COSECHA':"SAN PEDRO",
+        '(S/) BIG BERRIES COSECHA':"LA COLINA", 
+        '(S/) GOLDEN BERRIES COSECHA':"LA COLINA",
+        '(S/) QBERRIES COSECHA':"QBERRIES I",
+        '(S/) QBERRIES 2 COSECHA':"QBERRIES II MAGICA",
+        '(S/) QBERRIES 3 COSECHA':"QBERRIES II SEKOYA", 
+        '(S/) TARA COSECHA' :"LAS BRISAS"
         }
     )
+    
     df = df[df["MONTO (S/)"]>0]
     canyon = df[df["FUNDO"] == "CANYON"].copy()
     canyon_magica = canyon.copy()
@@ -298,7 +326,9 @@ def builder_costos_manual(df):
         'COMERCIAL DE HUERTO', 'KG COSECHADOS BRUTO', 'JARRAS', 'HA',
         '% COMERCIAL DE HUERTO', 'KG BRUTO/JR', 'JARRAS /JR', 'KG BRUTO /JARRA',
         'EPPS (POLOS, GORRAS, MASCARILLAS, ETC)', 'SUMINISTROS ACOPIO', 'OTROS',
-        'ACTIVIDADES Y OTROS COSECHA (RRHH)'
+        'ACTIVIDADES Y OTROS COSECHA (RRHH)', 'BIENESTAR SOCIAL (COSECHA)',
+        'RECLUTAMIENTO Y SELECCION (COSECHA)', 'ADMINISTRACION DE PERSONAL (COSECHA)',
+        'SERVICIOS CAMPO (COSECHA)'
     ]]
 
     col_numericos=[
@@ -310,23 +340,35 @@ def builder_costos_manual(df):
         'COMERCIAL DE HUERTO', 'KG COSECHADOS BRUTO', 'JARRAS', 'HA',
         '% COMERCIAL DE HUERTO', 'KG BRUTO/JR', 'JARRAS /JR', 'KG BRUTO /JARRA',
         'EPPS (POLOS, GORRAS, MASCARILLAS, ETC)', 'SUMINISTROS ACOPIO', 'OTROS',
-        'ACTIVIDADES Y OTROS COSECHA (RRHH)'
+        'ACTIVIDADES Y OTROS COSECHA (RRHH)', 'BIENESTAR SOCIAL (COSECHA)',
+        'RECLUTAMIENTO Y SELECCION (COSECHA)', 'ADMINISTRACION DE PERSONAL (COSECHA)',
+        'SERVICIOS CAMPO (COSECHA)'
     ]
     for col_ in col_numericos:
         df[col_] = df[col_].fillna(0)
     #df = df.rename(columns={"CAMPANA":"CAMPAÑA"})
     df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
     df = df.rename(columns={c: f"{c}_DN" for c in col_numericos if c in df.columns})
+   
     return df
 
 def _agg_to_fecha_fundo(df):
-    num_cols = [c for c in df.columns if c not in ["FECHA","FUNDO"] and pd.api.types.is_numeric_dtype(df[c])]
-    return df.groupby(["FECHA","FUNDO"])[num_cols].sum().reset_index()
+    group_keys = ["FECHA","FUNDO"] + (["MERCADO"] if "MERCADO" in df.columns else [])
+    num_cols = [c for c in df.columns if c not in group_keys and pd.api.types.is_numeric_dtype(df[c])]
+    return df.groupby(group_keys)[num_cols].sum().reset_index()
 
 def build_master_table():
     tc = datos_tipo_cambio_()
-    agri_df    = builder_agri_jr(pd.read_parquet("AGRITRACER_GENERAL.parquet"))
-    cosecha_df = _agg_to_fecha_fundo(builder_cosecha(pd.read_parquet("COSECHA CAMPO.parquet")))
+    agri_df    = builder_agri_jr(datos_agritracer())
+    cosecha_df = builder_cosecha(datos_cosecha_1())
+   
+    cosecha_df = _agg_to_fecha_fundo(cosecha_df)
+   
+    
+    
+    
+    
+    
     tp_df      = _agg_to_fecha_fundo(
         builder_transporte_personal(datos_transporte_personal(), tc)
         .drop(columns=["SEMANA","TIPO_CAMBIO"], errors="ignore")

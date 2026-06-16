@@ -14,7 +14,7 @@ from functions.mayor_analitico_pipeline import (
     incremental as mayor_analitico_incremental,
     full_load as mayor_analitico_full_load,
 )
-
+from functions.kissflow import upload_datakiss_bd_formulario_camaras
 
 async def pipeline_agritracer_job():
     for attempt in range(1, 6):
@@ -47,6 +47,7 @@ async def main():
     scheduler.add_job(tipo_cambio_load_data, 'cron', hour=7, minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_hubcrop, 'cron', hour='9,15,17', minute=0, timezone='America/Lima')
     scheduler.add_job(pipeline_agritracer_job, 'cron', hour='8-23', minute=20, timezone='America/Lima')
+    scheduler.add_job(upload_datakiss_bd_formulario_camaras, 'cron', hour='8-23', minute=20, timezone='America/Lima')
     
     scheduler.add_job(pipeline_meteorologia, 'cron', hour='8,20', minute=0, timezone='America/Lima')
     scheduler.add_job(plt_load_data, 'cron', hour='8-23', minute=20, timezone='America/Lima')

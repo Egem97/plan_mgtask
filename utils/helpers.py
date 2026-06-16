@@ -123,67 +123,71 @@ def create_format_excel(dff: pd.DataFrame, nombre_archivo: str) -> str:
         else:
             print("No se pudo crear la tabla de Excel porque los encabezados no son válidos para Excel. Solo se exportó el formato básico.")
 
-def create_format_excel_in_memory(dff: pd.DataFrame) -> bytes:
+def create_format_excel_in_memory(dff: pd.DataFrame, sheet_name: str = "DATA") -> bytes:
     """
     Crea un archivo Excel formateado en memoria y retorna los bytes
-    
+
     Args:
         dff: DataFrame de pandas a formatear
-    
+        sheet_name: Nombre de la hoja (default "DATA")
+
     Returns:
         bytes: Contenido del archivo Excel formateado
     """
-    # Crear buffer en memoria
+    from openpyxl.styles import Alignment as XLAlignment
     excel_buffer = io.BytesIO()
-    
-    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-        dff.to_excel(writer, index=False, sheet_name="TIEMPOS")
-        ws = writer.sheets["TIEMPOS"]
 
-        # Encabezados en negrita y fondo azul claro
-        header_fill = PatternFill(start_color="B7DEE8", end_color="B7DEE8", fill_type="solid")
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        dff.to_excel(writer, index=False, sheet_name=sheet_name)
+        ws = writer.sheets[sheet_name]
+
+        # Encabezados: azul oscuro profesional + texto blanco + negrita + centrado
+        header_fill = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_align = XLAlignment(horizontal="center", vertical="center", wrap_text=False)
+        ws.row_dimensions[1].height = 28
+
         for col_num, col in enumerate(dff.columns, 1):
             cell = ws.cell(row=1, column=col_num)
-            cell.font = Font(bold=True)
+            cell.font = header_font
             cell.fill = header_fill
+            cell.alignment = header_align
 
-        # Ajustar ancho de columnas automáticamente
-        for i, col in enumerate(dff.columns, 1):
+        # Ajustar ancho de columnas (padding generoso, máximo 45)
+        for i in range(1, dff.shape[1] + 1):
             max_length = max(
-                [len(str(cell.value)) if cell.value is not None else 0 for cell in ws[get_column_letter(i)]]
+                len(str(cell.value)) if cell.value is not None else 0
+                for cell in ws[get_column_letter(i)]
             )
-            ws.column_dimensions[get_column_letter(i)].width = max_length + 2
+            ws.column_dimensions[get_column_letter(i)].width = min(max_length + 4, 45)
 
         # Congelar la primera fila
         ws.freeze_panes = "A2"
 
         # Validar encabezados para tabla de Excel
-        columnas_validas = True
         colnames = list(dff.columns)
-        if any(pd.isna(col) or str(col).strip() == '' for col in colnames):
-            columnas_validas = False
-        if len(set(colnames)) != len(colnames):
-            columnas_validas = False
-        if any(any(c in str(col) for c in ['[', ']', '*', '?', '/', '\\']) for col in colnames):
-            columnas_validas = False
+        columnas_validas = (
+            not any(pd.isna(col) or str(col).strip() == '' for col in colnames)
+            and len(set(colnames)) == len(colnames)
+            and not any(any(c in str(col) for c in ['[', ']', '*', '?', '/', '\\']) for col in colnames)
+        )
 
-        # Crear tabla de Excel real solo si los encabezados son válidos
         if columnas_validas:
-            nrows = dff.shape[0] + 1  # +1 por encabezado
-            ncols = dff.shape[1]
-            last_col = get_column_letter(ncols)
-            table_ref = f"A1:{last_col}{nrows}"
-            tabla = Table(displayName="TIEMPOS_TABLA", ref=table_ref)
-            style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False, showLastColumn=False, showRowStripes=True, showColumnStripes=False)
+            nrows = dff.shape[0] + 1
+            table_name = "".join(c for c in sheet_name if c.isalnum() or c == "_") + "_TABLA"
+            tabla = Table(displayName=table_name, ref=f"A1:{get_column_letter(dff.shape[1])}{nrows}")
+            style = TableStyleInfo(
+                name="TableStyleMedium2",
+                showFirstColumn=False, showLastColumn=False,
+                showRowStripes=True, showColumnStripes=False
+            )
             tabla.tableStyleInfo = style
             ws.add_table(tabla)
         else:
             print("⚠️  No se pudo crear la tabla de Excel porque los encabezados no son válidos. Solo se aplicó el formato básico.")
-    
-    # Obtener los bytes del archivo Excel formateado
+
     excel_data = excel_buffer.getvalue()
     excel_buffer.close()
-    
     return excel_data
 
 def get_download_url_by_name(json_data, name):

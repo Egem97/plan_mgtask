@@ -399,7 +399,7 @@ def PLT_ACTIVIDADES_GENERAL():
         
 
 def redimientos_ppto_costos():
-    print(f"📤 Subiendo archivos 'ACT - PLANES DE TRABAJO' a OneDrive...")
+    
     def cosecha_ppto_():
         data = listar_archivos_en_carpeta_compartida(
             get_access_token(),

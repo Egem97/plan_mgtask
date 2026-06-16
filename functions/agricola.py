@@ -1483,7 +1483,7 @@ def proyecciones_2026():
     "CY":"PROYECCIONES 2026 CANYON.xlsx",
     "TF":"PROYECCIONES 2026 TARA FARM.xlsx",
     "SJ2" : "PROYECCIONES 2026- SJ 2.xlsx",
-    "QBERRIES2":"PROYECCIONES 2026- QBERRIES EII.xlsx",
+    "QBERRIES2":"PROYECCIONES 2026- QBERRIES EII SEM 24.xlsx",
     "TESTBLOCK":"PROYECIONES VARIEDADES 2026_TEST BLOCK.xlsx"
     
     
@@ -1610,7 +1610,7 @@ def proyecciones_2026():
         
         
         raw = pd.read_excel(url_excel, sheet_name="BASE")
-        
+       
         cleaned = clean_df(raw)
         
         cleaned["ORIGEN"] = key

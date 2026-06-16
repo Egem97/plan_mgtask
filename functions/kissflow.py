@@ -9,10 +9,15 @@ def datakiss_formularios_camaras():
     df_kissflow = df_kissflow.rename(columns={
         'Untitled_field':'FUNDO',
         'N_DE_PLACA':'PLACA',
-        'Untitled_field_1':'SE_APRUEBA'
+        'Untitled_field_1':'SE_APRUEBA',
+        'HORA_DE_LLEGADA':'FECHA_DE_LLEGADA'
     })
     print(df_kissflow.columns)
-    df_kissflow["HORA_DE_LLEGADA"] = df_kissflow["HORA_DE_LLEGADA"].astype(str).str[11:19]
+    df_kissflow["FECHA_DE_LLEGADA"] = pd.to_datetime(
+        df_kissflow["FECHA_DE_LLEGADA"].astype(str).str.split(" ").str[0],
+        errors="coerce"
+    ).dt.tz_localize(None)
+    
     df_kissflow["FECHA_Y_HORA_DE_REGISTRO"] = pd.to_datetime(
         df_kissflow["FECHA_Y_HORA_DE_REGISTRO"], errors="coerce", utc=True
     )

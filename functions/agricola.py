@@ -1030,9 +1030,8 @@ def data_drenaje_kissflow():
         dff["% MÁXIMO"].astype(str).str.replace("%", "", regex=False).str.strip(),
         errors="coerce",
     ) / 100
-    dff = dff[dff["FUNDO"]=="SAN JOSE"]
-    st.write(dff.shape)
-    st.dataframe(dff)
+    #dff = dff[dff["FUNDO"]=="SAN JOSE"]
+    
     dff["VOL DREN.1"] = dff["VOL DREN.1"].fillna(0)
     dff["VOL DREN.1"] = dff["VOL DREN.1"].astype(float)
     dff["VOL DREN. 2"] = dff["VOL DREN. 2"].fillna(0)

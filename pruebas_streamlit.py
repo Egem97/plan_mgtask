@@ -99,6 +99,17 @@ from functions.transporte import *
 #st.dataframe(costos_cosecha_df)
 #st.dataframe(transporte_df)
 ########################################CARGA DATASETS
+def datos_costo_laboral():
+        data = listar_archivos_en_carpeta_compartida(
+            get_access_token(),
+            "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+            "01KM43WT4FS6JNXKKHRNCJZMAXLX56IOEQ"
+        )
+        url_= get_download_url_by_name(data, "COSTO_LABORAL.parquet")
+        df = pd.read_parquet(url_)
+        
+        return df
+    
 def datos_transporte_personal():
         data = listar_archivos_en_carpeta_compartida(
             get_access_token(),
@@ -221,8 +232,9 @@ def builder_agri_jr(agritracer_df):
 def builder_cosecha(df):
     df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
     df["MERCADO"] = df["MERCADO"].fillna(df["PACKING"])
+    df["MERCADO"] = df["MERCADO"].str.strip()
     #df["MERCADO"] = 
-    df = df[df["FECHA"]>="2026-01-01"]
+    df = df[df["FECHA"]>="2026-06-01"]
     df["FUNDO_"] = df["FUNDO_"].replace({
         'CANYON MANILA':"CANYON MADEIRA"
     })
@@ -280,6 +292,44 @@ def builder_transporte_personal(df,tc):
     df["MONTO($)"] = df["MONTO (S/)"]/df["TIPO_CAMBIO"]
     df = df.rename(columns={"MONTO (S/)": "MONTO_TP (S/)", "MONTO($)": "MONTO_TP($)"})
     return df
+
+
+def builder_costo_laboral(dataframe,tc_df):
+    #datos_costo_laboral
+    costo_mo_cosecha = (
+        dataframe[dataframe["PARTIDA PRESUPUESTARIA"] == "MO COSECHA"]
+        .groupby(["FUNDO", "FECHA"], as_index=False)[["COSTO LABORAL", "N TRABAJADORES"]]
+        .sum()
+        .rename(columns={
+            "COSTO LABORAL": "MO COSECHA_COSTO_CL",
+            "N TRABAJADORES": "MO COSECHA_JR_CL",
+        })
+        )
+
+        # Total diario (FECHA - FUNDO) cuando ACTIVIDAD es COSECHA
+    costo_cosecha = (
+            dataframe[dataframe["ACTIVIDAD"] == "COSECHA"]
+            .groupby(["FUNDO", "FECHA"], as_index=False)[["COSTO LABORAL", "N TRABAJADORES"]]
+            .sum()
+            .rename(columns={
+                "COSTO LABORAL": "COSECHA_COSTO_CL",
+                "N TRABAJADORES": "COSECHA_JR_CL",
+            })
+        )
+
+    costo_laboral_df = pd.merge(costo_mo_cosecha, costo_cosecha, on=["FUNDO", "FECHA"], how="outer")
+    costo_laboral_df["FECHA"] = pd.to_datetime(costo_laboral_df["FECHA"], errors="coerce")
+    dataframe = pd.merge(costo_laboral_df,tc_df,on=["FECHA"],how="left")
+    dataframe["MO COSECHA_COSTO_CL"] = dataframe["MO COSECHA_COSTO_CL"].fillna(0)
+    dataframe["COSECHA_COSTO_CL"] = dataframe["COSECHA_COSTO_CL"].fillna(0)
+    dataframe["MO COSECHA_JR_CL"] = dataframe["MO COSECHA_JR_CL"].fillna(0)
+    dataframe["COSECHA_JR_CL"] = dataframe["COSECHA_JR_CL"].fillna(0)
+
+    dataframe["TIPO_CAMBIO"] = dataframe["TIPO_CAMBIO"].fillna(0)
+    dataframe["MO COSECHA_COSTO$_CL"] = dataframe["MO COSECHA_COSTO_CL"]/dataframe["TIPO_CAMBIO"]
+    dataframe["COSECHA_COSTO$_CL"] = dataframe["COSECHA_COSTO_CL"]/dataframe["TIPO_CAMBIO"]
+    return dataframe
+
 
 def builder_transporte_kias(transport_df,tc):
     transport_df.columns = (
@@ -355,15 +405,27 @@ def builder_costos_manual(df):
 def _agg_to_fecha_fundo(df):
     group_keys = ["FECHA","FUNDO"] + (["MERCADO"] if "MERCADO" in df.columns else [])
     num_cols = [c for c in df.columns if c not in group_keys and pd.api.types.is_numeric_dtype(df[c])]
-    return df.groupby(group_keys)[num_cols].sum().reset_index()
+    df = df.groupby(group_keys)[num_cols].sum().reset_index()
+    
+    return df
 
 def build_master_table():
+    
     tc = datos_tipo_cambio_()
+    #costo_laboral_df = builder_costo_laboral(builder_costo_laboral,tc)
     agri_df    = builder_agri_jr(datos_agritracer())
     cosecha_df = builder_cosecha(datos_cosecha_1())
    
     cosecha_df = _agg_to_fecha_fundo(cosecha_df)
-   
+    cosecha_df["TIPO_COS"] = cosecha_df["MERCADO"].replace({
+            "-":"-",
+            "NACIONAL":"VENTA NACIONAL",
+            
+            "ALZA PERU PACKING": "ALZA PERU PACKING",
+            "ASIA":"ALZA PERU PACKING",
+            "EUROPA":"ALZA PERU PACKING",
+            "CONVENCIONAL":"ALZA PERU PACKING",
+        })
     
     
     
@@ -378,7 +440,10 @@ def build_master_table():
         .groupby(["FECHA","FUNDO"])["MONTO_TK $"].sum().reset_index()
     )
     dn_df      = _agg_to_fecha_fundo(builder_costos_manual(datos_costos_manual()))
-
+    cl_df      = _agg_to_fecha_fundo(                                                                      
+            builder_costo_laboral(datos_costo_laboral(), tc)                                                   
+              .drop(columns=["TIPO_CAMBIO"], errors="ignore")                                                    
+    )  
     join_key = ["FECHA","FUNDO"]
     master = (
         agri_df
@@ -386,6 +451,7 @@ def build_master_table():
         .merge(tp_df,      on=join_key, how="left")
         .merge(tk_df,      on=join_key, how="left")
         .merge(dn_df,      on=join_key, how="left")
+        .merge(cl_df,      on=join_key, how="left")  
     )
     master["TRANSPORTE_EXTERNO"] = 0
     # Columnas completamente vacías → 0 (no se eliminan)
@@ -407,6 +473,8 @@ def build_master_table():
 #['SAN JOSE' 'SAN JOSE II' 'QBERRIES I' 'GAP' 'LAS BRISAS' 'SAN PEDRO''CANYON MADEIRA'  'LA COLINA' 'QBERRIES II MAGICA']
 #df = pd.read_parquet("COSECHA CAMPO.parquet")
 
+
+
 df = build_master_table()
 print(df.columns)
 st.write(df.shape)
@@ -426,3 +494,4 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
+

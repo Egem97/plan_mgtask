@@ -433,17 +433,18 @@ def data_cosecha():
     h_df["MERCADO"] = h_df["PACKING"]
     h_df["MERCADO"] = h_df["MERCADO"].replace(
         {
-        "VENTA NACIONAL":"NACIONAL",   
-        "ALZA PERU PACKING":"EXPORTACION",  
-        "ALZA PACKING":"EXPORTACION",  
-        "ALZA + PACKING":"EXPORTACION",  
-        "ALZA PERU PACKING S.A.C.":"EXPORTACION",  
-        "SMART PACKING S.A.C.":"EXPORTACION",  
+        "VENTA NACIONAL":"VENTA NACIONAL",   
+        "ALZA PERU PACKING":"ALZA PERU PACKING",  
+        "ALZA PACKING":"ALZA PERU PACKING",  
+        "ALZA + PACKING":"ALZA PERU PACKING",  
+        "ALZA PERU PACKING S.A.C.":"ALZA PERU PACKING",  
+        "SMART PACKING S.A.C.":"ALZA PERU PACKING",  
         }
     )
     list_files = [
         "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx",
-        "1. Cosecha Excelence Sur 2026 CAMPO San Jose I.xlsx"
+        "1. Cosecha Excelence Sur 2026 CAMPO San Jose I.xlsx",
+        "3. Cosecha GAP - 2026.xlsx"
 
         ]
 
@@ -454,7 +455,7 @@ def data_cosecha():
         #DATA EXP Y CAMP 
         if file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
             preferred_sheet = "KG VARIEDAD"
-        elif file == "3. Cosecha GAP - 2025.xlsx":
+        elif file == "3. Cosecha GAP - 2026.xlsx":
             preferred_sheet = "DATA EXP Y CAMP "
         elif file == "5. Cosecha QBERRIES-CAMPAÑA-2025.xlsx" or file == "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx":
             preferred_sheet = "DATA EXP Y CAMP  "
@@ -1181,6 +1182,7 @@ def completed_kissflow_muestras():
     #df["FECHA_DE_CREACION"] = datetime(2026,1,1)
     ####
     dff = fetch_all_kissflow("RIE_1_1_BD")
+   
     dff["FECHA_DE_REGISTRO"] = pd.to_datetime(dff["FECHA_DE_REGISTRO"], errors="coerce")
     dff["AÑO"] = dff["FECHA_DE_REGISTRO"].dt.year
     dff["MES"] = dff["FECHA_DE_REGISTRO"].dt.month

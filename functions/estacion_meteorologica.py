@@ -35,6 +35,8 @@ def pipeline_meteorologia():
 
     df = api_client.get_all_stations_data()
     df = pd.concat([hdf,df],axis=0)
+    
+    
     resultado = subir_archivo_con_reintento(
         access_token=get_access_token(),
         dataframe=df,
@@ -49,3 +51,4 @@ def pipeline_meteorologia():
     else:
         print(f"❌ Error al subir el archivo")
         return False
+    

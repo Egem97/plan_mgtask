@@ -622,3 +622,117 @@ def load_costos_cosecha_excel():
     )
     if resultado_2:
         print(f"✅ Proceso 2 completado exitosamente")
+        
+        
+
+def costo_proyectado_cosecha():
+    files = [
+        "Costo Laboral - Big MO.xlsx",
+        "Costo Laboral - Canyon MO.xlsx",
+        "Costo Laboral - Excellence MO.xlsx",
+        "Costo Laboral - Gap MO.xlsx",
+        "Costo Laboral - Golden MO.xlsx",
+        "Costo Laboral - Qberries MO.xlsx",
+        "Costo Laboral - Tara MO.xlsx",
+    ]
+    dataframe = pd.DataFrame()
+    
+    data = listar_archivos_en_carpeta_compartida(
+        get_access_token(),
+        "b!nQ5Z090m9keqA8S99a5Wa_gI_FmonXtKlhzUKGbAKlx_NGWVoo3wRozum3uuwV37",
+        "01KQPAXGDCQ4ABNVNFLBGKR3EIGQWHJQBK"
+    )
+    for file_ in files:
+        
+        url_ = get_download_url_by_name(data, file_)
+        df = pd.read_excel(url_,skiprows=1)
+        df.columns = (
+                df.columns.astype(str)
+                .str.normalize('NFKD')
+                .str.encode('ascii', errors='ignore')
+                .str.decode('utf-8')
+                .str.replace('\n', ' ', regex=False)
+                .str.replace('.', '', regex=False)
+                .str.strip()
+                .str.upper()
+        )
+       
+        dataframe= pd.concat([dataframe,df])
+    dataframe["FECHA"] = pd.to_datetime(dataframe["FECHA"], dayfirst=True, errors="coerce")
+
+    # Validar fechas futuras: si la fecha es mayor a hoy, intercambiar dia <-> mes
+    hoy = pd.Timestamp.today().normalize()
+
+    def corregir_fecha_futura(fecha):
+        if pd.isna(fecha) or fecha <= hoy:
+            return fecha
+        try:
+            fecha_swap = fecha.replace(month=fecha.day, day=fecha.month)
+        except ValueError:
+            # El swap genera una fecha invalida (ej. dia > 12), se deja igual
+            return fecha
+        return fecha_swap
+
+    dataframe["FECHA"] = dataframe["FECHA"].apply(corregir_fecha_futura)
+    dataframe["FECHA"] = dataframe["FECHA"].dt.strftime("%Y-%m-%d")
+    dataframe = dataframe[['FUNDO', 'FECHA', 'PARTIDA PRESUPUESTARIA',
+       'LABOR/ACTIVIDAD', 'HORAS', 'BONO COSECHA', 'BONO LABOR', 'MOVILIDAD',
+       'COSTO LABORAL', 'N TRABAJADORES']]
+    dataframe = dataframe[dataframe["FECHA"].notna()]
+    def limpiar_costo_laboral(valor):                                                                         
+        if pd.isna(valor):                                                                                    
+            return pd.NA                                                                                      
+        if isinstance(valor, (int, float)):                                                                   
+            return float(valor)                                                                               
+                                                        
+        texto = str(valor).replace("S/", "").replace(" ", "").strip()                                         
+        texto = texto.replace(",", "")                                                                        
+        if texto == "":                                                                                       
+                return pd.NA                                                                                      
+        try:                                                                                                  
+                return float(texto)                                                                               
+        except ValueError:                                                                                    
+                return pd.NA                                                                                      
+
+    dataframe["BONO COSECHA"] = dataframe["BONO COSECHA"].fillna(0)
+    dataframe["BONO LABOR"] = dataframe["BONO LABOR"].fillna(0)
+    dataframe["MOVILIDAD"] = dataframe["MOVILIDAD"].fillna(0)
+    dataframe["N TRABAJADORES"] = dataframe["N TRABAJADORES"].fillna(0)
+    dataframe["BONO COSECHA"] = dataframe["BONO COSECHA"].apply(limpiar_costo_laboral).astype("Float64")  
+    dataframe["BONO LABOR"] = dataframe["BONO LABOR"].apply(limpiar_costo_laboral).astype("Float64")                                                                                                          
+    dataframe["COSTO LABORAL"] = dataframe["COSTO LABORAL"].apply(limpiar_costo_laboral).astype("Float64")  
+    dataframe["FUNDO"] = dataframe["FUNDO"].fillna("NO ESPECIFICADO")
+    dataframe["FUNDO"] = dataframe["FUNDO"].str.strip().str.upper()
+    dataframe["PARTIDA PRESUPUESTARIA"] = dataframe["PARTIDA PRESUPUESTARIA"].str.strip().str.upper()
+    dataframe["LABOR/ACTIVIDAD"] = dataframe["LABOR/ACTIVIDAD"].str.strip().str.upper()
+    dataframe["FUNDO"] = dataframe["FUNDO"].replace({
+        'CANYON':'CANYON MAGICA',
+        '#N/D':'NO ESPECIFICADO',
+        'GAP BERRIES':'GAP',
+        'LICAPA':'QBERRIES I',
+        'LICAPA II':'QBERRIES II MAGICA',
+        'LICAPA III':'QBERRIES II SEKOYA',
+        'TARA FARM':'LAS BRISAS'
+    })
+    dataframe["BONO COSECHA"] = dataframe["BONO COSECHA"].fillna(0)
+    dataframe["BONO LABOR"] = dataframe["BONO LABOR"].fillna(0)
+    dataframe["MOVILIDAD"] = dataframe["MOVILIDAD"].fillna(0)
+    dataframe["N TRABAJADORES"] = dataframe["N TRABAJADORES"].fillna(0)
+    dataframe = dataframe.rename(columns={"LABOR/ACTIVIDAD":"ACTIVIDAD"})
+
+    
+    return dataframe
+
+def load_costo_laboral_gh():
+    print(f"📤 Subiendo archivos 'COSTO LABORAL' a OneDrive...")
+    df = costo_proyectado_cosecha()
+    resultado_1 = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=df,
+        nombre_archivo="COSTO_LABORAL.parquet",
+        drive_id="b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+        folder_id="01KM43WT4FS6JNXKKHRNCJZMAXLX56IOEQ",
+        type_file="parquet"
+    )
+    if resultado_1:
+        print(f"✅ Proceso 1 completado exitosamente")

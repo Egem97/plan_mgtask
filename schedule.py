@@ -8,7 +8,7 @@ from functions.tipo_cambio import tipo_cambio_load_data
 from functions.proc_files_xlsx import pipeline_agritracer
 from functions.hubcrop import pipeline_hubcrop
 from functions.estacion_meteorologica import pipeline_meteorologia
-from functions.costos import plt_load_data,PLT_ACTIVIDADES_GENERAL
+from functions.costos import *
 from functions.net_pipeline import pipeline_netsuite_ordenes
 from functions.mayor_analitico_pipeline import (
     incremental as mayor_analitico_incremental,
@@ -53,6 +53,8 @@ async def main():
     scheduler.add_job(plt_load_data, 'cron', hour='8-23', minute=20, timezone='America/Lima')
     scheduler.add_job(proy_2026_load_data, 'interval', minutes=60)
     scheduler.add_job(load_proyecciones_2026, 'cron', hour='7-20', minute='28,55', timezone='America/Lima')
+    ##COSTOS
+    scheduler.add_job(load_costo_laboral_gh, 'cron', hour='8,20', minute=0, timezone='America/Lima')
     scheduler.add_job(
         pipeline_netsuite_ordenes,
         'cron',
@@ -62,7 +64,7 @@ async def main():
         timezone='America/Lima'
     )
     """
-    # Mayor analítico (CDC) cada 30 min + recarga completa semanal (red de seguridad)
+    # Mayor analítico (CD_pC) cada 30 min + recarga completa semanal (red de seguridad)
     scheduler.add_job(
         mayor_analitico_incremental,
         'cron',

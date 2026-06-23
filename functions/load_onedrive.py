@@ -315,3 +315,20 @@ def load_proyecciones_2026():
         print(f"❌ Error al subir el archivo")
         return False
 #monitoreo fenológico 
+def load_poligonos():
+    print(f"📤 Subiendo archivos 'POLIGONOS' a OneDrive...")
+    
+    upload = subir_archivo_con_reintento(
+        access_token=get_access_token(),
+        dataframe=poligonos(),
+        nombre_archivo="POLIGONOS.parquet",
+        drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+        folder_id="01XOBWFSDI34HN5SD7HBHZRUBPX3457IPQ",
+        type_file="parquet"
+    )
+    if upload:
+        print(f"✅ Proceso completado exitosamente")
+        return True
+    else:
+        print(f"❌ Error al subir el archivo")
+        return False

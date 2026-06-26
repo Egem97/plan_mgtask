@@ -60,7 +60,7 @@ async def main():
         'cron',
         day_of_week='mon-fri',
         hour='8-19',
-        minute='0,30',
+        minute='13',
         timezone='America/Lima'
     )
     """

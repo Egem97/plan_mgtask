@@ -645,7 +645,7 @@ def costo_proyectado_cosecha():
     for file_ in files:
         
         url_ = get_download_url_by_name(data, file_)
-        df = pd.read_excel(url_,skiprows=1)
+        df = pd.read_excel(url_,skiprows=1,sheet_name="BD")
         df.columns = (
                 df.columns.astype(str)
                 .str.normalize('NFKD')
@@ -653,10 +653,15 @@ def costo_proyectado_cosecha():
                 .str.decode('utf-8')
                 .str.replace('\n', ' ', regex=False)
                 .str.replace('.', '', regex=False)
+                .str.replace(r'\s+', ' ', regex=True)
                 .str.strip()
                 .str.upper()
         )
-       
+        # Algunos archivos (ej. Qberries) nombran la columna como
+        # "COSTO LABORAL TOTAL"; se unifica a "COSTO LABORAL" para que no
+        # quede en NaN al concatenar.
+        df = df.rename(columns={"COSTO LABORAL TOTAL": "COSTO LABORAL"})
+
         dataframe= pd.concat([dataframe,df])
     dataframe["FECHA"] = pd.to_datetime(dataframe["FECHA"], dayfirst=True, errors="coerce")
 
@@ -685,22 +690,28 @@ def costo_proyectado_cosecha():
         if isinstance(valor, (int, float)):                                                                   
             return float(valor)                                                                               
                                                         
-        texto = str(valor).replace("S/", "").replace(" ", "").strip()                                         
-        texto = texto.replace(",", "")                                                                        
+        texto = str(valor).replace("S/", "").replace("\xa0", "").replace(" ", "").strip()
+        texto = texto.replace(",", "")
         if texto == "":                                                                                       
                 return pd.NA                                                                                      
         try:                                                                                                  
                 return float(texto)                                                                               
         except ValueError:                                                                                    
                 return pd.NA                                                                                      
-
+    dataframe["COSTO LABORAL"] = dataframe["COSTO LABORAL"].astype(str)
+    dataframe["COSTO LABORAL"] = dataframe["COSTO LABORAL"].str.replace("S/","")
+    dataframe["COSTO LABORAL"] = dataframe["COSTO LABORAL"].str.strip()
+    
+    
     dataframe["BONO COSECHA"] = dataframe["BONO COSECHA"].fillna(0)
     dataframe["BONO LABOR"] = dataframe["BONO LABOR"].fillna(0)
     dataframe["MOVILIDAD"] = dataframe["MOVILIDAD"].fillna(0)
     dataframe["N TRABAJADORES"] = dataframe["N TRABAJADORES"].fillna(0)
-    dataframe["BONO COSECHA"] = dataframe["BONO COSECHA"].apply(limpiar_costo_laboral).astype("Float64")  
-    dataframe["BONO LABOR"] = dataframe["BONO LABOR"].apply(limpiar_costo_laboral).astype("Float64")                                                                                                          
-    dataframe["COSTO LABORAL"] = dataframe["COSTO LABORAL"].apply(limpiar_costo_laboral).astype("Float64")  
+    dataframe["BONO COSECHA"] = dataframe["BONO COSECHA"].apply(limpiar_costo_laboral).astype("Float64")
+    dataframe["BONO LABOR"] = dataframe["BONO LABOR"].apply(limpiar_costo_laboral).astype("Float64")
+    dataframe["COSTO LABORAL"] = dataframe["COSTO LABORAL"].apply(limpiar_costo_laboral).astype("Float64")
+    dataframe["MOVILIDAD"] = dataframe["MOVILIDAD"].apply(limpiar_costo_laboral).astype("Float64")
+    dataframe["N TRABAJADORES"] = dataframe["N TRABAJADORES"].apply(limpiar_costo_laboral).astype("Float64")
     dataframe["FUNDO"] = dataframe["FUNDO"].fillna("NO ESPECIFICADO")
     dataframe["FUNDO"] = dataframe["FUNDO"].str.strip().str.upper()
     dataframe["PARTIDA PRESUPUESTARIA"] = dataframe["PARTIDA PRESUPUESTARIA"].str.strip().str.upper()

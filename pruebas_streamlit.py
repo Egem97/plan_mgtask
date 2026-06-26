@@ -120,6 +120,8 @@ def datos_transporte_personal():
         df = read_excel_fast(url_excel_1,sheet_name="CUADRO RESUMEN")    
         
         return df 
+
+
 def datos_tipo_cambio_():
         data = listar_archivos_en_carpeta_compartida(
             get_access_token(),
@@ -174,6 +176,17 @@ def datos_cosecha_1():
         url_ = get_download_url_by_name(data, "COSECHA CAMPO.parquet")
         df = pd.read_parquet(url_)
 
+        return df
+
+def datos_transporte_interno():
+        data = listar_archivos_en_carpeta_compartida(
+            get_access_token(),
+            "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+            "01XOBWFSDC2SPT2RFM3BGY6TJUHKMNQGOI"
+        )
+        url_ = get_download_url_by_name(data, "TRANSPORTE_CAMARAS.parquet")
+        df = pd.read_parquet(url_)
+        
         return df
 ######################################################################################
 #df = pd.read_parquet("AGRITRACER_GENERAL.parquet")
@@ -240,9 +253,9 @@ def builder_cosecha(df):
     })
     df = df.rename(columns = {"FUNDO":"FUNDO_ALTERNO"})
     df = df.rename(columns = {"FUNDO_":"FUNDO"})
-    df = df.drop(columns = ["CAMPAÑA","PACKING"])
+    df = df.drop(columns = ["CAMPAÑA"])
     
-    df = df.groupby(["FECHA","FUNDO","FUNDO_ALTERNO","MERCADO"])[["HA","JORNAL","JABAS","JARRAS","KILOS BRUTOS","KILOS /HA","DESCARTE"]].sum().reset_index()
+    df = df.groupby(["FECHA","FUNDO","FUNDO_ALTERNO","MERCADO","PACKING"])[["HA","JORNAL","JABAS","JARRAS","KILOS BRUTOS","KILOS /HA","DESCARTE"]].sum().reset_index()
     
 
     df = df.rename(columns={c: f"{c}_COS" for c in ["HA","JORNAL","JABAS","JARRAS","KILOS BRUTOS","KILOS /HA","DESCARTE"]})
@@ -356,6 +369,35 @@ def builder_transporte_kias(transport_df,tc):
     transport_df = transport_df[["SEMANA","FECHA","FUNDO","MONTO_TK $"]]
     return transport_df
 
+def builder_transporte_camaras(dff,tc):
+    dff = dff[dff["CAMPAÑA"]=="Campaña 2026"]
+    dff = dff.rename(
+        columns={
+            "FECHA INICIO TRASLADO":"FECHA",
+            "FUNDO PARTIDA":"FUNDO"
+        }
+    )
+    dff["FUNDO"] = dff["FUNDO"].str.strip()
+    dff["FUNDO"] = dff["FUNDO"].str.upper()
+    dff["FECHA"] = pd.to_datetime(dff["FECHA"], errors="coerce")
+    dff["FUNDO"] = dff["FUNDO"].replace({
+        "GAP BERRIES":"GAP",
+        "QBERRIES":"QBERRIES II MAGICA"
+    })
+    #print(dff["FUNDO"].unique())
+    dff = dff.groupby(["FECHA","FUNDO"])[["COSTO PRORRATEADO"]].sum().reset_index()
+    dff = dff.rename(
+        columns={
+            "COSTO PRORRATEADO":"MONTO_TI",
+            
+        }
+    )
+    dff = pd.merge(dff,tc,on=["FECHA"],how="left")
+    dff["MONTO$_TI"] = dff["MONTO_TI"]/dff["TIPO_CAMBIO"]
+    dff = dff.drop(columns = ["TIPO_CAMBIO"])
+    return dff
+
+
 def builder_costos_manual(df):
     df.columns = (
             df.columns.astype(str)
@@ -370,7 +412,7 @@ def builder_costos_manual(df):
     df = df[[
         'FECHA','FUNDO', 'GRUPO COSECHA',
         'COSTO MO S/ GRUPO COSECHA', 'GRUPO  COSECHA DOLAR',
-        'COSTO MANO DE OBR SOLO COSECHA', 'JORNALES', 'DISAL',
+         'JORNALES', 'DISAL',
         'ALQUILER DE BANOS  VU DIARIO S/', 'COSTO DISAL DIARIO', 'COSTO DIS  $',
         'KG MATERIA PRIMA A PACKING', 'COMERCIAL DE HUERTO BUENO',
         'COMERCIAL DE HUERTO', 'KG COSECHADOS BRUTO', 'JARRAS', 'HA',
@@ -384,7 +426,7 @@ def builder_costos_manual(df):
     col_numericos=[
         'GRUPO COSECHA',
         'COSTO MO S/ GRUPO COSECHA', 'GRUPO  COSECHA DOLAR',
-        'COSTO MANO DE OBR SOLO COSECHA', 'JORNALES', 'DISAL',
+         'JORNALES', 'DISAL',
         'ALQUILER DE BANOS  VU DIARIO S/', 'COSTO DISAL DIARIO', 'COSTO DIS  $',
         'KG MATERIA PRIMA A PACKING', 'COMERCIAL DE HUERTO BUENO',
         'COMERCIAL DE HUERTO', 'KG COSECHADOS BRUTO', 'JARRAS', 'HA',
@@ -403,7 +445,7 @@ def builder_costos_manual(df):
     return df
 
 def _agg_to_fecha_fundo(df):
-    group_keys = ["FECHA","FUNDO"] + (["MERCADO"] if "MERCADO" in df.columns else [])
+    group_keys = ["FECHA","FUNDO"] + (["MERCADO"] if "MERCADO" in df.columns else []) + (["PACKING"] if "PACKING" in df.columns else [])
     num_cols = [c for c in df.columns if c not in group_keys and pd.api.types.is_numeric_dtype(df[c])]
     df = df.groupby(group_keys)[num_cols].sum().reset_index()
     
@@ -417,23 +459,36 @@ def build_master_table():
     cosecha_df = builder_cosecha(datos_cosecha_1())
    
     cosecha_df = _agg_to_fecha_fundo(cosecha_df)
-    cosecha_df["TIPO_COS"] = cosecha_df["MERCADO"].replace({
+    cosecha_df["TIPO_COS"] = cosecha_df["PACKING"].replace({
             "-":"-",
             "NACIONAL":"VENTA NACIONAL",
             
             "ALZA PERU PACKING": "ALZA PERU PACKING",
-            "ASIA":"ALZA PERU PACKING",
-            "EUROPA":"ALZA PERU PACKING",
-            "CONVENCIONAL":"ALZA PERU PACKING",
+
         })
-    
-    
-    
-    
-    
+    #QBERRIES I, QBERRIES II MAGICA, QBERRIES II SEKOYA
+    cosecha_df["TIPO_COS"] = cosecha_df["MERCADO"]
+    fundos_qberries = ["QBERRIES I", "QBERRIES II MAGICA", "QBERRIES II SEKOYA"]
+    mask_qberries = cosecha_df["FUNDO"].isin(fundos_qberries)
+    cosecha_df.loc[mask_qberries, "MERCADO"] = np.where(
+        cosecha_df.loc[mask_qberries, "MERCADO"] == "NACIONAL",
+        "VENTA NACIONAL",
+        "ALZA PERU PACKING",
+    )
+    cosecha_df.loc[mask_qberries, "TIPO_COS"] = cosecha_df.loc[mask_qberries, "MERCADO"]
+    # La reasignacion de MERCADO para QBERRIES colapsa varios mercados
+    # (CONVENCIONAL, ESPANA, etc.) en "ALZA PERU PACKING", lo que deja filas
+    # duplicadas por (FECHA, FUNDO, MERCADO, PACKING). Se vuelven a agregar.
+    cosecha_df = _agg_to_fecha_fundo(cosecha_df)
+    cosecha_df["TIPO_COS"] = cosecha_df["MERCADO"]
+
     tp_df      = _agg_to_fecha_fundo(
         builder_transporte_personal(datos_transporte_personal(), tc)
         .drop(columns=["SEMANA","TIPO_CAMBIO"], errors="ignore")
+    )
+    ti_df      = (
+        builder_transporte_camaras(datos_transporte_interno(), tc)
+        .groupby(["FECHA","FUNDO"])[["MONTO_TI","MONTO$_TI"]].sum().reset_index()
     )
     tk_df      = (
         builder_transporte_kias(datos_transporte_kias(), tc)
@@ -449,6 +504,7 @@ def build_master_table():
         agri_df
         .merge(cosecha_df, on=join_key, how="outer")
         .merge(tp_df,      on=join_key, how="left")
+        .merge(ti_df,      on=join_key, how="left")
         .merge(tk_df,      on=join_key, how="left")
         .merge(dn_df,      on=join_key, how="left")
         .merge(cl_df,      on=join_key, how="left")  
@@ -474,9 +530,20 @@ def build_master_table():
 #df = pd.read_parquet("COSECHA CAMPO.parquet")
 
 
+#df      = costo_proyectado_cosecha()
+df = data_cosecha()
 
+#COSTO MANO DE OBR SOLO COSECHA
+st.dataframe(df)
+"""
+camaras_kias_load_data()
+st.success("TRANSPORTE")
+load_costo_laboral_gh()
+st.success("costo laboral cargado")
 df = build_master_table()
-print(df.columns)
+hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)
+df = df[df["FECHA"].dt.normalize() != hoy_peru]
+#print(df.columns)
 st.write(df.shape)
 st.dataframe(df)
 
@@ -494,4 +561,4 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
-
+"""

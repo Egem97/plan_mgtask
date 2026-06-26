@@ -444,7 +444,8 @@ def data_cosecha():
     list_files = [
         "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx",
         "1. Cosecha Excelence Sur 2026 CAMPO San Jose I.xlsx",
-        "3. Cosecha GAP - 2026.xlsx"
+        "3. Cosecha GAP - 2026.xlsx",
+        "COSECHA CANYON BERRIES 2026.xlsx"
 
         ]
 
@@ -462,7 +463,7 @@ def data_cosecha():
         else:
             preferred_sheet = "DATA EXP Y CAMP"
 
-        if file == "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx":
+        if file == "COSECHA CANYON BERRIES 2026.xlsx":
             skip_rows = 12
         elif file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
             skip_rows = 4
@@ -477,7 +478,7 @@ def data_cosecha():
         df = cosecha_datasets(access_token,file,preferred_sheet,skip_rows)
         #st.write(full_path)
         #st.dataframe(df)
-        if file == "COSECHA CANYON BERRIES 2025 ACTUALIZADO.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":
+        if file == "COSECHA CANYON BERRIES 2026.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":
             df = df.rename(columns={"KILOS": "KILOS BRUTOS","º":"MES"})
             
         elif file == "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx":
@@ -547,7 +548,9 @@ def data_cosecha():
     })
     data.loc[data["FUNDO"] == "LICAPA II", "FUNDO_"] = "QBERRIES II " + data.loc[data["FUNDO"] == "LICAPA II", "VARIEDAD"]
     data.loc[data["FUNDO"] == "EL POTRERO", "FUNDO_"] = "CANYON " + data.loc[data["FUNDO"] == "EL POTRERO", "VARIEDAD"]
-    
+    data["FUNDO_"] = data["FUNDO_"].replace({
+        "CANYON MANILA":"CANYON MADEIRA"
+    })
     
     
     return data

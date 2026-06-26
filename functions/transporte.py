@@ -16,19 +16,27 @@ def camaras_data():
     url_excel_2 = get_download_url_by_name(data, "APG TK - CONTROL DIARIO KIAS.xlsx")
     url_excel_3 = get_download_url_by_name(data, "CONTROL T. CÁMARAS ABG ALZA.xlsx")
     url_excel_4 = get_download_url_by_name(data, "APG TK - CONTROL DIARIO KIAS - 2026.xlsx")
+    #APG ALZA - CONTROL T. CÁMARAS - 2026
+    url_excel_5 = get_download_url_by_name(data, "APG ALZA - CONTROL T. CÁMARAS - 2026.xlsx")
     return (
         read_excel_fast(url_excel_1, sheet_name="BD", skiprows=2),
         read_excel_fast(url_excel_2, sheet_name="BD"),
         read_excel_fast(url_excel_3, sheet_name="BD", skiprows=2),
-        read_excel_fast(url_excel_4, sheet_name="BD")
+        read_excel_fast(url_excel_4, sheet_name="BD"),
+        read_excel_fast(url_excel_5, sheet_name="BD", skiprows=2),
     )
 
 def transform_camaras_kias():
-    control_camaras,apg_kias,control_camaras25,apg_kias26 = camaras_data()
+    control_camaras,apg_kias,control_camaras25,apg_kias26,control_camaras26 = camaras_data()
     control_camaras["TIPO"] = "APG"
+    control_camaras["CAMPAÑA"]="Campaña 2025"
     control_camaras25["TIPO"] = "COMPARTIDO"
+    control_camaras25["CAMPAÑA"]="Campaña 2025"
     control_camaras25 = control_camaras25.rename(columns = {'TIPO UN.':'TIPO UNID.'})
-    camaras_df = pd.concat([control_camaras,control_camaras25])
+    
+    control_camaras26["TIPO"] = "APG"
+    control_camaras26["CAMPAÑA"]="Campaña 2026"
+    camaras_df = pd.concat([control_camaras,control_camaras25,control_camaras26])
     camaras_df.columns = (
             camaras_df.columns.astype(str)
             .str.normalize('NFKD')
@@ -47,7 +55,7 @@ def transform_camaras_kias():
        'CONDUCTOR', 'DIRECCION FUNDO', 'NOMBRE REMITENTE',
        'NOMBRE DESTINATARIO', 'CAPACIDAD PALLETS',
        'CAPAC (KG)', 'TIEMPO', 'COD RUTA', 'COSTO', 'COSTO PRORRATEADO',
-       'PESO TOTAL DEL VIAJE', 'COSTO / KG', '% OCUP','TIPO',
+       'PESO TOTAL DEL VIAJE', 'COSTO / KG', '% OCUP','TIPO','CAMPANA'
     ]
     camaras_df = camaras_df[cols]
     camaras_df = camaras_df[(camaras_df["FECHA INICIO TRASLADO"].notna())]
@@ -83,8 +91,8 @@ def transform_camaras_kias():
 
     camaras_df["FECHA INICIO TRASLADO"] = pd.to_datetime(camaras_df["FECHA INICIO TRASLADO"]).dt.date
     camaras_df["RUTA"] = camaras_df["RUTA"].str.split("-").str[0].str.strip()
-    camaras_df["CAMPAÑA"] = 2025
-    camaras_df = camaras_df.rename(columns = {"SEM":"SEMANA"})
+    
+    camaras_df = camaras_df.rename(columns = {"SEM":"SEMANA","CAMPANA":"CAMPAÑA"})
     """
     """
     apg_kias.columns = (
@@ -132,15 +140,19 @@ def transform_camaras_kias():
     cols_time_kias = [
             'HORA ENTRADA', 'HORA SALIDA',
     ]
+    #print(apg_kias['CAPAC TOTAL JARRAS'].unique())
     for cstrk in cols_str_kias:
             apg_kias[cstrk] = apg_kias[cstrk].fillna("-")
             apg_kias[cstrk] = apg_kias[cstrk].astype(str)
+            apg_kias[cstrk] = apg_kias[cstrk].replace('ERROR','NO ESPECIFICADO')
             apg_kias[cstrk] = apg_kias[cstrk].str.strip()
             apg_kias[cstrk] = apg_kias[cstrk].str.upper()
 
     for cnumk in cols_num_kias:
+            
             apg_kias[cnumk] = apg_kias[cnumk].fillna(0)
             apg_kias[cnumk] = apg_kias[cnumk].astype(str)
+            apg_kias[cnumk] = apg_kias[cnumk].replace('ERROR','0')
             apg_kias[cnumk] = apg_kias[cnumk].astype(float)
 
     for coltimek in cols_time_kias:
@@ -153,7 +165,7 @@ def transform_camaras_kias():
         .str.encode('ascii', errors='ignore')
         .str.decode('utf-8')
     )
-    
+    apg_kias["PROVEEDOR-ZONA"] = apg_kias["PROVEEDOR-ZONA"].str.replace("ERROR","")
     #.str.normalize('NFKD')
     return camaras_df,apg_kias
 
@@ -173,7 +185,7 @@ def camaras_kias_load_data():
     resultado_2 = subir_archivo_con_reintento(
         access_token=get_access_token(),
         dataframe=kias_df,
-        nombre_archivo="    _KIAS.parquet",
+        nombre_archivo="TRANSPORTE_KIAS.parquet",
         drive_id="b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
         folder_id="01XOBWFSDC2SPT2RFM3BGY6TJUHKMNQGOI",
         type_file="parquet"

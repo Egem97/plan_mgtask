@@ -453,7 +453,7 @@ def data_cosecha():
 
     data = pd.DataFrame()
     for file in list_files:
-        print(file)
+        
         # Hoja preferida por archivo
         #DATA EXP Y CAMP 
         if file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
@@ -481,9 +481,8 @@ def data_cosecha():
         #st.write(dff.shape)
         df = cosecha_datasets(access_token,file,preferred_sheet,skip_rows)
         
-        #st.write(full_path)
-        #st.dataframe(df)
-        if file == "COSECHA CANYON BERRIES 2026.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":
+        
+        if file == "COSECHA CANYON BERRIES 2026.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2026.xlsx":
             df = df.rename(columns={"KILOS": "KILOS BRUTOS","º":"MES"})
             
         elif file == "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx":
@@ -503,7 +502,7 @@ def data_cosecha():
         df.columns = [str(c).strip().upper() for c in df.columns]
         if file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
             df = lacolina_transform(df)
-        
+        #data = df.copy()
         data = pd.concat([data, df], axis=0)
 
     # Convertir FECHA (puede venir como serial Excel tipo "45968") a datetime
@@ -513,8 +512,7 @@ def data_cosecha():
     data["VARIEDAD"] = data["VARIEDAD"].fillna("NO ESPECIFICADO")
     data["VARIEDAD"] = data["VARIEDAD"].replace(0,"NO ESPECIFICADO")
     data["VARIEDAD"] = data["VARIEDAD"].astype(str)
-    data["Nª GUIA INTERNA"] = data["Nª GUIA INTERNA"].fillna("xxxx")
-    data["Nª GUIA INTERNA"] = data["Nª GUIA INTERNA"].astype(str)
+
 
     data["LOTE"] = data["LOTE"].fillna("x")
     data["LOTE"] = data["LOTE"].astype(str)
@@ -534,7 +532,7 @@ def data_cosecha():
             "CANYON BERRIES":"EL POTRERO",
         }
     )
-    data = data.drop(columns = ["Nª GUIA INTERNA","MES","SEMANA","REF","REF2"])
+    data = data.drop(columns = ["Nª GUIA INTERNA","MES","SEMANA","REF","REF2"])#
 
     data["MODULO"] = data["MODULO"].fillna("MX")
     data["MODULO"] = data["MODULO"].replace({"I":"M1","II":"M2"})

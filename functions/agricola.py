@@ -502,6 +502,7 @@ def data_cosecha():
         data = pd.concat([data, df], axis=0)
 
     # Convertir FECHA (puede venir como serial Excel tipo "45968") a datetime
+    data = data[(data["FECHA"].notna())&(data["MODULO"].notna())&(data["KILOS BRUTOS"].notna())]
     data["FECHA"] = data["FECHA"].apply(parse_mixed_date)
     data = data[data["FECHA"].notna()]
     data["VARIEDAD"] = data["VARIEDAD"].fillna("NO ESPECIFICADO")

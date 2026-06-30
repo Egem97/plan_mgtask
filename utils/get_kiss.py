@@ -7,7 +7,7 @@ from utils.get_token import load_config
 config = load_config()
 
 SUBDOMAIN = config['kissflow']['subdomain']
-PAGE_SIZE = 100
+PAGE_SIZE = 1000
 MAX_PAGES = 10_000
 TIMEOUT = 30
 RETRY_ON_429 = 3

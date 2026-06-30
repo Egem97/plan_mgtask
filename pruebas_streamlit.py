@@ -531,11 +531,11 @@ def build_master_table():
 
 
 #df      = costo_proyectado_cosecha()
-df = data_cosecha()
+#df = data_cosecha()
 
 #COSTO MANO DE OBR SOLO COSECHA
-st.dataframe(df)
-"""
+#st.dataframe(df)
+
 camaras_kias_load_data()
 st.success("TRANSPORTE")
 load_costo_laboral_gh()
@@ -561,4 +561,3 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
-"""

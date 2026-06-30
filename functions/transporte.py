@@ -81,6 +81,8 @@ def transform_camaras_kias():
         camaras_df[cstr] = camaras_df[cstr].str.upper()
         
     for cnum in cols_num:
+        
+        camaras_df[cnum] = camaras_df[cnum].replace("NO REGISTRADO",0)
         camaras_df[cnum] = camaras_df[cnum].fillna(0)
         camaras_df[cnum] = camaras_df[cnum].astype(str)
         camaras_df[cnum] = camaras_df[cnum].astype(float)

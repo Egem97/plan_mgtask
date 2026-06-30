@@ -536,6 +536,7 @@ def build_master_table():
 #COSTO MANO DE OBR SOLO COSECHA
 #st.dataframe(df)
 
+
 camaras_kias_load_data()
 st.success("TRANSPORTE")
 load_costo_laboral_gh()

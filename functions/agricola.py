@@ -445,7 +445,9 @@ def data_cosecha():
         "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx",
         "1. Cosecha Excelence Sur 2026 CAMPO San Jose I.xlsx",
         "3. Cosecha GAP - 2026.xlsx",
-        "COSECHA CANYON BERRIES 2026.xlsx"
+        "COSECHA CANYON BERRIES 2026.xlsx",
+        "COSECHA FUNDO SAN PEDRO 2026.xlsx"
+        
 
         ]
 
@@ -550,7 +552,8 @@ def data_cosecha():
     data.loc[data["FUNDO"] == "LICAPA II", "FUNDO_"] = "QBERRIES II " + data.loc[data["FUNDO"] == "LICAPA II", "VARIEDAD"]
     data.loc[data["FUNDO"] == "EL POTRERO", "FUNDO_"] = "CANYON " + data.loc[data["FUNDO"] == "EL POTRERO", "VARIEDAD"]
     data["FUNDO_"] = data["FUNDO_"].replace({
-        "CANYON MANILA":"CANYON MADEIRA"
+        "CANYON MANILA":"CANYON MADEIRA",
+        "QBERRIES II SEKOYA POP":"QBERRIES II SEKOYA"
     })
     
     

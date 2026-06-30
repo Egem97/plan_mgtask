@@ -480,8 +480,7 @@ def data_cosecha():
         #dff = pd.read_excel(full_path, sheet_name=preferred_sheet, skiprows=skip_rows)
         #st.write(dff.shape)
         df = cosecha_datasets(access_token,file,preferred_sheet,skip_rows)
-        st.write(file)
-        st.dataframe(df)
+        
         #st.write(full_path)
         #st.dataframe(df)
         if file == "COSECHA CANYON BERRIES 2026.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":

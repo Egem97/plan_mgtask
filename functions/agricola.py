@@ -453,7 +453,7 @@ def data_cosecha():
 
     data = pd.DataFrame()
     for file in list_files:
-  
+        print(file)
         # Hoja preferida por archivo
         #DATA EXP Y CAMP 
         if file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
@@ -468,7 +468,9 @@ def data_cosecha():
         if file == "COSECHA CANYON BERRIES 2026.xlsx":
             skip_rows = 12
         elif file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
-            skip_rows = 4
+            skip_rows = 3
+        elif file == "COSECHA FUNDO SAN PEDRO 2026.xlsx":
+            skip_rows = 12
         elif file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":
             skip_rows = 12
 
@@ -478,6 +480,8 @@ def data_cosecha():
         #dff = pd.read_excel(full_path, sheet_name=preferred_sheet, skiprows=skip_rows)
         #st.write(dff.shape)
         df = cosecha_datasets(access_token,file,preferred_sheet,skip_rows)
+        st.write(file)
+        st.dataframe(df)
         #st.write(full_path)
         #st.dataframe(df)
         if file == "COSECHA CANYON BERRIES 2026.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":

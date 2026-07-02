@@ -464,7 +464,8 @@ def build_master_table():
             "NACIONAL":"VENTA NACIONAL",
             
             "ALZA PERU PACKING": "ALZA PERU PACKING",
-
+            "ALZA PACKING": "ALZA PERU PACKING",
+            
         })
     #QBERRIES I, QBERRIES II MAGICA, QBERRIES II SEKOYA
     cosecha_df["TIPO_COS"] = cosecha_df["MERCADO"]
@@ -536,12 +537,14 @@ def build_master_table():
 #COSTO MANO DE OBR SOLO COSECHA
 #st.dataframe(df)
 
+
 cosecha_load_data()
 st.success("COSECHA")
 camaras_kias_load_data()
 st.success("TRANSPORTE")
 load_costo_laboral_gh()
 st.success("costo laboral cargado")
+
 df = build_master_table()
 hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)
 df = df[df["FECHA"].dt.normalize() != hoy_peru]

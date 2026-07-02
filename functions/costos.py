@@ -234,17 +234,12 @@ def PLT_CORE_():
     #fecha_max_semana = actividad_df.groupby(['YEAR', 'SEMANA', 'FUNDO','ACTIVIDAD'  ])["FECHA"].transform("max")
     #st.dataframe(actividad_df)
     #actividad_df = actividad_df[actividad_df["FECHA"] == fecha_max_semana]
-    """"""
+
     GRANO = ["SEMANA", "FUNDO", "AREA", "SUBAREA", "ACTIVIDAD"]
     max_fecha = actividad_df.groupby(GRANO)["FECHA"].transform("max")
     actividad_df = actividad_df[actividad_df["FECHA"] == max_fecha].copy()
     
-    resumen = (
-        actividad_df.groupby("SEMANA")
-        .agg(PROY_JR=("JORNALES_PROYECTADOS", "sum"), FILAS=("COSTO PROYECTADO", "size"))
-        .reset_index()
-    )
-    """"""
+
     actividad_df = actividad_df.groupby(['YEAR', 'SEMANA', 'FUNDO', 'AREA', 'SUBAREA', 'ACTIVIDAD'])[['JORNALES_PROYECTADOS', 'COSTO PROYECTADO']].sum().reset_index()
     actividad_df["ACTIVIDAD"] = actividad_df["ACTIVIDAD"].replace(
             {   

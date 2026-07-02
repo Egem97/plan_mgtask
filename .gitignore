@@ -130,5 +130,5 @@ pruebas_streamlit.py
 *.sql
 *.csv
 DICCIONARIO_test_tradetrack_out.md
-analisis_test_tradetrack_out.ipynb
+
 analisis_test_tradetrack_out.ipynb

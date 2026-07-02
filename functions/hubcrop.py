@@ -41,7 +41,7 @@ def run_hubcrop_query(query):
         df = pd.read_sql(query, conn)
         return df
     except Exception as e:
-        st.error(f"Error executing query: {e}")
+        print(f"Error executing query: {e}")
         return pd.DataFrame()
     finally:
         if conn.is_connected():
@@ -58,7 +58,7 @@ def get_hubcrop_cosecha_default():
     SUM(PESO * BANDEJAS) AS KILOS
     from hubcrop_alsa_cosecha
     group by HUERTO,CUARTEL,RUT_TRABAJADOR,NOMBRE_TRABAJADOR,FECHA
-    having FECHA >='2026-01-01'and FECHA <='2026-12-31';
+    having FECHA >= '2026-06-01';
 
 
     """
@@ -121,6 +121,7 @@ def pipeline_hubcrop():
     df = get_hubcrop_cosecha_default()
     df = clean_hubcrop(df)
     df = pd.concat([hdf, df], ignore_index=True)
+    
     access_token = get_access_token()
     print(f"📤 Subiendo archivo 'HUBCROP' a OneDrive...")
     
@@ -138,5 +139,4 @@ def pipeline_hubcrop():
     else:
         print(f"❌ Error al subir el archivo")
         return False
-    
     

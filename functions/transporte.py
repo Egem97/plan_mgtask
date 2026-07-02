@@ -138,7 +138,7 @@ def transform_camaras_kias():
             'PROVEEDOR-ZONA', 
         'COD TARIF PRO', 'MODULOS QBERRIES'
     ]
-    cols_num_kias = [ 'GRR',  'CAPAC TOTAL JARRAS', 'TARIFA', 'TARIFA TOTAL','SEMANA']
+    cols_num_kias = [ 'GRR',  'CAPAC TOTAL JARRAS', 'TARIFA', 'TARIFA TOTAL']
     cols_time_kias = [
             'HORA ENTRADA', 'HORA SALIDA',
     ]
@@ -173,7 +173,7 @@ def transform_camaras_kias():
 
 def camaras_kias_load_data():
     print(f"📤 Subiendo archivos 'CAMARA Y KIAS' a OneDrive...")
-    camaras_df, kias_df =transform_camaras_kias()
+    camaras_df,kias_df =transform_camaras_kias()#, kias_df
     resultado_1 = subir_archivo_con_reintento(
         access_token=get_access_token(),
         dataframe=camaras_df,
@@ -182,8 +182,10 @@ def camaras_kias_load_data():
         folder_id="01XOBWFSDC2SPT2RFM3BGY6TJUHKMNQGOI",
         type_file="parquet"
     )
+    
     if resultado_1:
         print(f"✅ Proceso 1 completado exitosamente")
+    
     resultado_2 = subir_archivo_con_reintento(
         access_token=get_access_token(),
         dataframe=kias_df,
@@ -196,3 +198,53 @@ def camaras_kias_load_data():
         print(f"✅ Proceso 2 completado exitosamente")
     else:
         print(f"❌ Error al subir el archivo")
+
+def prorrateo_transporte():
+    df = data_cosecha()
+    df["FECHA"] = pd.to_datetime(df["FECHA"])
+    df = df[df["FECHA"]>="2026-06-01"]
+    df = df[df["FUNDO_"].isin(["QBERRIES II MAGICA","QBERRIES II SEKOYA","QBERRIES I"])]
+
+    df = df.groupby(["FECHA","FUNDO_"])[["KILOS BRUTOS"]].sum().reset_index()
+    df = df.pivot(index="FECHA", columns="FUNDO_", values="KILOS BRUTOS").fillna(0)
+    df.columns.name = None
+
+    kilos_cols = list(df.columns)
+    df["KILOS_TOTALES"] = df[kilos_cols].sum(axis=1)
+    for col in kilos_cols:
+        df[f"{col}_%"] = (df[col] / df["KILOS_TOTALES"] * 100).round(2)
+
+    df = df.reset_index()
+    df = df.rename({
+        'QBERRIES I':'I KG',
+        'QBERRIES II MAGICA':'II KG',
+        'QBERRIES II SEKOYA':'III KG',
+        'QBERRIES I_%':'I %',
+        'QBERRIES II MAGICA_%':'II %',
+        'QBERRIES II SEKOYA_%':'III %',
+    })
+    st.dataframe(df)
+    print(df.columns)
+    camaras_df, kias_df =transform_camaras_kias()
+    #QBERRIES S.A.C.
+    camaras_df["FECHA INICIO TRASLADO"] = pd.to_datetime(camaras_df["FECHA INICIO TRASLADO"])
+    kias_df["FECHA"] = pd.to_datetime(kias_df["FECHA"])
+    camaras_df = camaras_df[(camaras_df["NOMBRE REMITENTE"]=="QBERRIES S.A.C.")&(camaras_df["FECHA INICIO TRASLADO"]>="2026-06-01")]
+    camaras_df = camaras_df.rename(columns ={"FECHA INICIO TRASLADO":"FECHA"})
+    kias_df = kias_df[(kias_df["FUNDO"]=="QBERRIES")&(kias_df["FECHA"]>="2026-06-01")]
+
+    st.dataframe(camaras_df)
+    st.dataframe(kias_df)
+
+    camaras_df= pd.merge(camaras_df,df,on=["FECHA"], how="left")
+    camaras_df["ETAPA I S/"] = (camaras_df["QBERRIES I_%"]/100) * camaras_df["COSTO PRORRATEADO"]
+    camaras_df["ETAPA II S/"] = (camaras_df["QBERRIES II MAGICA_%"]/100) * camaras_df["COSTO PRORRATEADO"]
+    camaras_df["ETAPA III S/"] = (camaras_df["QBERRIES II SEKOYA_%"]/100 )* camaras_df["COSTO PRORRATEADO"]
+    st.dataframe(camaras_df)
+    kias_df= pd.merge(kias_df,df,on=["FECHA"], how="left")
+    kias_df["ETAPA I S/"] = (kias_df["QBERRIES I_%"]/100) * kias_df["TARIFA"]
+    kias_df["ETAPA II S/"] = (kias_df["QBERRIES II MAGICA_%"]/100)  * kias_df["TARIFA"]
+    kias_df["ETAPA III S/"] = (kias_df["QBERRIES II SEKOYA_%"]/100)  * kias_df["TARIFA"]
+    st.dataframe(kias_df)
+    kias_df.to_excel("kias_costos.xlsx",index=False)
+    camaras_df.to_excel("camaras_costos.xlsx",index=False)

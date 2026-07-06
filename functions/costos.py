@@ -714,6 +714,8 @@ def costo_proyectado_cosecha():
     dataframe["LABOR/ACTIVIDAD"] = dataframe["LABOR/ACTIVIDAD"].str.strip().str.upper()
     dataframe["FUNDO"] = dataframe["FUNDO"].replace({
         'CANYON':'CANYON MAGICA',
+        'CANYON BERRIES 01':'CANYON MAGICA',
+        'CANYON BERRIES 02':'CANYON MADEIRA',
         '#N/D':'NO ESPECIFICADO',
         'GAP BERRIES':'GAP',
         'LICAPA':'QBERRIES I',

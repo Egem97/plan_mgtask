@@ -196,7 +196,7 @@ def builder_agri_jr(agritracer_df):
         "LICAPA II":"QBERRIES II MAGICA",
         "LICAPA III":"QBERRIES II SEKOYA",
         "LICAPA":"QBERRIES I",
-        "GAP BERRIES":"GAP"
+        "GAP BERRIES":"GAP",
     })
     
     
@@ -533,10 +533,12 @@ def build_master_table():
 #print(df.columns)
 #st.write(df.shape)
 #st.dataframe(df)
+tc = datos_tipo_cambio_()
+df = builder_costo_laboral(datos_costo_laboral(), tc)  
+st.dataframe(df)
 
 
-
-
+"""
 cosecha_load_data()
 st.success("COSECHA")
 camaras_kias_load_data()
@@ -565,3 +567,4 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
+"""                                                                                                                                     

@@ -534,12 +534,13 @@ def build_master_table():
 #print(df.columns)
 #st.write(df.shape)
 #st.dataframe(df)datos_transporte_personal()
-tc = datos_tipo_cambio_()
+#tc = datos_tipo_cambio_()
 
-df = builder_transporte_personal(datos_transporte_personal(), tc)
+#df = builder_transporte_personal(datos_transporte_personal(), tc)
 
-st.dataframe(df)
-
+#st.dataframe(df)
+cosecha_df= data_cosecha()
+st.dataframe(cosecha_df)
 
 """
 cosecha_load_data()
@@ -570,4 +571,5 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
-"""                                                                                                                                     
+"""
+                                                                                                                                

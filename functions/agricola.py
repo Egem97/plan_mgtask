@@ -446,13 +446,15 @@ def data_cosecha():
         "1. Cosecha Excelence Sur 2026 CAMPO San Jose I.xlsx",
         "3. Cosecha GAP - 2026.xlsx",
         "COSECHA CANYON BERRIES 2026.xlsx",
-        "COSECHA FUNDO SAN PEDRO 2026.xlsx"
+        "COSECHA FUNDO SAN PEDRO 2026.xlsx",
+        "4. Cosecha TARA FARM - 2026.xlsx"
         
 
         ]
 
     data = pd.DataFrame()
     for file in list_files:
+        #print(file)
         
         # Hoja preferida por archivo
         #DATA EXP Y CAMP 
@@ -464,13 +466,13 @@ def data_cosecha():
             preferred_sheet = "DATA EXP Y CAMP  "
         else:
             preferred_sheet = "DATA EXP Y CAMP"
-
+                               
         if file == "COSECHA CANYON BERRIES 2026.xlsx":
-            skip_rows = 12
+            skip_rows = 11
         elif file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
             skip_rows = 3
         elif file == "COSECHA FUNDO SAN PEDRO 2026.xlsx":
-            skip_rows = 12
+            skip_rows = 11
         elif file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx":
             skip_rows = 12
 
@@ -483,8 +485,11 @@ def data_cosecha():
         
         
         if file == "COSECHA CANYON BERRIES 2026.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2026.xlsx":
-            df = df.rename(columns={"KILOS": "KILOS BRUTOS","º":"MES"})
             
+            df = df.rename(columns={"KILOS": "KILOS BRUTOS","º":"MES"})
+        if file == "COSECHA CANYON BERRIES 2026.xlsx":
+            st.write("file")
+            st.dataframe(df)
         elif file == "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx":
             df["num_modulo"] = df['MODULO'].str.replace(r'\D', '', regex=True)
             df["num_modulo"] = pd.to_numeric(df["num_modulo"], errors='coerce').fillna(0).astype(int)
@@ -499,6 +504,7 @@ def data_cosecha():
         
         # Limpieza por iteración: quitar columnas 'Unnamed*' y estandarizar nombres
         df = df.loc[:, [c for c in df.columns if not str(c).strip().upper().startswith("UNNAMED")]]
+        #DATA EXP Y CAMP
         df.columns = [str(c).strip().upper() for c in df.columns]
         if file == "REPORTE COSECHA LA COLINA ATLAS 2025..xlsx":
             df = lacolina_transform(df)
@@ -556,7 +562,7 @@ def data_cosecha():
         "CANYON MANILA":"CANYON MADEIRA",
         "QBERRIES II SEKOYA POP":"QBERRIES II SEKOYA"
     })
-    
+    data["HA REAL"] = data["HA REAL"].astype(float)
     
     return data
 

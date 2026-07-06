@@ -16,6 +16,7 @@ from functions.costos import *
 from utils.get_kiss import fetch_all_kissflow
 
 
+
 st.set_page_config(page_title="web pruebas", page_icon=":tada:")
 st.title("pruebas")
 from functions.transporte import *
@@ -31,74 +32,11 @@ def historico_agritracer(access_token):
         #url_excel_2 = get_download_url_by_name(data, "REGISTRO APLICACIONES NUTRICIONALES-FUNDO QBERRIES.xlsx")
         return pd.read_parquet(url_parquet, engine="pyarrow")
 
-#df = historico_agritracer(get_access_token())
-#df["FECHA"] = pd.to_datetime(df["FECHA"], errors='coerce')
-#df = df[df["FECHA"]<="2026-04-30"]
-#df =df.sort_values(by="FECHA")
-#st.write(df.shape)
-#st.dataframe(df)
-#df.to_parquet("AGRITRACER_HISTO.parquet",index=False)
-#with st.spinner("Wait for it...", show_time=True):
-#    cosecha_load_data()
-#st.success("listo ww")
-#df = data_cosecha()
-
-#st.write(df.shape)
-#st.dataframe(df)
-#MADEIRA,MANILA
-#df = proyecciones_2026()
-#st.dataframe(df)
-
-#proy_df,ppt_df = proy_2026()
-#st.dataframe(ppt_df)
-#proy_df,ppt_df = proy_2026()s
-#ppt_df["CAMPAÑA"] = "Campañsa 2026"
-#ppt_df["Semana Año"] = ppt_df["SEMANA"].astype(str) + "-" + ppt_df["SEMANA"].apply(lambda x: "2027" if x < 23 else "2026")
-
-#st.write(ppt_df.shape)
-#st.dataframe(ppt_df)
-
-
-#from functions.costos import PLT_CORE_
-#df,dff,index_df = PLT_CORE_()
-#st.write(df.shape)
-#st.dataframe(df)
-#proy_df,ppt_df = proy_2026()
-#st.dataframe(proy_df)
-#st.dataframe(ppt_df)
-
-#df = proyecciones_2026()
-#st.dataframe(df)
-#st.success("owo")
-#meq_df = transform_kissflow_meq()
-#dff = fetch_all_kissflow("COP01_BD_PLANES_DE_TRABAJO")
-#st.dataframe(dff)
-#api_client = InnovaWeatherAPI()
-#api_client.login()
-#df = api_client.get_all_stations_data()
-#st.write(df.shape)
-#st.dataframe(df)
-#plt_load_data()
-#st.success("ssss")
-
-#cosecha_datasets
 
 
 from functions.costos import *
 from functions.transporte import *
-#df,kias_df = transform_camaras_kias()
-#df,transp_df = costos_cosecha_2026()
 
-#st.dataframe(df)
-#st.dataframe(kias_df)
-
-#df = data_cosecha()
-#st.dataframe(df)
-
-#costos_cosecha_df, transporte_df = costos_cosecha_2026()
-#st.dataframe(costos_cosecha_df)
-#st.dataframe(transporte_df)
-########################################CARGA DATASETS
 def datos_costo_laboral():
         data = listar_archivos_en_carpeta_compartida(
             get_access_token(),
@@ -151,10 +89,64 @@ def datos_costos_manual():
             "016WMGJCUL63W2LEO4JVE2ABL7PVCROI4O"
         )
         url_excel_1 = get_download_url_by_name(data, "1. Costos Cosecha.xlsx")
-        df = read_excel_fast(url_excel_1, sheet_name="QBERRIES II MAGICA")
-        df["FUNDO"] = "QBERRIES II MAGICA"
+        dataframe = pd.DataFrame()
+        sheets = [
+            "QBERRIES I","QBERRIES II MAGICA","QBERRIES II SEKOYA","SAN JOSE",
+            "SAN JOSE II", "SAN PEDRO","TARA","GAP","COLINA","CANYON"
+        ]
+        for fundo in sheets:
+            df = read_excel_fast(url_excel_1, sheet_name=fundo)
+            df.columns = [strip_accents(c).strip().upper() for c in df.columns]
+            df = df[df["FECHA"].notna()]
+            df["FUNDO"] = fundo
+            df["CAMPANA"] = df["CAMPANA"].str.strip()
+            df = df[df["CAMPANA"]=="Campaña 2026"]
+            dataframe = pd.concat([dataframe,df])
+        return dataframe
+        
+        """
+        qb2_magica_df = read_excel_fast(url_excel_1, sheet_name="QBERRIES II MAGICA")
+        qb2_magica_df.columns = [strip_accents(c).strip().upper() for c in qb2_magica_df.columns]
+        qb2_magica_df = qb2_magica_df[qb2_magica_df["FECHA"].notna()]
+        qb2_magica_df["FUNDO"] = "QBERRIES II MAGICA"
+        
+        
+        
+        qb3_magica_df = read_excel_fast(url_excel_1, sheet_name="QBERRIES II SEKOYA")
+        qb3_magica_df.columns = [strip_accents(c).strip().upper() for c in qb3_magica_df.columns]
+        qb3_magica_df["FUNDO"] = "QBERRIES II SEKOYA"
+        
+        
+        qb_df = read_excel_fast(url_excel_1, sheet_name="QBERRIES I")
+        qb_df.columns = [strip_accents(c).strip().upper() for c in qb_df.columns]
+        qb_df["FUNDO"] = "QBERRIES I"
+        qb_df["CAMPANA"] = qb_df["CAMPANA"].str.strip()
+        qb_df = qb_df[qb_df["CAMPANA"]=="Campaña 2026"]
+        
+        sanjose_df = read_excel_fast(url_excel_1, sheet_name="SAN JOSE")
+        sanjose_df.columns = [strip_accents(c).strip().upper() for c in sanjose_df.columns]
+        sanjose_df["FUNDO"] = "SAN JOSE"
+        sanjose_df["CAMPANA"] = sanjose_df["CAMPANA"].str.strip()
+        sanjose_df = sanjose_df[sanjose_df["CAMPANA"]=="Campaña 2026"]
+        
+        sanjose2_df = read_excel_fast(url_excel_1, sheet_name="SAN JOSE II")
+        sanjose2_df.columns = [strip_accents(c).strip().upper() for c in sanjose2_df.columns]
+        sanjose2_df["FUNDO"] = "SAN JOSE II"
+        sanjose2_df["CAMPANA"] = sanjose2_df["CAMPANA"].str.strip()
+        sanjose2_df = sanjose2_df[sanjose2_df["CAMPANA"]=="Campaña 2026"]
+        
+        sanpedro_df = read_excel_fast(url_excel_1, sheet_name="SAN PEDRO")
+        sanpedro_df.columns = [strip_accents(c).strip().upper() for c in sanpedro_df.columns]
+        sanpedro_df["FUNDO"] = "SAN PEDRO"
+        sanpedro_df["CAMPANA"] = sanpedro_df["CAMPANA"].str.strip()
+        sanpedro_df = sanpedro_df[sanpedro_df["CAMPANA"]=="Campaña 2026"]
+        
+        
+        
+        
+        df = pd.concat([qb2_magica_df,qb3_magica_df,qb_df,sanjose_df,sanjose2_df])
         return df
-    
+        """
 
 def datos_agritracer():
         data = listar_archivos_en_carpeta_compartida(
@@ -536,6 +528,13 @@ def build_master_table():
 
 #COSTO MANO DE OBR SOLO COSECHA
 #st.dataframe(df)
+
+#df = datos_costos_manual()
+#print(df.columns)
+#st.write(df.shape)
+#st.dataframe(df)
+
+
 
 
 cosecha_load_data()

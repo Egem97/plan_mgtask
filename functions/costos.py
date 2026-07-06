@@ -292,7 +292,7 @@ def PLT_CORE_():
     
     #JOINS "CONCAT HISTORICA-KISSFLOW PLT"
     plt_proyectados_jr = pd.concat([hist_eject_df,actividad_df], ignore_index=True)
-    
+    plt_proyectados_jr["ACTIVIDAD"] = plt_proyectados_jr["ACTIVIDAD"].replace("AUXILAR DE RIEGO","AUXILIAR DE RIEGO")
     #JOINS "CONCAT MERGE PLT - JR EJECUTADOS(AGRITRACER)"
     dataframe_join_1 = pd.merge(agritracer_df,plt_proyectados_jr,on=['YEAR', 'SEMANA', 'FUNDO','ACTIVIDAD',], how="outer")
     
@@ -350,6 +350,7 @@ def PLT_CORE_():
     
     
     dataframe_join_1['PERIODO SEMANA'] = dataframe_join_1["SEMANA"].astype(int).astype(str)+"-"+dataframe_join_1["YEAR"].astype(int).astype(str)
+    dataframe_join_1 = dataframe_join_1[(dataframe_join_1["YEAR"].isin([2026,2027]))&(dataframe_join_1["SEMANA"]>19)]
     return dataframe_join_1,plt_ppt_df,index_df
 
 def PLT_ACTIVIDADES_GENERAL():

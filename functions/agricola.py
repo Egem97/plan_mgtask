@@ -439,7 +439,7 @@ def data_cosecha():
         "ALZA + PACKING":"ALZA PERU PACKING",  
         "ALZA PERU PACKING S.A.C.":"ALZA PERU PACKING",  
         "SMART PACKING S.A.C.":"ALZA PERU PACKING",  
-        "ALZA PERU PACKING S.A.C.":"ALZA PERU PACKING"
+        
         }
     )
     list_files = [
@@ -509,7 +509,18 @@ def data_cosecha():
             df = lacolina_transform(df)
         #data = df.copy()
         data = pd.concat([data, df], axis=0)
-
+        
+    data["PACKING"] = data["PACKING"].replace(
+        {
+        "VENTA NACIONAL":"VENTA NACIONAL",   
+        "ALZA PERU PACKING":"ALZA PERU PACKING",  
+        "ALZA PACKING":"ALZA PERU PACKING",  
+        "ALZA + PACKING":"ALZA PERU PACKING",  
+        "ALZA PERU PACKING S.A.C.":"ALZA PERU PACKING",  
+        "SMART PACKING S.A.C.":"ALZA PERU PACKING",  
+        
+        })
+    
     # Convertir FECHA (puede venir como serial Excel tipo "45968") a datetime
     data = data[(data["FECHA"].notna())&(data["MODULO"].notna())&(data["KILOS BRUTOS"].notna())]
     data["FECHA"] = data["FECHA"].apply(parse_mixed_date)

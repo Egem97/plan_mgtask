@@ -256,7 +256,7 @@ def builder_cosecha(df):
 def builder_transporte_personal(df,tc):
     df = df[df["FECHA"]>='2026-06-01']
     cols_pivot = [
-        '(S/) GAP COSECHA','(S/) SAN JOSE II COSECHA','(S/) SAN JOSE COSECHA','(S/) CANYON COSECHA','(S/) SAN PEDRO COSECHA','(S/) BIG BERRIES COSECHA',
+        '(S/) GAP COSECHA','(S/) SAN JOSE II COSECHA','(S/) SAN JOSE COSECHA','(S/) CANYON COSECHA','(S/) CANYON 2 COSECHA','(S/) SAN PEDRO COSECHA','(S/) BIG BERRIES COSECHA',
         '(S/) GOLDEN BERRIES COSECHA','(S/) QBERRIES COSECHA','(S/) QBERRIES 2 COSECHA','(S/) QBERRIES 3 COSECHA','(S/) TARA COSECHA'
     ]
     df = df[['SEMANA', 'FECHA']+cols_pivot]
@@ -272,7 +272,8 @@ def builder_transporte_personal(df,tc):
         '(S/) GAP COSECHA':'GAP',
         '(S/) SAN JOSE II COSECHA':"SAN JOSE II",
         '(S/) SAN JOSE COSECHA':"SAN JOSE",
-        '(S/) CANYON COSECHA':"CANYON",
+        '(S/) CANYON COSECHA':"CANYON MAGICA",
+        '(S/) CANYON 2 COSECHA':"CANYON MADEIRA",
         '(S/) SAN PEDRO COSECHA':"SAN PEDRO",
         '(S/) BIG BERRIES COSECHA':"LA COLINA", 
         '(S/) GOLDEN BERRIES COSECHA':"LA COLINA",
@@ -284,14 +285,14 @@ def builder_transporte_personal(df,tc):
     )
     
     df = df[df["MONTO (S/)"]>0]
-    canyon = df[df["FUNDO"] == "CANYON"].copy()
-    canyon_magica = canyon.copy()
-    canyon_magica["FUNDO"] = "CANYON MAGICA"
-    canyon_magica["MONTO (S/)"] = canyon_magica["MONTO (S/)"] * 0.81
-    canyon_madeira = canyon.copy()
-    canyon_madeira["FUNDO"] = "CANYON MADEIRA"
-    canyon_madeira["MONTO (S/)"] = canyon_madeira["MONTO (S/)"] * 0.19
-    df = pd.concat([df[df["FUNDO"] != "CANYON"], canyon_magica, canyon_madeira], ignore_index=True)
+    #canyon = df[df["FUNDO"] == "CANYON"].copy()
+    #canyon_magica = canyon.copy()
+    #canyon_magica["FUNDO"] = "CANYON MAGICA"
+    #canyon_magica["MONTO (S/)"] = canyon_magica["MONTO (S/)"] * 0.81
+    #canyon_madeira = canyon.copy()
+    #canyon_madeira["FUNDO"] = "CANYON MADEIRA"
+    #canyon_madeira["MONTO (S/)"] = canyon_madeira["MONTO (S/)"] * 0.19
+    #df = pd.concat([df[df["FUNDO"] != "CANYON"], canyon_magica, canyon_madeira], ignore_index=True)
     df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
     df = pd.merge(df,tc,on=["FECHA"],how="left")
     df["MONTO($)"] = df["MONTO (S/)"]/df["TIPO_CAMBIO"]
@@ -532,9 +533,11 @@ def build_master_table():
 #df = datos_costos_manual()
 #print(df.columns)
 #st.write(df.shape)
-#st.dataframe(df)
+#st.dataframe(df)datos_transporte_personal()
 tc = datos_tipo_cambio_()
-df = builder_costo_laboral(datos_costo_laboral(), tc)  
+
+df = builder_transporte_personal(datos_transporte_personal(), tc)
+
 st.dataframe(df)
 
 

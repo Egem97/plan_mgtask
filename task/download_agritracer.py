@@ -15,7 +15,7 @@ def download_files_c1():
         # Lanzar navegador en modo headless (sin ventana visible)
         # Lanzar navegador en modo headless con argumentos adicionales
         browser = p.chromium.launch(
-            headless=True,
+            headless=False,
             args=['--start-maximized']
         )
         

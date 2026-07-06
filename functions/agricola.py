@@ -439,6 +439,7 @@ def data_cosecha():
         "ALZA + PACKING":"ALZA PERU PACKING",  
         "ALZA PERU PACKING S.A.C.":"ALZA PERU PACKING",  
         "SMART PACKING S.A.C.":"ALZA PERU PACKING",  
+        "ALZA PERU PACKING S.A.C.":"ALZA PERU PACKING"
         }
     )
     list_files = [
@@ -487,9 +488,7 @@ def data_cosecha():
         if file == "COSECHA CANYON BERRIES 2026.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2025 ACTUALIZADO.xlsx" or file == "COSECHA FUNDO SAN PEDRO 2026.xlsx":
             
             df = df.rename(columns={"KILOS": "KILOS BRUTOS","º":"MES"})
-        if file == "COSECHA CANYON BERRIES 2026.xlsx":
-            st.write("file")
-            st.dataframe(df)
+        
         elif file == "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx":
             df["num_modulo"] = df['MODULO'].str.replace(r'\D', '', regex=True)
             df["num_modulo"] = pd.to_numeric(df["num_modulo"], errors='coerce').fillna(0).astype(int)

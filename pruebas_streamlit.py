@@ -539,10 +539,10 @@ def build_master_table():
 #df = builder_transporte_personal(datos_transporte_personal(), tc)
 
 #st.dataframe(df)
-cosecha_df= data_cosecha()
-st.dataframe(cosecha_df)
+#cosecha_df= data_cosecha()
+#st.dataframe(cosecha_df)
 
-"""
+
 cosecha_load_data()
 st.success("COSECHA")
 camaras_kias_load_data()
@@ -571,5 +571,4 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
-"""
-                                                                                                                                
+                                                                                                                

@@ -15,6 +15,7 @@ from functions.mayor_analitico_pipeline import (
     full_load as mayor_analitico_full_load,
 )
 from functions.kissflow import upload_datakiss_bd_formulario_camaras
+from functions.comex import update_comex
 
 async def pipeline_agritracer_job():
     for attempt in range(1, 6):
@@ -39,7 +40,8 @@ async def pipeline_agritracer_job():
 
 async def main():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(PLT_ACTIVIDADES_GENERAL, 'cron', hour='7-20', minute='27', timezone='America/Lima')
+    #scheduler.add_job(PLT_ACTIVIDADES_GENERAL, 'cron', hour='7-20', minute='27', timezone='America/Lima')
+    scheduler.add_job(update_comex, 'cron', hour='8-20', minute='15,45', timezone='America/Lima')
     scheduler.add_job(cosecha_load_data, 'cron', hour='7-20', minute='28,55', timezone='America/Lima')
     scheduler.add_job(load_kissflow_fertirriego, 'interval', minutes=14)
     scheduler.add_job(load_biometria_2026,'cron', hour='7-20', minute='28,55', timezone='America/Lima')

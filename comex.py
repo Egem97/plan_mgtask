@@ -408,7 +408,6 @@ def agregar_presupuesto(dim):
 st.subheader("TABLA ENVIO")
 dim_envio = construir_dim_envio(_TABLAS_COMEX)
 dim_envio = agregar_presupuesto(dim_envio)      # tasas presupuestadas por FUNDO
-dim_envio
 st.write(dim_envio.shape)
 st.dataframe(dim_envio)
 

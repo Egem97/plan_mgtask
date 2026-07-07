@@ -541,10 +541,7 @@ def build_master_table():
 #st.dataframe(df)
 #cosecha_df= data_cosecha()
 #st.dataframe(cosecha_df)
-df = data_cosecha()
-df = df[df["FUNDO"]=="LAS BRISAS"]
-st.dataframe(df)
-"""
+
 cosecha_load_data()
 st.success("COSECHA")
 camaras_kias_load_data()
@@ -574,4 +571,3 @@ if resultado:
 else:
     print(f"❌ Error al subir el archivo")
                                                                                                             
-"""

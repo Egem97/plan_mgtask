@@ -448,8 +448,8 @@ def data_cosecha():
         "3. Cosecha GAP - 2026.xlsx",
         "COSECHA CANYON BERRIES 2026.xlsx",
         "COSECHA FUNDO SAN PEDRO 2026.xlsx",
-        "4. Cosecha TARA FARM - 2026.xlsx"
-        
+        "4. Cosecha TARA FARM - 2026.xlsx",
+        "2. Cosecha Excelence Sur 2026 CAMPO San Jose II LIS.xlsx"
 
         ]
 

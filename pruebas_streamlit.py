@@ -620,7 +620,9 @@ def build_master_table():
 #st.dataframe(cosecha_df)
 #dn_df      = _agg_to_fecha_fundo(builder_costos_manual(datos_costos_manual()))
 #st.dataframe(dn_df)
-
+#COSECHA_DF= data_cosecha()
+#st.write(COSECHA_DF.shape)
+#st.dataframe(COSECHA_DF)
 
 
 

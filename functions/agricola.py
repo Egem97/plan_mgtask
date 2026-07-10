@@ -559,7 +559,7 @@ def data_cosecha():
         'KILOS BRUTOS', 'KILOS /HA', 'JARRAS/JR', 'KG/JR', 'DESCARTE']
     for col in cols_numeric:
         data[col] = data[col].fillna(0)
-    data["FECHA"] = pd.to_datetime(data["FECHA"])
+    data["FECHA"] = pd.to_datetime(data["FECHA"],errors="coerce")
     data["CAMPAÑA"] = "Campaña 2026"
     data = pd.concat([h_df,data],axis=0)
     data["FUNDO_"] = data["FUNDO"].replace({
@@ -573,7 +573,8 @@ def data_cosecha():
         "QBERRIES II SEKOYA POP":"QBERRIES II SEKOYA"
     })
     data["HA REAL"] = data["HA REAL"].astype(float)
-    
+    data["JORNAL"] = data["JORNAL"].fillna(0)
+    data["JORNAL"] = data["JORNAL"].astype(str)
     return data
 
 #DATA QUE CAMBIA POCAS VECES O FRECUENCIA

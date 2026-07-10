@@ -201,8 +201,8 @@ def builder_agri_jr(agritracer_df):
     
     
     
-    agritracer_df = agritracer_df.groupby(["FUNDO","YEAR","FECHA","PERIODO SEMANA","SEMANA","ACTIVIDAD","PARTIDA PRESUPUESTARIA","MACRO PARTIDA","TRABAJADOR"])[["COPIA"]].count().reset_index()
-    agritracer_df = agritracer_df.groupby(["FUNDO","YEAR","FECHA","SEMANA","PERIODO SEMANA","ACTIVIDAD","PARTIDA PRESUPUESTARIA","MACRO PARTIDA"])[["COPIA"]].count().reset_index()
+    agritracer_df = agritracer_df.groupby(["FUNDO","YEAR","FECHA","PERIODO SEMANA","SEMANA","ACTIVIDAD","PARTIDA PRESUPUESTARIA","MACRO PARTIDA","TRABAJADOR"]).agg({"COPIA": "count","HORAS": "sum"}).reset_index()#,"HORAS": "sum"
+    agritracer_df = agritracer_df.groupby(["FUNDO","YEAR","FECHA","SEMANA","PERIODO SEMANA","ACTIVIDAD","PARTIDA PRESUPUESTARIA","MACRO PARTIDA"]).agg({"COPIA": "count","HORAS": "sum"}).reset_index()#,"HORAS": "sum"
     agritracer_df["PERIODO SEMANA"] = agritracer_df["PERIODO SEMANA"].astype(str)
     agritracer_df = agritracer_df.rename(columns={"COPIA":"JORNALES_AGRITRACER"})
     index_cols = ["FUNDO","YEAR","FECHA","PERIODO SEMANA","SEMANA"]
@@ -218,19 +218,30 @@ def builder_agri_jr(agritracer_df):
     macro_cols = [c for c in pivot_df.columns if c not in index_cols]
     pivot_df = pivot_df.rename(columns={c: f"{c}_JR" for c in macro_cols})
 
+    
+    HORAS_POR_JORNAL = 9.6
+    
+    mo_cosecha_mask = agritracer_df["PARTIDA PRESUPUESTARIA"] == "MO COSECHA"
+    cosecha_mask = agritracer_df["ACTIVIDAD"] == "COSECHA"
+    
     mo_cosecha_df = (
-        agritracer_df[agritracer_df["PARTIDA PRESUPUESTARIA"] == "MO COSECHA"]
-        .groupby(index_cols)["JORNALES_AGRITRACER"].sum().reset_index()
-        .rename(columns={"JORNALES_AGRITRACER": "MO COSECHA"})
+        agritracer_df[mo_cosecha_mask]
+        .groupby(index_cols)[["JORNALES_AGRITRACER", "HORAS"]].sum().reset_index()
+        .rename(columns={"JORNALES_AGRITRACER": "MO COSECHA", "HORAS": "MO COSECHA_JRH"})
     )
+    mo_cosecha_df["MO COSECHA_JRH"] = mo_cosecha_df["MO COSECHA_JRH"] / HORAS_POR_JORNAL
+    
     cosecha_df = (
-        agritracer_df[agritracer_df["ACTIVIDAD"] == "COSECHA"]
-        .groupby(index_cols)["JORNALES_AGRITRACER"].sum().reset_index()
-        .rename(columns={"JORNALES_AGRITRACER": "COSECHA"})
+        agritracer_df[cosecha_mask]
+        .groupby(index_cols)[["JORNALES_AGRITRACER", "HORAS"]].sum().reset_index()
+        .rename(columns={"JORNALES_AGRITRACER": "COSECHA", "HORAS": "COSECHA_JRH"})
     )
-
+    cosecha_df["COSECHA_JRH"] = cosecha_df["COSECHA_JRH"] / HORAS_POR_JORNAL
+    
     pivot_df = pivot_df.merge(mo_cosecha_df, on=index_cols, how="left").merge(cosecha_df, on=index_cols, how="left")
-    pivot_df[["MO COSECHA", "COSECHA"]] = pivot_df[["MO COSECHA", "COSECHA"]].fillna(0)
+    
+    fill_cols = ["MO COSECHA", "COSECHA", "MO COSECHA_JRH", "COSECHA_JRH"]
+    pivot_df[fill_cols] = pivot_df[fill_cols].fillna(0)
     pivot_df = pivot_df.rename(columns = {"MO COSECHA":"MO COSECHA_JR","COSECHA":"COSECHA_JR"})
     return pivot_df
 
@@ -337,6 +348,67 @@ def builder_costo_laboral(dataframe,tc_df):
     return dataframe
 
 
+# Fundos que en transporte (kias/camaras) llegan agrupados bajo un solo nombre
+# y deben prorratearse entre sus fundos "hijos" segun los kilos cosechados por
+# fecha. El PRIMER fundo de cada lista es la "primera etapa": recibe el costo
+# completo cuando esa fecha no tiene cosecha registrada del grupo.
+PRORRATEO_GRUPOS = {
+    "QBERRIES": ["QBERRIES I", "QBERRIES II MAGICA", "QBERRIES II SEKOYA"],
+    "CANYON":   ["CANYON MAGICA", "CANYON MADEIRA"],
+}
+
+@st.cache_data(show_spinner=False)
+def _kilos_cosecha_transporte(fecha_desde="2026-06-01"):
+    """KILOS BRUTOS cosechados por (FECHA, FUNDO) para los fundos hijos de
+    PRORRATEO_GRUPOS. Cacheado para no releer la cosecha en cada builder."""
+    hijos = [f for hs in PRORRATEO_GRUPOS.values() for f in hs]
+    df = data_cosecha()
+    df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
+    df = df[(df["FECHA"] >= fecha_desde) & (df["FUNDO_"].isin(hijos))]
+    return df.groupby(["FECHA", "FUNDO_"], as_index=False)["KILOS BRUTOS"].sum()
+
+def _prorratear_transporte(df, cost_cols, fecha_desde="2026-06-01",
+                           pct_col="% KILOS", kilos_col="KILOS_COS"):
+    """Reparte el costo de los fundos agrupados (PRORRATEO_GRUPOS) entre sus
+    fundos hijos en proporcion a los KILOS BRUTOS cosechados por FECHA.
+    Las filas cuya fecha no tiene cosecha del grupo van completas a la primera
+    etapa (primer fundo de la lista). Los demas fundos pasan sin cambios.
+
+    Agrega dos columnas para saber a cuantos kilos equivale el MONTO:
+    - kilos_col: kilos cosechados de ese fundo en esa fecha (base del reparto).
+    - pct_col: % de kilos que representa ese fundo dentro de su grupo (0-100).
+    Los fundos no prorrateados quedan con pct_col=100 (el MONTO es 100% suyo)."""
+    df = df.copy()
+    df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
+    kilos = _kilos_cosecha_transporte(fecha_desde).rename(
+        columns={"FUNDO_": "FUNDO", "KILOS BRUTOS": kilos_col})
+
+    partes = [df[~df["FUNDO"].isin(list(PRORRATEO_GRUPOS.keys()))]]
+    for padre, hijos in PRORRATEO_GRUPOS.items():
+        sub = df[df["FUNDO"] == padre]
+        if sub.empty:
+            continue
+        pesos = kilos[kilos["FUNDO"].isin(hijos)].copy()
+        total = pesos.groupby("FECHA")[kilos_col].transform("sum")
+        pesos = pesos[total > 0].copy()
+        pesos["PESO"] = pesos[kilos_col] / pesos.groupby("FECHA")[kilos_col].transform("sum")
+        pesos = pesos[["FECHA", "FUNDO", kilos_col, "PESO"]]
+
+        exp = sub.drop(columns=["FUNDO"]).merge(pesos, on="FECHA", how="left")
+        # Fecha de transporte sin cosecha del grupo -> todo a la primera etapa
+        sin_cosecha = exp["FUNDO"].isna()
+        exp.loc[sin_cosecha, "FUNDO"] = hijos[0]
+        exp.loc[sin_cosecha, "PESO"] = 1.0
+        exp.loc[sin_cosecha, kilos_col] = 0.0
+        for c in cost_cols:
+            exp[c] = exp[c] * exp["PESO"]
+        exp[pct_col] = (exp["PESO"] * 100).round(2)
+        partes.append(exp.drop(columns=["PESO"]))
+    out = pd.concat(partes, ignore_index=True)
+    # Fundos no prorrateados: el MONTO corresponde 100% a su propio fundo.
+    out[pct_col] = out[pct_col].fillna(100.0)
+    return out
+
 def builder_transporte_kias(transport_df,tc):
     transport_df.columns = (
                 transport_df.columns.astype(str)
@@ -351,15 +423,15 @@ def builder_transporte_kias(transport_df,tc):
     transport_df = pd.merge(transport_df,tc,on=["FECHA"],how="left")
     transport_df["TARIFA $"] = transport_df["TARIFA"]/transport_df["TIPO_CAMBIO"]
     transport_df["FUNDO"] = transport_df["FUNDO"].str.strip()
-    transport_df["FUNDO"] = transport_df["FUNDO"].replace({
-        "QBERRIES":"QBERRIES II MAGICA",
-        
-    })
     #transport_df["CAMPAÑA"] = "CAMPAÑA 2026"
     #transport_df["VARIEDAD"] = "MAGICA"
     transport_df = transport_df.rename(columns={"TARIFA $":"MONTO_TK $"})
     #
     transport_df = transport_df[["SEMANA","FECHA","FUNDO","MONTO_TK $"]]
+    # QBERRIES y CANYON llegan agrupados: se prorratean entre sus fundos hijos
+    # segun los kilos cosechados por fecha (los demas fundos pasan sin cambios).
+    transport_df = _prorratear_transporte(transport_df, ["MONTO_TK $"])
+    transport_df = transport_df.drop(columns=["KILOS_COS","% KILOS"])
     return transport_df
 
 def builder_transporte_camaras(dff,tc):
@@ -375,19 +447,24 @@ def builder_transporte_camaras(dff,tc):
     dff["FECHA"] = pd.to_datetime(dff["FECHA"], errors="coerce")
     dff["FUNDO"] = dff["FUNDO"].replace({
         "GAP BERRIES":"GAP",
-        "QBERRIES":"QBERRIES II MAGICA"
     })
     #print(dff["FUNDO"].unique())
     dff = dff.groupby(["FECHA","FUNDO"])[["COSTO PRORRATEADO"]].sum().reset_index()
     dff = dff.rename(
         columns={
             "COSTO PRORRATEADO":"MONTO_TI",
-            
+
         }
     )
+    # QBERRIES y CANYON llegan agrupados: se prorratean entre sus fundos hijos
+    # segun los kilos cosechados por fecha (los demas fundos pasan sin cambios).
+    # transform_camaras_kias() solo agrega columnas ETAPA (desglose para Power BI)
+    # sin tocar COSTO PRORRATEADO ni FUNDO, por eso aqui se reparte igual que antes.
+    dff = _prorratear_transporte(dff, ["MONTO_TI"])
     dff = pd.merge(dff,tc,on=["FECHA"],how="left")
     dff["MONTO$_TI"] = dff["MONTO_TI"]/dff["TIPO_CAMBIO"]
-    dff = dff.drop(columns = ["TIPO_CAMBIO"])
+    dff = dff.drop(columns = ["TIPO_CAMBIO","KILOS_COS","% KILOS"])
+
     return dff
 
 
@@ -430,7 +507,7 @@ def builder_costos_manual(df):
         'SERVICIOS CAMPO (COSECHA)'
     ]
     for col_ in col_numericos:
-        df[col_] = df[col_].fillna(0)
+        df[col_] = pd.to_numeric(df[col_], errors="coerce").fillna(0)
     #df = df.rename(columns={"CAMPANA":"CAMPAÑA"})
     df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
     df = df.rename(columns={c: f"{c}_DN" for c in col_numericos if c in df.columns})
@@ -541,6 +618,11 @@ def build_master_table():
 #st.dataframe(df)
 #cosecha_df= data_cosecha()
 #st.dataframe(cosecha_df)
+#dn_df      = _agg_to_fecha_fundo(builder_costos_manual(datos_costos_manual()))
+#st.dataframe(dn_df)
+
+
+
 
 cosecha_load_data()
 st.success("COSECHA")
@@ -570,4 +652,10 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
-                                                                                                            
+
+
+#tc = datos_tipo_cambio_()         
+#camaras_df,kias_df =transform_camaras_kias()               
+#camaras_df = builder_transporte_camaras(datos_transporte_interno(), tc)
+#st.dataframe(camaras_df)
+#st.dataframe(kias_df)                                                                                    

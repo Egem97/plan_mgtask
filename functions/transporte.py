@@ -5,6 +5,73 @@ from utils.helpers import get_download_url_by_name
 from utils.get_api import listar_archivos_en_carpeta_compartida,subir_archivo_con_reintento
 from utils.utils import read_excel_fast
 from utils.get_token import get_access_token
+from functions.agricola import data_cosecha
+
+# Fundos que en transporte (kias/camaras) llegan agrupados bajo un solo nombre
+# y deben prorratearse entre sus fundos "hijos" segun los kilos cosechados por
+# fecha. El PRIMER fundo de cada lista es la "primera etapa": recibe el costo
+# completo cuando esa fecha no tiene cosecha registrada del grupo.
+PRORRATEO_GRUPOS = {
+    "QBERRIES": ["QBERRIES I", "QBERRIES II MAGICA", "QBERRIES II SEKOYA"],
+    "CANYON":   ["CANYON MAGICA", "CANYON MADEIRA"],
+}
+
+@st.cache_data(show_spinner=False)
+def _kilos_cosecha_transporte(fecha_desde="2026-06-01"):
+    """KILOS BRUTOS cosechados por (FECHA, FUNDO_) para los fundos hijos de
+    PRORRATEO_GRUPOS. Cacheado para no releer la cosecha en cada dataset."""
+    hijos = [f for hs in PRORRATEO_GRUPOS.values() for f in hs]
+    df = data_cosecha()
+    df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce").dt.normalize()
+    df = df[(df["FECHA"] >= fecha_desde) & (df["FUNDO_"].isin(hijos))]
+    return df.groupby(["FECHA", "FUNDO_"], as_index=False)["KILOS BRUTOS"].sum()
+
+ETAPAS_PRORRATEO = ("ETAPA I S/", "ETAPA II S/", "ETAPA III S/")
+
+def _prorratear_por_columnas(df, fundo_col, fecha_col, cost_col,
+                             fecha_desde="2026-06-01", etapas=ETAPAS_PRORRATEO):
+    """Prorratea POR COLUMNAS (sin explotar filas): a cada fila cuyo fundo es un
+    grupo de PRORRATEO_GRUPOS (QBERRIES/CANYON) y cuya fecha es >= fecha_desde se
+    le agrega el reparto de cost_col en las columnas ETAPA I/II/III, donde
+    ETAPA n = costo * (% KILOS BRUTOS cosechados del n-esimo fundo hijo en esa
+    fecha). Las fechas sin cosecha del grupo mandan todo el costo a ETAPA I
+    (primera etapa). El FUNDO y cost_col originales NO se modifican; las filas de
+    fundos no agrupados quedan con ETAPA = 0.
+
+    QBERRIES usa las 3 etapas (I=QBERRIES I, II=QBERRIES II MAGICA,
+    III=QBERRIES II SEKOYA); CANYON usa ETAPA I=CANYON MAGICA, II=CANYON MADEIRA
+    y ETAPA III queda en 0."""
+    df = df.copy()
+    for e in etapas:
+        df[e] = 0.0
+    fnorm = pd.to_datetime(df[fecha_col], errors="coerce").dt.normalize()
+
+    kilos = _kilos_cosecha_transporte(fecha_desde).copy()
+    kilos["FECHA"] = pd.to_datetime(kilos["FECHA"], errors="coerce").dt.normalize()
+
+    for padre, hijos in PRORRATEO_GRUPOS.items():
+        mask = (df[fundo_col] == padre) & (fnorm >= fecha_desde)
+        if not mask.any():
+            continue
+        # % de cada fundo hijo por fecha (pivot fecha -> hijo)
+        pesos = kilos[kilos["FUNDO_"].isin(hijos)].copy()
+        pesos["PESO"] = pesos["KILOS BRUTOS"] / pesos.groupby("FECHA")["KILOS BRUTOS"].transform("sum")
+        piv = pesos.pivot_table(index="FECHA", columns="FUNDO_", values="PESO", fill_value=0.0)
+        for h in hijos:
+            if h not in piv.columns:
+                piv[h] = 0.0
+        piv = piv[hijos]  # ordena columnas segun etapas I, II, III
+
+        f = fnorm[mask]                                  # fechas de las filas del grupo
+        costo = df.loc[mask, cost_col].astype(float)
+        for i, hijo in enumerate(hijos):
+            w = f.map(piv[hijo])                         # NaN si la fecha no tiene cosecha
+            df.loc[mask, etapas[i]] = (costo * w).where(w.notna(), 0.0)
+        # Fechas sin cosecha del grupo -> todo el costo a la primera etapa
+        idx_sin = f.index[~f.isin(piv.index)]
+        df.loc[idx_sin, etapas[0]] = df.loc[idx_sin, cost_col].astype(float)
+
+    return df
 
 def camaras_data():
     data = listar_archivos_en_carpeta_compartida(
@@ -169,6 +236,23 @@ def transform_camaras_kias():
     )
     apg_kias["PROVEEDOR-ZONA"] = apg_kias["PROVEEDOR-ZONA"].str.replace("ERROR","")
     #.str.normalize('NFKD')
+
+    # Prorrateo POR COLUMNAS: QBERRIES y CANYON llegan agrupados; a cada viaje se
+    # le agrega el reparto del costo en columnas ETAPA I/II/III segun los kilos
+    # cosechados por fecha (sin explotar filas, sin tocar el costo original).
+    # Camaras -> reparte COSTO PRORRATEADO ; Kias -> reparte TARIFA.
+    camaras_df = _prorratear_por_columnas(
+        camaras_df,
+        fundo_col="FUNDO PARTIDA",
+        fecha_col="FECHA INICIO TRASLADO",
+        cost_col="COSTO PRORRATEADO",
+    )
+    apg_kias = _prorratear_por_columnas(
+        apg_kias,
+        fundo_col="FUNDO",
+        fecha_col="FECHA",
+        cost_col="TARIFA",
+    )
     return camaras_df,apg_kias
 
 def camaras_kias_load_data():

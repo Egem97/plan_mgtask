@@ -573,8 +573,8 @@ def data_cosecha():
         "QBERRIES II SEKOYA POP":"QBERRIES II SEKOYA"
     })
     data["HA REAL"] = data["HA REAL"].astype(float)
-    data["JORNAL"] = data["JORNAL"].fillna(0)
-    data["JORNAL"] = data["JORNAL"].astype(str)
+    
+    data["JORNAL"] = pd.to_numeric(data["JORNAL"], errors="coerce").fillna(0)
     return data
 
 #DATA QUE CAMBIA POCAS VECES O FRECUENCIA

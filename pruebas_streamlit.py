@@ -623,7 +623,7 @@ def build_master_table():
 #COSECHA_DF= data_cosecha()
 #st.write(COSECHA_DF.shape)
 #st.dataframe(COSECHA_DF)
-
+from functions.hubcrop import*
 
 
 cosecha_load_data()

@@ -1468,7 +1468,7 @@ def proy_2026():
     ppt_df["MODULO"] = ppt_df["MODULO"].fillna("I")
     maskppt_sanjose2 = ppt_df["FUNDO"] == "SAN JOSE II"
     ppt_df.loc[maskppt_sanjose2 & (ppt_df["MODULO"]=="I"), "MODULO"] = "II"
-    ppt_df["VARIEDAD"] = ppt_df["VARIEDAD"].fillna("SEKOYA POP")
+    #ppt_df["VARIEDAD"] = ppt_df["VARIEDAD"].fillna("SEKOYA POP")
     mask_ppt_canyon_madeira = (ppt_df["FUNDO"] == "CANYON MADEIRA")
     mask_ppt_magica_magica = (ppt_df["FUNDO"] == "CANYON MAGICA")
     ppt_df.loc[mask_ppt_canyon_madeira & (ppt_df["VARIEDAD"]=="SEKOYA POP"), "VARIEDAD"] = "MADEIRA"

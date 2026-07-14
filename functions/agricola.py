@@ -430,18 +430,6 @@ def data_cosecha():
     #path_cosecha = r"C:\Users\EdwardoGiampiereEnri\OneDrive - ALZA PERU GROUP S.A.C\Archivos de Andy Rodriguez - INTELIGENCIA DE NEGOCIOS\DATA BI\AGRICOLA\PRODUCCION"
     access_token = get_access_token()
     h_df = cosecha_histo()
-    h_df["MERCADO"] = h_df["PACKING"]
-    h_df["MERCADO"] = h_df["MERCADO"].replace(
-        {
-        "VENTA NACIONAL":"VENTA NACIONAL",   
-        "ALZA PERU PACKING":"ALZA PERU PACKING",  
-        "ALZA PACKING":"ALZA PERU PACKING",  
-        "ALZA + PACKING":"ALZA PERU PACKING",  
-        "ALZA PERU PACKING S.A.C.":"ALZA PERU PACKING",  
-        "SMART PACKING S.A.C.":"ALZA PERU PACKING",  
-        
-        }
-    )
     list_files = [
         "6.Cosecha QBERRIES-CAMPAÑA-2026.xlsx",
         "1. Cosecha Excelence Sur 2026 CAMPO San Jose I.xlsx",

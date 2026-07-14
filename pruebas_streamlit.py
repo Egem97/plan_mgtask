@@ -568,13 +568,20 @@ def build_master_table():
 #st.dataframe(COSECHA_DF)
 from functions.hubcrop import*
 
+#st.cache_data(persist=True)
+def save_data_cosecha():
+    return data_cosecha()
+df = data_cosecha()
+df = df[(df["FUNDO_"].isin(["QBERRIES II MAGICA","QBERRIES II SEKOYA","QBERRIES I"]))&(df["CAMPAÑA"] == "Campaña 2026")]
+st.dataframe(df)
+"""
+camaras_kias_load_data()
+st.success("TRANSPORTE")
+cosecha_load_data()
+st.success("COSECHA")
 
-#cosecha_load_data()
-#st.success("COSECHA")
-#camaras_kias_load_data()
-#st.success("TRANSPORTE")
-#load_costo_laboral_gh()
-#st.success("costo laboral cargado")
+load_costo_laboral_gh()
+st.success("costo laboral cargado")
 
 df = build_master_table()
 hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)
@@ -597,6 +604,8 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
+"""
+
 
 
 #tc = datos_tipo_cambio_()         

@@ -36,6 +36,7 @@ def historico_agritracer(access_token):
 
 from functions.costos import *
 from functions.transporte import *
+from functions.transporte import desagregar_transporte
 
 def datos_costo_laboral():
         data = listar_archivos_en_carpeta_compartida(
@@ -74,12 +75,12 @@ def datos_tipo_cambio_():
 def datos_transporte_kias():
         data = listar_archivos_en_carpeta_compartida(
             get_access_token(),
-            "b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
-            "01KM43WT4M3PZTZVTV3VC3ORHLY6J4WI2X"
+            "b!M5ucw3aa_UqBAcqv3a6affR7vTZM2a5ApFygaKCcATxyLdOhkHDiRKl9EvzaYbuR",
+            "01XOBWFSDC2SPT2RFM3BGY6TJUHKMNQGOI"
         )
-        url_excel_1 = get_download_url_by_name(data, "APG TK - CONTROL DIARIO KIAS - 2026.xlsx")
-        df = read_excel_fast(url_excel_1, sheet_name="BD")
-        
+        url_ = get_download_url_by_name(data, "TRANSPORTE_KIAS.parquet")
+        df = pd.read_parquet(url_)
+
         return df
     
 def datos_costos_manual():
@@ -348,66 +349,10 @@ def builder_costo_laboral(dataframe,tc_df):
     return dataframe
 
 
-# Fundos que en transporte (kias/camaras) llegan agrupados bajo un solo nombre
-# y deben prorratearse entre sus fundos "hijos" segun los kilos cosechados por
-# fecha. El PRIMER fundo de cada lista es la "primera etapa": recibe el costo
-# completo cuando esa fecha no tiene cosecha registrada del grupo.
-PRORRATEO_GRUPOS = {
-    "QBERRIES": ["QBERRIES I", "QBERRIES II MAGICA", "QBERRIES II SEKOYA"],
-    "CANYON":   ["CANYON MAGICA", "CANYON MADEIRA"],
-}
-
-@st.cache_data(show_spinner=False)
-def _kilos_cosecha_transporte(fecha_desde="2026-06-01"):
-    """KILOS BRUTOS cosechados por (FECHA, FUNDO) para los fundos hijos de
-    PRORRATEO_GRUPOS. Cacheado para no releer la cosecha en cada builder."""
-    hijos = [f for hs in PRORRATEO_GRUPOS.values() for f in hs]
-    df = data_cosecha()
-    df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
-    df = df[(df["FECHA"] >= fecha_desde) & (df["FUNDO_"].isin(hijos))]
-    return df.groupby(["FECHA", "FUNDO_"], as_index=False)["KILOS BRUTOS"].sum()
-
-def _prorratear_transporte(df, cost_cols, fecha_desde="2026-06-01",
-                           pct_col="% KILOS", kilos_col="KILOS_COS"):
-    """Reparte el costo de los fundos agrupados (PRORRATEO_GRUPOS) entre sus
-    fundos hijos en proporcion a los KILOS BRUTOS cosechados por FECHA.
-    Las filas cuya fecha no tiene cosecha del grupo van completas a la primera
-    etapa (primer fundo de la lista). Los demas fundos pasan sin cambios.
-
-    Agrega dos columnas para saber a cuantos kilos equivale el MONTO:
-    - kilos_col: kilos cosechados de ese fundo en esa fecha (base del reparto).
-    - pct_col: % de kilos que representa ese fundo dentro de su grupo (0-100).
-    Los fundos no prorrateados quedan con pct_col=100 (el MONTO es 100% suyo)."""
-    df = df.copy()
-    df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
-    kilos = _kilos_cosecha_transporte(fecha_desde).rename(
-        columns={"FUNDO_": "FUNDO", "KILOS BRUTOS": kilos_col})
-
-    partes = [df[~df["FUNDO"].isin(list(PRORRATEO_GRUPOS.keys()))]]
-    for padre, hijos in PRORRATEO_GRUPOS.items():
-        sub = df[df["FUNDO"] == padre]
-        if sub.empty:
-            continue
-        pesos = kilos[kilos["FUNDO"].isin(hijos)].copy()
-        total = pesos.groupby("FECHA")[kilos_col].transform("sum")
-        pesos = pesos[total > 0].copy()
-        pesos["PESO"] = pesos[kilos_col] / pesos.groupby("FECHA")[kilos_col].transform("sum")
-        pesos = pesos[["FECHA", "FUNDO", kilos_col, "PESO"]]
-
-        exp = sub.drop(columns=["FUNDO"]).merge(pesos, on="FECHA", how="left")
-        # Fecha de transporte sin cosecha del grupo -> todo a la primera etapa
-        sin_cosecha = exp["FUNDO"].isna()
-        exp.loc[sin_cosecha, "FUNDO"] = hijos[0]
-        exp.loc[sin_cosecha, "PESO"] = 1.0
-        exp.loc[sin_cosecha, kilos_col] = 0.0
-        for c in cost_cols:
-            exp[c] = exp[c] * exp["PESO"]
-        exp[pct_col] = (exp["PESO"] * 100).round(2)
-        partes.append(exp.drop(columns=["PESO"]))
-    out = pd.concat(partes, ignore_index=True)
-    # Fundos no prorrateados: el MONTO corresponde 100% a su propio fundo.
-    out[pct_col] = out[pct_col].fillna(100.0)
-    return out
+# El prorrateo de QBERRIES/CANYON entre sus fundos hijos vive ahora en
+# functions/transporte.py (_prorratear_etapas / desagregar_transporte) y viene
+# embebido por etapa en los parquet TRANSPORTE_CAMARAS/KIAS. Los builders solo
+# desagregan esas columnas ETAPA a filas por fundo hijo.
 
 def builder_transporte_kias(transport_df,tc):
     transport_df.columns = (
@@ -420,19 +365,21 @@ def builder_transporte_kias(transport_df,tc):
                 .str.strip()
                 .str.upper()
         )
-    transport_df = pd.merge(transport_df,tc,on=["FECHA"],how="left")
-    transport_df["TARIFA $"] = transport_df["TARIFA"]/transport_df["TIPO_CAMBIO"]
+    transport_df["FECHA"] = pd.to_datetime(transport_df["FECHA"], errors="coerce")
     transport_df["FUNDO"] = transport_df["FUNDO"].str.strip()
-    #transport_df["CAMPAÑA"] = "CAMPAÑA 2026"
-    #transport_df["VARIEDAD"] = "MAGICA"
-    transport_df = transport_df.rename(columns={"TARIFA $":"MONTO_TK $"})
-    #
-    transport_df = transport_df[["SEMANA","FECHA","FUNDO","MONTO_TK $"]]
-    # QBERRIES y CANYON llegan agrupados: se prorratean entre sus fundos hijos
-    # segun los kilos cosechados por fecha (los demas fundos pasan sin cambios).
-    transport_df = _prorratear_transporte(transport_df, ["MONTO_TK $"])
-    transport_df = transport_df.drop(columns=["KILOS_COS","% KILOS"])
-    return transport_df
+    # El reparto QBERRIES/CANYON viene embebido por etapa en TRANSPORTE_KIAS.parquet.
+    # Desagregamos esas columnas ETAPA a una fila por (FECHA, fundo hijo) sin
+    # duplicar el resto de columnas del viaje. KILOS_COS = kilos cosechados de ese
+    # fundo/etapa en esa fecha.
+    df = desagregar_transporte(transport_df, "FECHA", "FUNDO", "TARIFA", "MONTO_TK")
+    df = df.groupby(["FECHA","FUNDO"], as_index=False).agg(
+        MONTO_TK=("MONTO_TK","sum"),
+        KILOS_COS=("KILOS_COS","sum"),
+    )
+    df = pd.merge(df,tc,on=["FECHA"],how="left")
+    df["MONTO_TK $"] = df["MONTO_TK"]/df["TIPO_CAMBIO"]
+    df = df.drop(columns=["TIPO_CAMBIO"])
+    return df
 
 def builder_transporte_camaras(dff,tc):
     dff = dff[dff["CAMPAÑA"]=="Campaña 2026"]
@@ -449,21 +396,17 @@ def builder_transporte_camaras(dff,tc):
         "GAP BERRIES":"GAP",
     })
     #print(dff["FUNDO"].unique())
-    dff = dff.groupby(["FECHA","FUNDO"])[["COSTO PRORRATEADO"]].sum().reset_index()
-    dff = dff.rename(
-        columns={
-            "COSTO PRORRATEADO":"MONTO_TI",
-
-        }
+    # El reparto QBERRIES/CANYON viene embebido por etapa en TRANSPORTE_CAMARAS.parquet.
+    # Desagregamos esas columnas ETAPA a una fila por (FECHA, fundo hijo) sin duplicar
+    # el resto de columnas del viaje. KILOS_COS = kilos cosechados de ese fundo/etapa.
+    dff = desagregar_transporte(dff, "FECHA", "FUNDO", "COSTO PRORRATEADO", "MONTO_TI")
+    dff = dff.groupby(["FECHA","FUNDO"], as_index=False).agg(
+        MONTO_TI=("MONTO_TI","sum"),
+        KILOS_COS=("KILOS_COS","sum"),
     )
-    # QBERRIES y CANYON llegan agrupados: se prorratean entre sus fundos hijos
-    # segun los kilos cosechados por fecha (los demas fundos pasan sin cambios).
-    # transform_camaras_kias() solo agrega columnas ETAPA (desglose para Power BI)
-    # sin tocar COSTO PRORRATEADO ni FUNDO, por eso aqui se reparte igual que antes.
-    dff = _prorratear_transporte(dff, ["MONTO_TI"])
     dff = pd.merge(dff,tc,on=["FECHA"],how="left")
     dff["MONTO$_TI"] = dff["MONTO_TI"]/dff["TIPO_CAMBIO"]
-    dff = dff.drop(columns = ["TIPO_CAMBIO","KILOS_COS","% KILOS"])
+    dff = dff.drop(columns = ["TIPO_CAMBIO"])
 
     return dff
 
@@ -626,12 +569,12 @@ def build_master_table():
 from functions.hubcrop import*
 
 
-cosecha_load_data()
-st.success("COSECHA")
-camaras_kias_load_data()
-st.success("TRANSPORTE")
-load_costo_laboral_gh()
-st.success("costo laboral cargado")
+#cosecha_load_data()
+#st.success("COSECHA")
+#camaras_kias_load_data()
+#st.success("TRANSPORTE")
+#load_costo_laboral_gh()
+#st.success("costo laboral cargado")
 
 df = build_master_table()
 hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)

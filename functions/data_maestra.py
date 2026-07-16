@@ -7,25 +7,12 @@ import pandas as pd
 import os
 import streamlit as st
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functions.load_onedrive import *
-from functions.biometria import *
-from functions.estacion_meteorologica import pipeline_meteorologia
-from utils.get_meteo import InnovaWeatherAPI
-from functions.costos import *
-from utils.get_kiss import fetch_all_kissflow
-
-
-
-st.set_page_config(page_title="web pruebas", page_icon=":tada:")
-st.title("pruebas")
-from functions.transporte import *
-
-
-
 from functions.costos import *
 from functions.transporte import *
-from functions.transporte import desagregar_transporte
+from functions.proc_files_xlsx import *
 
 def datos_costo_laboral():
         data = listar_archivos_en_carpeta_compartida(
@@ -127,9 +114,7 @@ def datos_transporte_interno():
         df = pd.read_parquet(url_)
         
         return df
-######################################################################################
-#df = pd.read_parquet("AGRITRACER_GENERAL.parquet")
-
+    
 def builder_agri_jr(agritracer_df):
     agritracer_df["SEMANA"] = agritracer_df["FECHA"].apply(calcular_semana_anclada_enero).astype("Int64")
     agritracer_df["FECHA"] = pd.to_datetime(agritracer_df["FECHA"], errors="coerce")
@@ -246,7 +231,6 @@ def builder_transporte_personal(df,tc):
     df = df.rename(columns={"MONTO (S/)": "MONTO_TP (S/)", "MONTO($)": "MONTO_TP($)"})
     return df
 
-
 def builder_costo_laboral(dataframe,tc_df):
     #datos_costo_laboral
     costo_mo_cosecha = (
@@ -282,12 +266,6 @@ def builder_costo_laboral(dataframe,tc_df):
     dataframe["MO COSECHA_COSTO$_CL"] = dataframe["MO COSECHA_COSTO_CL"]/dataframe["TIPO_CAMBIO"]
     dataframe["COSECHA_COSTO$_CL"] = dataframe["COSECHA_COSTO_CL"]/dataframe["TIPO_CAMBIO"]
     return dataframe
-
-
-# El prorrateo de QBERRIES/CANYON entre sus fundos hijos vive ahora en
-# functions/transporte.py (_prorratear_etapas / desagregar_transporte) y viene
-# embebido por etapa en los parquet TRANSPORTE_CAMARAS/KIAS. Los builders solo
-# desagregan esas columnas ETAPA a filas por fundo hijo.
 
 def builder_transporte_kias(transport_df,tc):
     transport_df.columns = (
@@ -347,7 +325,6 @@ def builder_transporte_camaras(dff,tc):
 
     return dff
 
-
 def builder_costos_manual(df):
     df.columns = (
             df.columns.astype(str)
@@ -394,6 +371,18 @@ def builder_costos_manual(df):
    
     return df
 
+def _run_parallel(tasks, max_workers=None):
+    """Ejecuta en paralelo callables sin argumentos y devuelve {nombre: resultado}.
+
+    Todas las tareas aqui son I/O de red (Graph API, descarga de Excel/parquet),
+    asi que los hilos si se solapan pese al GIL. Al salir del `with` todas han
+    terminado; .result() propaga la primera excepcion que haya ocurrido.
+    """
+    with ThreadPoolExecutor(max_workers=max_workers or len(tasks)) as ex:
+        futures = {name: ex.submit(fn) for name, fn in tasks.items()}
+    return {name: fut.result() for name, fut in futures.items()}
+
+
 def _agg_to_fecha_fundo(df):
     group_keys = ["FECHA","FUNDO"] + (["PACKING"] if "PACKING" in df.columns else [])
     num_cols = [c for c in df.columns if c not in group_keys and pd.api.types.is_numeric_dtype(df[c])]
@@ -402,12 +391,24 @@ def _agg_to_fecha_fundo(df):
     return df
 
 def build_master_table():
-    
-    tc = datos_tipo_cambio_()
+    # Las 8 descargas son independientes entre si, se lanzan a la vez y despues
+    # se transforma en serie (los builders son pandas puro, no ganan con hilos).
+    raw = _run_parallel({
+        "tc":         datos_tipo_cambio_,
+        "agritracer": datos_agritracer,
+        "cosecha":    datos_cosecha_1,
+        "tp":         datos_transporte_personal,
+        "ti":         datos_transporte_interno,
+        "tk":         datos_transporte_kias,
+        "dn":         datos_costos_manual,
+        "cl":         datos_costo_laboral,
+    })
+
+    tc = raw["tc"]
     #costo_laboral_df = builder_costo_laboral(builder_costo_laboral,tc)
-    agri_df    = builder_agri_jr(datos_agritracer())
-    cosecha_df = builder_cosecha(datos_cosecha_1())
-   
+    agri_df    = builder_agri_jr(raw["agritracer"])
+    cosecha_df = builder_cosecha(raw["cosecha"])
+
     cosecha_df = _agg_to_fecha_fundo(cosecha_df)
     cosecha_df = _agg_to_fecha_fundo(cosecha_df)
     # TIPO_COS se deriva de PACKING despues de la agregacion, porque
@@ -423,22 +424,22 @@ def build_master_table():
     #cosecha_df["TIPO_COS"] = cosecha_df["MERCADO"]
 
     tp_df      = _agg_to_fecha_fundo(
-        builder_transporte_personal(datos_transporte_personal(), tc)
+        builder_transporte_personal(raw["tp"], tc)
         .drop(columns=["SEMANA","TIPO_CAMBIO"], errors="ignore")
     )
     ti_df      = (
-        builder_transporte_camaras(datos_transporte_interno(), tc)
+        builder_transporte_camaras(raw["ti"], tc)
         .groupby(["FECHA","FUNDO"])[["MONTO_TI","MONTO$_TI"]].sum().reset_index()
     )
     tk_df      = (
-        builder_transporte_kias(datos_transporte_kias(), tc)
+        builder_transporte_kias(raw["tk"], tc)
         .groupby(["FECHA","FUNDO"])["MONTO_TK $"].sum().reset_index()
     )
-    dn_df      = _agg_to_fecha_fundo(builder_costos_manual(datos_costos_manual()))
-    cl_df      = _agg_to_fecha_fundo(                                                                      
-            builder_costo_laboral(datos_costo_laboral(), tc)                                                   
-              .drop(columns=["TIPO_CAMBIO"], errors="ignore")                                                    
-    )  
+    dn_df      = _agg_to_fecha_fundo(builder_costos_manual(raw["dn"]))
+    cl_df      = _agg_to_fecha_fundo(
+            builder_costo_laboral(raw["cl"], tc)
+              .drop(columns=["TIPO_CAMBIO"], errors="ignore")
+    )
     join_key = ["FECHA","FUNDO"]
     master = (
         agri_df
@@ -465,35 +466,31 @@ def build_master_table():
     return master
 
 
+def upload_general_costos_data():
+    # Los 4 pipelines son independientes: ninguno lee el parquet que otro escribe
+    # (camaras_kias y cosecha releen data_cosecha() del Excel, no del parquet).
+    # build_master_table() si depende de los 4, por eso va fuera del paralelo:
+    # _run_parallel no retorna hasta que todos hayan subido su archivo.
+    _run_parallel({
+        "agritracer":    pipeline_agritracer,
+        "camaras_kias":  camaras_kias_load_data,
+        "cosecha":       cosecha_load_data,
+        "costo_laboral": load_costo_laboral_gh,
+    })
+    df = build_master_table()
+    hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)
+    df = df[df["FECHA"].dt.normalize() != hoy_peru]
+    access_token = get_access_token()
+    resultado = subir_archivo_con_reintento(
+            access_token=access_token,
+            dataframe=df,
+            nombre_archivo="COSECHA_MAESTRO.parquet",
+            drive_id="b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
+            folder_id="01KM43WT4FS6JNXKKHRNCJZMAXLX56IOEQ",
+            type_file="parquet"
+        )
+    if resultado:
+        print(f"✅ Proceso completado exitosamente")
 
-camaras_kias_load_data()
-st.success("TRANSPORTE")
-
-cosecha_load_data()
-st.success("COSECHA")
-
-load_costo_laboral_gh()
-st.success("costo laboral cargado")
-
-
-df = build_master_table()
-hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)
-df = df[df["FECHA"].dt.normalize() != hoy_peru]
-#print(df.columns)
-st.write(df.shape)
-st.dataframe(df)
-
-access_token = get_access_token()
-resultado = subir_archivo_con_reintento(
-        access_token=access_token,
-        dataframe=df,
-        nombre_archivo="COSECHA_MAESTRO.parquet",
-        drive_id="b!7vn8i7N-DE-ulN73jRlvqAu5qgW8g95Cn8TCfsKkQKdsTPblFTr2TIQQJcSPyz9s",
-        folder_id="01KM43WT4FS6JNXKKHRNCJZMAXLX56IOEQ",
-        type_file="parquet"
-    )
-if resultado:
-    print(f"✅ Proceso completado exitosamente")
-
-else:
-    print(f"❌ Error al subir el archivo")
+    else:
+        print(f"❌ Error al subir el archivo")

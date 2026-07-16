@@ -3,7 +3,7 @@ import time
 import pandas as pd
 import io
 from pathlib import Path
-from utils.get_token import get_access_token, load_config
+from utils.get_token import get_access_token, refresh_access_token, load_config
 from utils.helpers import create_format_excel_in_memory
 
 config = load_config()
@@ -25,11 +25,20 @@ def listar_archivos_en_carpeta_compartida(access_token: str  ,drive_id: str, ite
     """
     
     url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item_id}/children"
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
 
-    response = requests.get(url, headers=headers)
+    def _get(token):
+        return requests.get(url, headers={"Authorization": f"Bearer {token}"})
+
+    response = _get(access_token)
+
+    # El token cacheado pudo vencerse o revocarse a mitad de vuelo: se renueva y
+    # se reintenta UNA vez. Si refresh_access_token devuelve None, el 401 no era
+    # por token vencido y se reporta como antes.
+    if response.status_code == 401:
+        print("🔑 401 al listar archivos: renovando token y reintentando...")
+        nuevo_token = refresh_access_token(access_token)
+        if nuevo_token:
+            response = _get(nuevo_token)
 
     if response.status_code == 200:
         return response.json().get("value", [])
@@ -60,20 +69,33 @@ def subir_archivo(access_token: str, dataframe: pd.DataFrame, nombre_archivo: st
         
         # Construir URL para subir archivo
         url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{folder_id}:/{nombre_archivo}:/content"
-        
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/octet-stream" if type_file == "parquet" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        }
-        
-        # Realizar la petición
+
+        content_type = "application/octet-stream" if type_file == "parquet" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+        # El cuerpo se genera UNA vez y se reusa si hay que reintentar por 401.
         if type_file == "parquet":
             # Generar parquet en memoria (sin guardar archivo local)
-            parquet_buffer = dataframe.to_parquet(None,index=False)  # None = retorna bytes en memoria
-            response = requests.put(url, headers=headers, data=parquet_buffer)
+            body = dataframe.to_parquet(None,index=False)  # None = retorna bytes en memoria
         else:
-            response = requests.put(url, headers=headers, data=create_format_excel_in_memory(dataframe))
-        
+            body = create_format_excel_in_memory(dataframe)
+
+        def _put(token):
+            return requests.put(url, headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": content_type,
+            }, data=body)
+
+        response = _put(access_token)
+
+        # El token cacheado pudo vencerse o revocarse a mitad de vuelo: se renueva
+        # y se reintenta UNA vez. Si refresh_access_token devuelve None, el 401 no
+        # era por token vencido y se reporta como antes.
+        if response.status_code == 401:
+            print(f"🔑 401 al subir '{nombre_archivo}': renovando token y reintentando...")
+            nuevo_token = refresh_access_token(access_token)
+            if nuevo_token:
+                response = _put(nuevo_token)
+
         if response.status_code in [200, 201]:
             print(f"✅ Archivo '{nombre_archivo}' subido exitosamente con formato especial")
             return True

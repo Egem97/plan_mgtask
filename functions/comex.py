@@ -226,20 +226,24 @@ RENOMBRAR_VARIEDAD ={
 # El monto es fijo por unidad y el mismo para todas las etapas de esa unidad.
 PRESUPUESTO_COMEX = {
     # UNIDAD:      (maquila, materiales, operlog)
-    "SAN JOSE I":  (0.56, 0.39, 0.19),
-    "SAN JOSE II": (0.56, 0.39, 0.19),
-    "SAN PEDRO":   (0.56, 0.39, 0.19),
-    "GAP BERRIES": (0.61, 0.49, 0.19),
-    "TARA FARM":   (0.72, 0.65, 0.20),
-    "QBERRIES":    (0.61, 0.49, 0.19),
-    "CANYON":      (0.61, 0.49, 0.19),
-    "BIG BERRIES": (0.55, 0.37, 0.19),
+    "SAN JOSE I":  (0.55, 0.40, 0.19),
+    "SAN JOSE II": (0.55, 0.38, 0.19),
+    "SAN PEDRO":   (0.55, 0.38, 0.19),
+    "GAP BERRIES": (0.59, 0.45, 0.19),
+    "TARA FARM":   (0.61, 0.49, 0.19),
+    
+    "QBERRIES":    (0.56, 0.41, 0.22),
+
+    
+    "CANYON":      (0.58, 0.45, 0.19),
+    "BIG BERRIES": (0.58, 0.45, 0.19),
 }
 # Mapeo FUNDO (como aparece en la data) -> unidad de presupuesto.
 # QBERRIES = LICAPA; las etapas (p.ej. LICAPA II) comparten el mismo monto.
 FUNDO_A_PRESUPUESTO = {
     "LICAPA":      "QBERRIES",
     "LICAPA II":   "QBERRIES",
+    #"LICAPA II":   "QBERRIES",
     "GAP BERRIES": "GAP BERRIES",
     "SAN JOSE":    "SAN JOSE I",   # SAN JOSE I y II tienen igual monto
     "SAN PEDRO":   "SAN PEDRO",

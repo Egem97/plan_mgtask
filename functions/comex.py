@@ -249,7 +249,7 @@ FUNDO_A_PRESUPUESTO = {
     "SAN PEDRO":   "SAN PEDRO",
     # Pendientes de confirmar cuando tengan envíos en la data:
     "EL POTRERO": "CANYON",
-    "TARA":        "TARA FARM",
+    "LAS BRISAS":        "TARA FARM",
     "BIG BERRIES":        "BIG BERRIES",
 }
 def _norm_key(s):

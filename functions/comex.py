@@ -226,7 +226,7 @@ RENOMBRAR_VARIEDAD ={
 # El monto es fijo por unidad y el mismo para todas las etapas de esa unidad.
 PRESUPUESTO_COMEX = {
     # UNIDAD:      (maquila, materiales, operlog)
-    "SAN JOSE I":  (0.55, 0.40, 0.19),
+    "SAN JOSE I":  (0.55, 0.39, 0.19),
     "SAN JOSE II": (0.55, 0.38, 0.19),
     "SAN PEDRO":   (0.55, 0.38, 0.19),
     "GAP BERRIES": (0.59, 0.45, 0.19),

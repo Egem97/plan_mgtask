@@ -247,6 +247,7 @@ FUNDO_A_PRESUPUESTO = {
     "GAP BERRIES": "GAP BERRIES",
     "SAN JOSE":    "SAN JOSE I",   # SAN JOSE I y II tienen igual monto
     "SAN PEDRO":   "SAN PEDRO",
+    "SAN JOSE II":    "SAN JOSE II",
     # Pendientes de confirmar cuando tengan envíos en la data:
     "EL POTRERO": "CANYON",
     "LAS BRISAS":        "TARA FARM",

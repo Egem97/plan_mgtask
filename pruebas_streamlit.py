@@ -386,12 +386,13 @@ def builder_costos_manual(df):
         'RECLUTAMIENTO Y SELECCION (COSECHA)', 'ADMINISTRACION DE PERSONAL (COSECHA)',
         'SERVICIOS CAMPO (COSECHA)'
     ]
+    df["FUNDO"] = df["FUNDO"].replace("TARA","LAS BRISAS")
     for col_ in col_numericos:
         df[col_] = pd.to_numeric(df[col_], errors="coerce").fillna(0)
     #df = df.rename(columns={"CAMPANA":"CAMPAÑA"})
     df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
     df = df.rename(columns={c: f"{c}_DN" for c in col_numericos if c in df.columns})
-   
+    
     return df
 
 def _agg_to_fecha_fundo(df):
@@ -497,3 +498,6 @@ if resultado:
 
 else:
     print(f"❌ Error al subir el archivo")
+
+#dn_df      = _agg_to_fecha_fundo(builder_costos_manual(datos_costos_manual()))
+#st.dataframe(dn_df)

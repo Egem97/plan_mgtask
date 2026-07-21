@@ -550,6 +550,10 @@ def data_cosecha():
     data["FECHA"] = pd.to_datetime(data["FECHA"],errors="coerce")
     data["CAMPAÑA"] = "Campaña 2026"
     data = pd.concat([h_df,data],axis=0)
+    # Descartar fechas futuras (errores de digitación en los Excel de cosecha)
+    hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)
+    data["FECHA"] = pd.to_datetime(data["FECHA"], errors="coerce")
+    data = data[data["FECHA"].notna() & (data["FECHA"].dt.normalize() <= hoy_peru)]
     data["FUNDO_"] = data["FUNDO"].replace({
         "GAP BERRIES":"GAP",
         "LICAPA":"QBERRIES I"

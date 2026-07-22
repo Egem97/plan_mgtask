@@ -639,9 +639,20 @@ def costo_proyectado_cosecha():
         "01KQPAXGDCQ4ABNVNFLBGKR3EIGQWHJQBK"
     )
     for file_ in files:
-        
+
         url_ = get_download_url_by_name(data, file_)
-        df = pd.read_excel(url_,skiprows=1,sheet_name="BD")
+        # La mayoria de archivos trae una fila en blanco antes del encabezado,
+        # pero algunos (ej. Qberries) tienen el encabezado en la primera fila.
+        # Detectamos la fila real buscando "FUNDO" en lugar de asumir skiprows=1;
+        # de lo contrario las filas de ese fundo se quedan sin FUNDO/FECHA y el
+        # filtro de FECHA notna las descarta por completo.
+        raw = pd.read_excel(url_, header=None, sheet_name="BD", nrows=5)
+        header_row = next(
+            (i for i in range(len(raw))
+             if raw.iloc[i].astype(str).str.strip().str.upper().eq("FUNDO").any()),
+            1,
+        )
+        df = pd.read_excel(url_, skiprows=header_row, sheet_name="BD")
         df.columns = (
                 df.columns.astype(str)
                 .str.normalize('NFKD')

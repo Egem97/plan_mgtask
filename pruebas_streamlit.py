@@ -192,6 +192,32 @@ def builder_agri_jr(agritracer_df):
     pivot_df = pivot_df.rename(columns = {"MO COSECHA":"MO COSECHA_JR","COSECHA":"COSECHA_JR"})
     return pivot_df
 
+# Variantes de PACKING que llegan desde cosecha y que representan al mismo destino.
+# Sin normalizar, el groupby por PACKING abre una fila por variante y el master
+# termina con filas duplicadas para la misma FECHA/FUNDO.
+PACKING_NORMALIZADO = {
+    "QPACK": "ALZA PERU PACKING",
+    "Q PACK": "ALZA PERU PACKING",
+    "Q PACK PERU": "ALZA PERU PACKING",
+    "QPACK PERU": "ALZA PERU PACKING",
+    "ALZA PACKING": "ALZA PERU PACKING",
+    "ALZA PERU PACKING": "ALZA PERU PACKING",
+    "NACIONAL": "VENTA NACIONAL",
+    "VENTA NACIONAL": "VENTA NACIONAL",
+}
+
+def normalizar_packing(serie):
+    limpio = (
+        serie.astype(str)
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+        .str.strip()
+        .str.upper()
+        .str.replace(r"\s+", " ", regex=True)
+    )
+    return limpio.map(PACKING_NORMALIZADO).fillna(limpio)
+
 def builder_cosecha(df):
     df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce")
     df = df[df["FECHA"]>="2026-06-01"]
@@ -201,7 +227,8 @@ def builder_cosecha(df):
     df = df.rename(columns = {"FUNDO":"FUNDO_ALTERNO"})
     df = df.rename(columns = {"FUNDO_":"FUNDO"})
     df = df.drop(columns = ["CAMPAÑA"])
-    
+    df["PACKING"] = normalizar_packing(df["PACKING"])
+
     df = df.groupby(["FECHA","FUNDO","FUNDO_ALTERNO","PACKING"])[["HA","JORNAL","JABAS","JARRAS","KILOS BRUTOS","KILOS /HA","DESCARTE"]].sum().reset_index()
     
 
@@ -410,36 +437,35 @@ def build_master_table():
     cosecha_df = builder_cosecha(datos_cosecha_1())
    
     cosecha_df = _agg_to_fecha_fundo(cosecha_df)
-    cosecha_df = _agg_to_fecha_fundo(cosecha_df)
+    
     # TIPO_COS se deriva de PACKING despues de la agregacion, porque
     # _agg_to_fecha_fundo descarta las columnas de texto que no son clave de grupo.
-    cosecha_df["TIPO_COS"] = cosecha_df["PACKING"].replace({
-            "-":"-",
-            "NACIONAL":"VENTA NACIONAL",
-
-            "ALZA PERU PACKING": "ALZA PERU PACKING",
-            "ALZA PACKING": "ALZA PERU PACKING",
-
-        })
+    # PACKING ya viene normalizado desde builder_cosecha.
+    cosecha_df["TIPO_COS"] = cosecha_df["PACKING"]
     #cosecha_df["TIPO_COS"] = cosecha_df["MERCADO"]
 
     tp_df      = _agg_to_fecha_fundo(
         builder_transporte_personal(datos_transporte_personal(), tc)
         .drop(columns=["SEMANA","TIPO_CAMBIO"], errors="ignore")
     )
+    print("1")
     ti_df      = (
         builder_transporte_camaras(datos_transporte_interno(), tc)
         .groupby(["FECHA","FUNDO"])[["MONTO_TI","MONTO$_TI"]].sum().reset_index()
     )
+    print("2")
     tk_df      = (
         builder_transporte_kias(datos_transporte_kias(), tc)
         .groupby(["FECHA","FUNDO"])["MONTO_TK $"].sum().reset_index()
     )
+    print("3")
     dn_df      = _agg_to_fecha_fundo(builder_costos_manual(datos_costos_manual()))
+    print("4")
     cl_df      = _agg_to_fecha_fundo(                                                                      
             builder_costo_laboral(datos_costo_laboral(), tc)                                                   
               .drop(columns=["TIPO_CAMBIO"], errors="ignore")                                                    
     )  
+    print("5")
     join_key = ["FECHA","FUNDO"]
     master = (
         agri_df
@@ -467,16 +493,18 @@ def build_master_table():
 
 
 
-camaras_kias_load_data()
-st.success("TRANSPORTE")
+#camaras_kias_load_data()
+#st.success("TRANSPORTE")
 
-cosecha_load_data()
-st.success("COSECHA")
+#cosecha_load_data()
+#st.success("COSECHA")
 
-load_costo_laboral_gh()
-st.success("costo laboral cargado")
+#load_costo_laboral_gh()
+#st.success("costo laboral cargado")
 
-
+df = costo_proyectado_cosecha()
+st.dataframe(df)
+"""
 df = build_master_table()
 hoy_peru = pd.Timestamp.now(tz="America/Lima").normalize().tz_localize(None)
 df = df[df["FECHA"].dt.normalize() != hoy_peru]
@@ -501,3 +529,4 @@ else:
 
 #dn_df      = _agg_to_fecha_fundo(builder_costos_manual(datos_costos_manual()))
 #st.dataframe(dn_df)
+"""

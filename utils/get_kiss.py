@@ -64,6 +64,7 @@ def fetch_all_kissflow(dataset: str) -> pd.DataFrame:
         df = df[["_id", *[c for c in df.columns if c != "_id"]]]
 
     cols_a_revisar = [c for c in df.columns if c != "_id"]
+    
     if cols_a_revisar:
         as_str = df[cols_a_revisar].astype(str)
         mask_dummy = as_str.apply(
